@@ -1,18 +1,18 @@
 import { useSettings } from '../../app/settings.ts'
-import { formatDate, formatMonth, toCalendar, todayIso } from '../../lib/jalali.ts'
+import { IconPlus } from '@tabler/icons-react'
+import { addDays, formatDate, formatMonth, toCalendar, todayIso } from '../../lib/jalali.ts'
 import { t } from '../../lib/i18n.ts'
 import { formatAmount, formatToman } from '../../lib/money.ts'
 import { CategoryIcon } from './CategoryIcon.tsx'
 import { groupByDay, sumAmounts } from './groupByDay.ts'
 import { useMonthExpenses } from './useExpenses.ts'
 
-function yesterdayIso(today: string): string {
-  const date = new Date(`${today}T12:00:00`)
-  date.setDate(date.getDate() - 1)
-  return todayIso(date)
+interface Props {
+  onAdd: () => void
+  onEdit: (id: string) => void
 }
 
-export function ExpenseList() {
+export function ExpenseList({ onAdd, onEdit }: Props) {
   const { locale, calendar } = useSettings()
   const today = todayIso()
   const { year, month } = toCalendar(today, calendar)
@@ -25,12 +25,12 @@ export function ExpenseList() {
   function dayLabel(date: string) {
     const label = formatDate(date, locale, calendar, { year: false })
     if (date === today) return `${t(locale, 'today')} · ${label}`
-    if (date === yesterdayIso(today)) return `${t(locale, 'yesterday')} · ${label}`
+    if (date === addDays(today, -1)) return `${t(locale, 'yesterday')} · ${label}`
     return label
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 pb-24">
       <section className="rounded-card bg-brand-50 p-3">
         <p className="text-xs text-brand-600">
           {t(locale, 'spentIn')} {formatMonth(year, month, locale, calendar)}
@@ -51,13 +51,19 @@ export function ExpenseList() {
               {day.expenses.map((expense) => {
                 const category = data.categories.get(expense.categoryId)
                 return (
-                  <li key={expense.id} className="flex items-center gap-3 border-b border-border py-2.5 last:border-0">
-                    <CategoryIcon name={category?.icon} />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm">{category?.names[locale] ?? expense.categoryId}</p>
-                      {expense.note && <p className="truncate text-xs text-text-secondary">{expense.note}</p>}
-                    </div>
-                    <span className="text-sm">{formatAmount(expense.amount, locale)}</span>
+                  <li key={expense.id} className="border-b border-border last:border-0">
+                    <button
+                      type="button"
+                      onClick={() => onEdit(expense.id)}
+                      className="flex w-full items-center gap-3 py-2.5 text-start"
+                    >
+                      <CategoryIcon name={category?.icon} />
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-sm">{category?.names[locale] ?? expense.categoryId}</span>
+                        {expense.note && <span className="block truncate text-xs text-text-secondary">{expense.note}</span>}
+                      </span>
+                      <span className="text-sm">{formatAmount(expense.amount, locale)}</span>
+                    </button>
                   </li>
                 )
               })}
@@ -65,6 +71,15 @@ export function ExpenseList() {
           </section>
         ))
       )}
+
+      <button
+        type="button"
+        onClick={onAdd}
+        aria-label={t(locale, 'addExpense')}
+        className="fixed bottom-6 flex size-14 items-center justify-center rounded-2xl bg-brand-600 text-white shadow-lg end-[max(1.5rem,calc(50vw-14rem+1.5rem))]"
+      >
+        <IconPlus size={26} aria-hidden="true" />
+      </button>
     </div>
   )
 }
