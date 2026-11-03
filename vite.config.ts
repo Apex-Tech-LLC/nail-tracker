@@ -18,7 +18,11 @@ function buildId(): string {
 }
 
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({ command, isPreview }) => ({
+  // GitHub Pages serves the app from /daftar/. Builds and `pnpm preview`
+  // always use it, so preview behaves exactly like the live site; dev
+  // stays at /. (Preview runs as command 'serve', hence isPreview.)
+  base: command === 'build' || isPreview ? '/daftar/' : '/',
   define: {
     __BUILD_ID__: JSON.stringify(buildId()),
     __BUILD_DATE__: JSON.stringify(new Date().toISOString().slice(0, 10)),
@@ -74,4 +78,4 @@ export default defineConfig({
   test: {
     include: ['tests/unit/**/*.test.ts'],
   },
-})
+}))
