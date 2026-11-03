@@ -1,11 +1,11 @@
 import { IconTrash, IconX } from '@tabler/icons-react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { useId, useRef, useState, type FormEvent } from 'react'
+import { useId, useLayoutEffect, useRef, useState, type FormEvent } from 'react'
 import { useSettings } from '../../app/settings.ts'
 import { db, type Category, type Expense } from '../../db/schema.ts'
 import { t } from '../../lib/i18n.ts'
 import { addDays, daysInMonth, fromCalendar, monthName, toCalendar, todayIso } from '../../lib/jalali.ts'
-import { formatAmount, parseAmount } from '../../lib/money.ts'
+import { formatAmount, localizeDigits, parseAmount } from '../../lib/money.ts'
 import { numberToWords } from '../../lib/numberWords.ts'
 import { CategoryIcon } from './CategoryIcon.tsx'
 import { requestPersistence } from '../../pwa/persistStorage.ts'
@@ -40,6 +40,9 @@ function ExpenseFormFields({ expense, categories, onDone, onDeleted }: FieldsPro
   const { locale, calendar } = useSettings()
   const id = useId()
   const amountRef = useRef<HTMLInputElement>(null)
+  // Where the caret was when the amount was last typed, so rewriting the
+  // digits does not jump it to the end.
+  const amountCaret = useRef<number | null>(null)
   const today = todayIso()
   const yesterday = addDays(today, -1)
 
@@ -51,6 +54,13 @@ function ExpenseFormFields({ expense, categories, onDone, onDeleted }: FieldsPro
   const [errors, setErrors] = useState<Errors>({})
 
   const amount = parseAmount(amountText)
+  const amountValue = localizeDigits(amountText, locale)
+
+  useLayoutEffect(() => {
+    if (amountCaret.current === null) return
+    amountRef.current?.setSelectionRange(amountCaret.current, amountCaret.current)
+    amountCaret.current = null
+  }, [amountText])
   const words = amount ? numberToWords(amount, locale) : ''
   const parts = toCalendar(date, calendar)
 
@@ -123,8 +133,9 @@ function ExpenseFormFields({ expense, categories, onDone, onDeleted }: FieldsPro
           autoFocus
           inputMode="numeric"
           autoComplete="off"
-          value={amountText}
+          value={amountValue}
           onChange={(e) => {
+            amountCaret.current = e.target.selectionStart
             setAmountText(e.target.value)
             if (errors.amount) setErrors({ ...errors, amount: undefined })
           }}

@@ -26,6 +26,18 @@ export function normalizeDigits(input: string): string {
 }
 
 /**
+ * Rewrites every digit in the locale's own script, keeping everything else
+ * as is. Phone keyboards often type Latin digits even in a Persian UI, so
+ * the amount field passes what the user types through this. The length never
+ * changes, so the caret can stay where it was.
+ */
+export function localizeDigits(input: string, locale: Locale): string {
+  const latin = normalizeDigits(input)
+  if (locale === 'en') return latin
+  return latin.replace(/\d/g, (d) => String.fromCharCode(PERSIAN_ZERO + Number(d)))
+}
+
+/**
  * Parses a user-typed amount in Toman. Accepts Persian, Arabic and English
  * digits, with or without thousands separators. Returns null for anything
  * that is not a positive whole number.

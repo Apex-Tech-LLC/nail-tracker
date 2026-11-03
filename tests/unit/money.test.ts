@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatAmount, formatToman, normalizeDigits, parseAmount } from '../../src/lib/money.ts'
+import { formatAmount, formatToman, localizeDigits, normalizeDigits, parseAmount } from '../../src/lib/money.ts'
 
 describe('normalizeDigits', () => {
   it('converts Persian and Arabic digits to English', () => {
@@ -9,6 +9,24 @@ describe('normalizeDigits', () => {
 
   it('leaves other characters alone', () => {
     expect(normalizeDigits('abc 12')).toBe('abc 12')
+  })
+})
+
+describe('localizeDigits', () => {
+  it('writes Latin and Arabic digits in Persian for fa', () => {
+    expect(localizeDigits('2750000', 'fa')).toBe('۲۷۵۰۰۰۰')
+    expect(localizeDigits('٤٥', 'fa')).toBe('۴۵')
+  })
+
+  it('writes Persian and Arabic digits in Latin for en', () => {
+    expect(localizeDigits('۱۲٣', 'en')).toBe('123')
+  })
+
+  it('keeps separators and other characters, so the length is unchanged', () => {
+    const typed = '1,250٬000 x'
+    const localized = localizeDigits(typed, 'fa')
+    expect(localized).toBe('۱,۲۵۰٬۰۰۰ x')
+    expect(localized).toHaveLength(typed.length)
   })
 })
 
