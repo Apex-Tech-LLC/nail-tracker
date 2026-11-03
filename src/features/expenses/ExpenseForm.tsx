@@ -8,6 +8,7 @@ import { addDays, daysInMonth, fromCalendar, monthName, toCalendar, todayIso } f
 import { formatAmount, parseAmount } from '../../lib/money.ts'
 import { numberToWords } from '../../lib/numberWords.ts'
 import { CategoryIcon } from './CategoryIcon.tsx'
+import { requestPersistence } from '../../pwa/persistStorage.ts'
 import { addExpense, deleteExpense, updateExpense } from './expenseStore.ts'
 
 interface Props {
@@ -72,7 +73,11 @@ function ExpenseFormFields({ expense, categories, onDone, onDeleted }: FieldsPro
 
     const input = { amount, categoryId, date, note }
     if (expense) await updateExpense(db, expense.id, input)
-    else await addExpense(db, input)
+    else {
+      await addExpense(db, input)
+      // Now there is data worth keeping. Not awaited: it may show a browser prompt.
+      void requestPersistence()
+    }
     onDone()
   }
 
