@@ -1,9 +1,11 @@
+import { IconAlertTriangle, IconShieldCheck } from '@tabler/icons-react'
 import type { ReactNode } from 'react'
 import { PageHeader } from '../../app/PageHeader.tsx'
 import { updateSettings, useSettings } from '../../app/settings.ts'
 import { t } from '../../lib/i18n.ts'
 import type { Calendar } from '../../lib/jalali.ts'
 import type { Locale } from '../../lib/locale.ts'
+import { usePersistState } from '../../pwa/persistStorage.ts'
 
 interface TileOption<T extends string> {
   value: T
@@ -77,9 +79,31 @@ export function SettingsPage() {
           { value: 'gregorian', glyph: locale === 'fa' ? '۳ نوامبر' : '3 Nov', label: t(locale, 'gregorian') },
         ]}
       />
+      <StorageStatus />
       <p className="mt-auto text-center text-xs text-text-muted" dir="ltr">
         {t(locale, 'version')} {__BUILD_ID__} · {__BUILD_DATE__}
       </p>
     </>
+  )
+}
+
+function StorageStatus() {
+  const { locale } = useSettings()
+  const state = usePersistState()
+  if (!state) return null
+  const safe = state === 'persisted'
+  const Icon = safe ? IconShieldCheck : IconAlertTriangle
+
+  return (
+    <section>
+      <h2 className="mb-2 text-xs text-text-secondary">{t(locale, 'storage')}</h2>
+      <div className="flex gap-3 rounded-card border border-border bg-surface p-3">
+        <Icon size={20} aria-hidden="true" className={`mt-0.5 flex-none ${safe ? 'text-brand-600' : 'text-warning-text'}`} />
+        <div>
+          <p className="text-sm">{t(locale, safe ? 'storagePersisted' : 'storageAtRisk')}</p>
+          <p className="text-xs text-text-secondary">{t(locale, safe ? 'storagePersistedHint' : 'storageAtRiskHint')}</p>
+        </div>
+      </div>
+    </section>
   )
 }
