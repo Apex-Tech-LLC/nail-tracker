@@ -20,7 +20,7 @@ export function UndoToast({ onUndo, onClose }: Props) {
 
   return (
     <div
-      className="fixed inset-x-4 bottom-24 mx-auto flex max-w-[calc(28rem-2rem)] items-center justify-between rounded-control bg-text px-4 py-3 text-sm text-surface shadow-lg"
+      className="fixed inset-x-4 bottom-38 mx-auto flex max-w-[calc(28rem-2rem)] items-center justify-between rounded-control bg-text px-4 py-3 text-sm text-surface shadow-lg"
     >
       <span>{t(locale, 'expenseDeleted')}</span>
       <button type="button" onClick={onUndo} className="font-medium text-brand-200">

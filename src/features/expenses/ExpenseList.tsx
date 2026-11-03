@@ -30,7 +30,7 @@ export function ExpenseList({ onAdd, onEdit }: Props) {
   }
 
   return (
-    <div className="flex flex-col gap-4 pb-24">
+    <div className="flex flex-col gap-4 pb-20">
       <section className="rounded-card bg-brand-50 p-3">
         <p className="text-xs text-brand-600">
           {t(locale, 'spentIn')} {formatMonth(year, month, locale, calendar)}
@@ -76,7 +76,7 @@ export function ExpenseList({ onAdd, onEdit }: Props) {
         type="button"
         onClick={onAdd}
         aria-label={t(locale, 'addExpense')}
-        className="fixed bottom-6 flex size-14 items-center justify-center rounded-2xl bg-brand-600 text-white shadow-lg end-[max(1.5rem,calc(50vw-14rem+1.5rem))]"
+        className="fixed bottom-20 flex size-14 items-center justify-center rounded-2xl bg-brand-600 text-white shadow-lg end-[max(1.5rem,calc(50vw-14rem+1.5rem))]"
       >
         <IconPlus size={26} aria-hidden="true" />
       </button>
