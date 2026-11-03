@@ -24,3 +24,17 @@ export async function updateExpense(db: DaftarDb, id: string, input: ExpenseInpu
   if (!existing) throw new Error(`Expense not found: ${id}`)
   await db.expenses.put({ ...existing, ...clean(input), updatedAt: now })
 }
+
+/** Deletes an expense and returns it unchanged, so the caller can offer undo. */
+export async function deleteExpense(db: DaftarDb, id: string): Promise<Expense | undefined> {
+  return db.transaction('rw', db.expenses, async () => {
+    const existing = await db.expenses.get(id)
+    if (existing) await db.expenses.delete(id)
+    return existing
+  })
+}
+
+/** Puts a deleted expense back exactly as it was, same id and timestamps. */
+export async function restoreExpense(db: DaftarDb, expense: Expense): Promise<void> {
+  await db.expenses.put(expense)
+}

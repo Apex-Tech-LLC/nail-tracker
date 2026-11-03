@@ -1,4 +1,4 @@
-import { IconX } from '@tabler/icons-react'
+import { IconTrash, IconX } from '@tabler/icons-react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useId, useRef, useState, type FormEvent } from 'react'
 import { useSettings } from '../../app/settings.ts'
@@ -8,32 +8,34 @@ import { addDays, daysInMonth, fromCalendar, monthName, toCalendar, todayIso } f
 import { formatAmount, parseAmount } from '../../lib/money.ts'
 import { numberToWords } from '../../lib/numberWords.ts'
 import { CategoryIcon } from './CategoryIcon.tsx'
-import { addExpense, updateExpense } from './expenseStore.ts'
+import { addExpense, deleteExpense, updateExpense } from './expenseStore.ts'
 
 interface Props {
   expenseId?: string
   onDone: () => void
+  onDeleted: (expense: Expense) => void
 }
 
 type Errors = Partial<Record<'amount' | 'category' | 'date', string>>
 
 /** Loads what the form needs, then mounts it with its starting values. */
-export function ExpenseForm({ expenseId, onDone }: Props) {
+export function ExpenseForm({ expenseId, onDone, onDeleted }: Props) {
   const categories = useLiveQuery(() => db.categories.orderBy('order').toArray())
   // null = not found, undefined = still loading.
   const existing = useLiveQuery(async () => (expenseId ? ((await db.expenses.get(expenseId)) ?? null) : null), [expenseId])
 
   if (!categories || existing === undefined) return null
-  return <ExpenseFormFields expense={existing ?? undefined} categories={categories} onDone={onDone} />
+  return <ExpenseFormFields expense={existing ?? undefined} categories={categories} onDone={onDone} onDeleted={onDeleted} />
 }
 
 interface FieldsProps {
   expense?: Expense
   categories: Category[]
   onDone: () => void
+  onDeleted: (expense: Expense) => void
 }
 
-function ExpenseFormFields({ expense, categories, onDone }: FieldsProps) {
+function ExpenseFormFields({ expense, categories, onDone, onDeleted }: FieldsProps) {
   const { locale, calendar } = useSettings()
   const id = useId()
   const amountRef = useRef<HTMLInputElement>(null)
@@ -74,6 +76,14 @@ function ExpenseFormFields({ expense, categories, onDone }: FieldsProps) {
     onDone()
   }
 
+  // No confirm dialog: deleting is instant and the list offers undo instead.
+  async function remove() {
+    if (!expense) return
+    const deleted = await deleteExpense(db, expense.id)
+    if (deleted) onDeleted(deleted)
+    else onDone()
+  }
+
   const currentYear = toCalendar(today, calendar).year
   const years = [...new Set([parts.year, currentYear - 2, currentYear - 1, currentYear])].sort()
   const dayCount = daysInMonth(parts.year, parts.month, calendar)
@@ -89,7 +99,13 @@ function ExpenseFormFields({ expense, categories, onDone }: FieldsProps) {
           <IconX size={22} aria-hidden="true" />
         </button>
         <h1 className="font-medium">{t(locale, expense ? 'editExpense' : 'newExpense')}</h1>
-        <span className="w-7" />
+        {expense ? (
+          <button type="button" onClick={remove} aria-label={t(locale, 'delete')} className="p-1 text-danger-text">
+            <IconTrash size={22} aria-hidden="true" />
+          </button>
+        ) : (
+          <span className="w-7" />
+        )}
       </header>
 
       <div className="flex flex-col items-center gap-1 text-center">
