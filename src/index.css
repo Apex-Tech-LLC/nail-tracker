@@ -1,1 +1,77 @@
 @import 'tailwindcss';
+@import '@fontsource-variable/vazirmatn';
+
+/*
+ * Design tokens. Raw colors live on :root as CSS variables and Tailwind
+ * utilities point at them, so dark mode (1.1) only has to redefine the
+ * variables. Brand is an indigo ramp; status is never shown by color alone.
+ */
+:root {
+  --brand-50: #eeedfe;
+  --brand-100: #cecbf6;
+  --brand-200: #afa9ec;
+  --brand-400: #7f77dd;
+  --brand-600: #534ab7;
+  --brand-800: #3c3489;
+  --brand-900: #26215c;
+
+  --page: #f7f7fb;
+  --surface: #ffffff;
+  --surface-subtle: #f1f0f7;
+  --text: #1d1b2e;
+  --text-secondary: #5f5d70;
+  --text-muted: #8b899a;
+  --border: rgb(29 27 46 / 0.12);
+  --border-strong: rgb(29 27 46 / 0.24);
+
+  --warning-bg: #faeeda;
+  --warning-text: #854f0b;
+  --danger-bg: #fcebeb;
+  --danger-text: #a32d2d;
+}
+
+@theme inline {
+  --font-sans: 'Vazirmatn Variable', system-ui, sans-serif;
+
+  --color-brand-50: var(--brand-50);
+  --color-brand-100: var(--brand-100);
+  --color-brand-200: var(--brand-200);
+  --color-brand-400: var(--brand-400);
+  --color-brand-600: var(--brand-600);
+  --color-brand-800: var(--brand-800);
+  --color-brand-900: var(--brand-900);
+
+  --color-page: var(--page);
+  --color-surface: var(--surface);
+  --color-surface-subtle: var(--surface-subtle);
+  --color-text: var(--text);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+
+  --color-warning-bg: var(--warning-bg);
+  --color-warning-text: var(--warning-text);
+  --color-danger-bg: var(--danger-bg);
+  --color-danger-text: var(--danger-text);
+
+  --radius-card: 12px;
+  --radius-control: 10px;
+}
+
+@layer base {
+  body {
+    @apply bg-page font-sans text-text antialiased;
+  }
+}
+
+/* Motion is opt-in: users who ask for reduced motion get none. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
