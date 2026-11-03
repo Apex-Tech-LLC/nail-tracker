@@ -29,6 +29,9 @@ const strings = {
     errorAmount: 'مبلغ را به تومان و بدون اعشار وارد کن.',
     errorCategory: 'یک دسته انتخاب کن.',
     errorDate: 'این تاریخ وجود ندارد.',
+    delete: 'حذف',
+    expenseDeleted: 'هزینه حذف شد',
+    undo: 'برگرداندن',
   },
   en: {
     appName: 'Daftar',
@@ -56,6 +59,9 @@ const strings = {
     errorAmount: 'Enter a whole amount in Toman.',
     errorCategory: 'Pick a category.',
     errorDate: "That date doesn't exist.",
+    delete: 'Delete',
+    expenseDeleted: 'Expense deleted',
+    undo: 'Undo',
   },
 } satisfies Record<Locale, Record<string, string>>
 

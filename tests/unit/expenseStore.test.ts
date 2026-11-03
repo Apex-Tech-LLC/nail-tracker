@@ -1,7 +1,7 @@
 import 'fake-indexeddb/auto'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { createDb, type DaftarDb } from '../../src/db/schema.ts'
-import { addExpense, updateExpense } from '../../src/features/expenses/expenseStore.ts'
+import { addExpense, deleteExpense, restoreExpense, updateExpense } from '../../src/features/expenses/expenseStore.ts'
 
 let db: DaftarDb
 let counter = 0
@@ -45,5 +45,25 @@ describe('updateExpense', () => {
 
   it('throws for an unknown id', async () => {
     await expect(updateExpense(db, 'missing', input)).rejects.toThrow()
+  })
+})
+
+describe('deleteExpense and restoreExpense', () => {
+  it('removes the expense and returns it', async () => {
+    const saved = await addExpense(db, input, 1000)
+    expect(await deleteExpense(db, saved.id)).toEqual(saved)
+    expect(await db.expenses.get(saved.id)).toBeUndefined()
+  })
+
+  it('returns undefined for an unknown id', async () => {
+    expect(await deleteExpense(db, 'missing')).toBeUndefined()
+  })
+
+  it('undo restores the exact record', async () => {
+    const saved = await addExpense(db, input, 1000)
+    const deleted = await deleteExpense(db, saved.id)
+    await restoreExpense(db, deleted!)
+    expect(await db.expenses.get(saved.id)).toEqual(saved)
+    expect(await db.expenses.count()).toBe(1)
   })
 })
