@@ -5,6 +5,8 @@ import { monthRange, type Calendar } from '../../lib/jalali.ts'
 export interface MonthData {
   expenses: Expense[]
   categories: Map<string, Category>
+  /** Expenses in all months, to tell a first run from an empty month. */
+  totalCount: number
 }
 
 /**
@@ -15,10 +17,11 @@ export interface MonthData {
 export function useMonthExpenses(year: number, month: number, calendar: Calendar): MonthData | undefined {
   return useLiveQuery(async () => {
     const { start, end } = monthRange(year, month, calendar)
-    const [expenses, categories] = await Promise.all([
+    const [expenses, categories, totalCount] = await Promise.all([
       db.expenses.where('date').between(start, end, true, true).toArray(),
       db.categories.toArray(),
+      db.expenses.count(),
     ])
-    return { expenses, categories: new Map(categories.map((c) => [c.id, c])) }
+    return { expenses, categories: new Map(categories.map((c) => [c.id, c])), totalCount }
   }, [year, month, calendar])
 }

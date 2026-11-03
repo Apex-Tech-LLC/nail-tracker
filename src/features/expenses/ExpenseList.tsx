@@ -1,5 +1,6 @@
-import { useSettings } from '../../app/settings.ts'
 import { IconPlus } from '@tabler/icons-react'
+import { useSettings } from '../../app/settings.ts'
+import { Welcome } from './Welcome.tsx'
 import { addDays, formatDate, formatMonth, toCalendar, todayIso } from '../../lib/jalali.ts'
 import { t } from '../../lib/i18n.ts'
 import { formatAmount, formatToman } from '../../lib/money.ts'
@@ -19,6 +20,7 @@ export function ExpenseList({ onAdd, onEdit }: Props) {
   const data = useMonthExpenses(year, month, calendar)
 
   if (!data) return null
+  if (data.totalCount === 0) return <Welcome onAdd={onAdd} />
 
   const days = groupByDay(data.expenses)
 
@@ -39,7 +41,7 @@ export function ExpenseList({ onAdd, onEdit }: Props) {
       </section>
 
       {days.length === 0 ? (
-        <EmptyList />
+        <p className="py-12 text-center text-sm text-text-secondary">{t(locale, 'noExpensesThisMonth')}</p>
       ) : (
         days.map((day) => (
           <section key={day.date} aria-label={dayLabel(day.date)}>
@@ -80,25 +82,6 @@ export function ExpenseList({ onAdd, onEdit }: Props) {
       >
         <IconPlus size={26} aria-hidden="true" />
       </button>
-    </div>
-  )
-}
-
-function EmptyList() {
-  const { locale } = useSettings()
-  return (
-    <div className="flex flex-col items-center gap-2 py-12 text-center">
-      <p className="font-medium">{t(locale, 'emptyTitle')}</p>
-      <p className="text-sm text-text-secondary">{t(locale, 'emptyBody')}</p>
-      {import.meta.env.DEV && (
-        <button
-          type="button"
-          className="mt-4 rounded-control border border-border-strong px-3 py-2 text-xs text-text-secondary"
-          onClick={() => import('../../db/devSamples.ts').then((m) => m.addSampleExpenses())}
-        >
-          {t(locale, 'addSampleData')}
-        </button>
-      )}
     </div>
   )
 }

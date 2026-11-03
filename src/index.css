@@ -55,8 +55,17 @@
   --color-danger-bg: var(--danger-bg);
   --color-danger-text: var(--danger-text);
 
+  --animate-fade-in: fade-in 0.3s ease-out;
+
   --radius-card: 12px;
   --radius-control: 10px;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
 }
 
 @layer base {

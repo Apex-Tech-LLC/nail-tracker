@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { Router, useLocation } from 'wouter'
 import { useHashLocation } from 'wouter/use-hash-location'
 import { db, type Expense } from '../db/schema.ts'
@@ -7,7 +7,6 @@ import { UndoToast } from '../features/expenses/UndoToast.tsx'
 import { BottomNav } from './BottomNav.tsx'
 import { paths } from './navigation.ts'
 import { Routes } from './routes.tsx'
-import { useSettings } from './settings.ts'
 
 export default function App() {
   return (
@@ -20,17 +19,11 @@ export default function App() {
 const TAB_PATHS: string[] = [paths.list, paths.summary, paths.settings]
 
 function Shell() {
-  const { locale } = useSettings()
   const [location] = useLocation()
   // The last deleted expense, kept only while its undo toast is showing.
   const [deleted, setDeleted] = useState<Expense | null>(null)
   const closeToast = useCallback(() => setDeleted(null), [])
   const onTab = TAB_PATHS.includes(location)
-
-  useEffect(() => {
-    document.documentElement.lang = locale
-    document.documentElement.dir = locale === 'fa' ? 'rtl' : 'ltr'
-  }, [locale])
 
   async function undo() {
     if (!deleted) return
