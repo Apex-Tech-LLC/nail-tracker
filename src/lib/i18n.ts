@@ -53,6 +53,8 @@ const strings = {
     reload: 'بارگذاری',
     later: 'بعداً',
     version: 'نسخه',
+    offline: 'آفلاین',
+    offlineHint: 'همه‌چیز روی همین دستگاه ذخیره می‌شود',
   },
   en: {
     appName: 'Daftar',
@@ -105,6 +107,8 @@ const strings = {
     reload: 'Reload',
     later: 'Later',
     version: 'Version',
+    offline: 'Offline',
+    offlineHint: 'Everything is saved on this device',
   },
 } satisfies Record<Locale, Record<string, string>>
 

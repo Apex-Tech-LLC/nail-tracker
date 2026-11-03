@@ -5,7 +5,7 @@ import { ExpenseList } from '../features/expenses/ExpenseList.tsx'
 import { SettingsPage } from '../features/settings/SettingsPage.tsx'
 import { SummaryPage } from '../features/summary/SummaryPage.tsx'
 import { t } from '../lib/i18n.ts'
-import { PageHeader } from './LanguageButton.tsx'
+import { PageHeader } from './PageHeader.tsx'
 import { paths, useGoBack, useNavigate } from './navigation.ts'
 import { useSettings } from './settings.ts'
 

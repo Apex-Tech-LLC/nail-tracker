@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { PageHeader } from '../../app/PageHeader.tsx'
 import { updateSettings, useSettings } from '../../app/settings.ts'
 import { t } from '../../lib/i18n.ts'
 import type { Calendar } from '../../lib/jalali.ts'
@@ -54,7 +55,7 @@ export function SettingsPage() {
 
   return (
     <>
-      <h1 className="text-lg font-medium">{t(locale, 'settingsTitle')}</h1>
+      <PageHeader title={t(locale, 'settingsTitle')} languageButton={false} />
       {/* Language names stay in their own script so anyone can find theirs. No flags. */}
       <TileGroup<Locale>
         legend={t(locale, 'language')}
