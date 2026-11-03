@@ -1,18 +1,35 @@
 /// <reference types="vitest/config" />
+import { execSync } from 'node:child_process'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
+// Short commit hash of the build, shown in Settings so a bug report says
+// which version is running. BUILD_ID overrides it (tests use this to make
+// two builds of the same commit differ).
+function buildId(): string {
+  if (process.env.BUILD_ID) return process.env.BUILD_ID
+  try {
+    return execSync('git rev-parse --short HEAD').toString().trim()
+  } catch {
+    return 'dev'
+  }
+}
+
 // https://vite.dev/config/
 export default defineConfig({
+  define: {
+    __BUILD_ID__: JSON.stringify(buildId()),
+    __BUILD_DATE__: JSON.stringify(new Date().toISOString().slice(0, 10)),
+  },
   plugins: [
     react(),
     tailwindcss(),
     VitePWA({
       // A new version waits until the user agrees to reload (#12): an
       // automatic reload could wipe a half-filled form. Registration is done
-      // in src/pwa/registerServiceWorker.ts, not injected.
+      // by the useRegisterSW hook in src/pwa/UpdatePrompt.tsx, not injected.
       registerType: 'prompt',
       injectRegister: false,
       workbox: {

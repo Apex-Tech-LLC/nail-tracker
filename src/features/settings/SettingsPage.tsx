@@ -76,6 +76,9 @@ export function SettingsPage() {
           { value: 'gregorian', glyph: locale === 'fa' ? '۳ نوامبر' : '3 Nov', label: t(locale, 'gregorian') },
         ]}
       />
+      <p className="mt-auto text-center text-xs text-text-muted" dir="ltr">
+        {t(locale, 'version')} {__BUILD_ID__} · {__BUILD_DATE__}
+      </p>
     </>
   )
 }
