@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="112" fill="#534ab7"/>
+  <!-- Notebook, kept inside the central 80% so maskable crops never cut it. -->
+  <rect x="156" y="124" width="200" height="264" rx="24" fill="#ffffff"/>
+  <rect x="156" y="124" width="44" height="264" rx="22" fill="#cecbf6"/>
+  <rect x="226" y="184" width="100" height="18" rx="9" fill="#7f77dd"/>
+  <rect x="226" y="234" width="100" height="18" rx="9" fill="#afa9ec"/>
+  <rect x="226" y="284" width="64" height="18" rx="9" fill="#afa9ec"/>
+</svg>
