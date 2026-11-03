@@ -1,21 +1,31 @@
 import { useCallback, useEffect, useState } from 'react'
+import { Router, useLocation } from 'wouter'
+import { useHashLocation } from 'wouter/use-hash-location'
 import { db, type Expense } from '../db/schema.ts'
-import { ExpenseForm } from '../features/expenses/ExpenseForm.tsx'
-import { ExpenseList } from '../features/expenses/ExpenseList.tsx'
 import { restoreExpense } from '../features/expenses/expenseStore.ts'
 import { UndoToast } from '../features/expenses/UndoToast.tsx'
-import { t } from '../lib/i18n.ts'
+import { BottomNav } from './BottomNav.tsx'
+import { paths } from './navigation.ts'
+import { Routes } from './routes.tsx'
 import { useSettings } from './settings.ts'
 
-// Which screen is open. A plain state for now; routes arrive with #9.
-type View = { name: 'list' } | { name: 'form'; expenseId?: string }
-
 export default function App() {
+  return (
+    <Router hook={useHashLocation}>
+      <Shell />
+    </Router>
+  )
+}
+
+const TAB_PATHS: string[] = [paths.list, paths.summary, paths.settings]
+
+function Shell() {
   const { locale } = useSettings()
-  const [view, setView] = useState<View>({ name: 'list' })
+  const [location] = useLocation()
   // The last deleted expense, kept only while its undo toast is showing.
   const [deleted, setDeleted] = useState<Expense | null>(null)
   const closeToast = useCallback(() => setDeleted(null), [])
+  const onTab = TAB_PATHS.includes(location)
 
   useEffect(() => {
     document.documentElement.lang = locale
@@ -29,26 +39,16 @@ export default function App() {
   }
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-md flex-col gap-4 p-4">
-      {view.name === 'form' ? (
-        <ExpenseForm
-          expenseId={view.expenseId}
-          onDone={() => setView({ name: 'list' })}
-          onDeleted={(expense) => {
-            setDeleted(expense)
-            setView({ name: 'list' })
-          }}
-        />
-      ) : (
-        <>
-          <h1 className="text-lg font-medium">{t(locale, 'appName')}</h1>
-          <ExpenseList onAdd={() => setView({ name: 'form' })} onEdit={(expenseId) => setView({ name: 'form', expenseId })} />
-        </>
-      )}
+    <>
+      <main className={`mx-auto flex min-h-dvh max-w-md flex-col gap-4 p-4 ${onTab ? 'pb-24' : ''}`}>
+        <Routes onDeleted={setDeleted} />
+      </main>
+      {/* The form is a focused task: no tabs while it is open. */}
+      {onTab && <BottomNav />}
       {/* Always mounted, so screen readers announce the toast when it appears. */}
       <div role="status">
-        {deleted && view.name === 'list' && <UndoToast key={deleted.id} onUndo={undo} onClose={closeToast} />}
+        {deleted && location === paths.list && <UndoToast key={deleted.id} onUndo={undo} onClose={closeToast} />}
       </div>
-    </main>
+    </>
   )
 }
