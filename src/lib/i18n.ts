@@ -1,15 +1,12 @@
 import type { Locale } from './locale.ts'
 
-// UI strings. Kept small and typed: a missing key in one language is a
-// type error. The full language switch lands in #24.
+// UI strings, typed: a missing key in one language is a type error.
 const strings = {
   fa: {
     appName: 'دفتر',
     spentIn: 'خرج',
     today: 'امروز',
     yesterday: 'دیروز',
-    emptyTitle: 'هنوز هزینه‌ای ثبت نشده',
-    emptyBody: 'هزینه‌هایت اینجا، روزبه‌روز، دیده می‌شوند.',
     addSampleData: 'افزودن داده نمونه (فقط در حالت توسعه)',
     addExpense: 'افزودن هزینه',
     newExpense: 'هزینه جدید',
@@ -41,14 +38,23 @@ const strings = {
     comingSoon: 'این بخش به‌زودی ساخته می‌شود.',
     notFound: 'این صفحه پیدا نشد.',
     backToList: 'برگشت به فهرست',
+    switchLanguage: 'Switch to English',
+    otherLanguageShort: 'EN',
+    language: 'زبان',
+    calendar: 'تقویم',
+    jalali: 'شمسی',
+    gregorian: 'میلادی',
+    hello: 'سلام',
+    welcomeBody: 'خرج‌وخرجت را ثبت کن، حتی بدون اینترنت.',
+    addFirstExpense: 'ثبت اولین هزینه',
+    worksOffline: 'بدون اینترنت هم کار می‌کند',
+    noExpensesThisMonth: 'این ماه هنوز هزینه‌ای ثبت نشده.',
   },
   en: {
     appName: 'Daftar',
     spentIn: 'Spent in',
     today: 'Today',
     yesterday: 'Yesterday',
-    emptyTitle: 'No expenses yet',
-    emptyBody: 'Your expenses show up here, day by day.',
     addSampleData: 'Add sample data (dev only)',
     addExpense: 'Add expense',
     newExpense: 'New expense',
@@ -80,6 +86,17 @@ const strings = {
     comingSoon: 'This part is coming soon.',
     notFound: "This page doesn't exist.",
     backToList: 'Back to the list',
+    switchLanguage: 'تغییر به فارسی',
+    otherLanguageShort: 'فا',
+    language: 'Language',
+    calendar: 'Calendar',
+    jalali: 'Jalali',
+    gregorian: 'Gregorian',
+    hello: 'Hello',
+    welcomeBody: 'Track your spending, even offline.',
+    addFirstExpense: 'Add your first expense',
+    worksOffline: 'Works without internet',
+    noExpensesThisMonth: 'No expenses this month yet.',
   },
 } satisfies Record<Locale, Record<string, string>>
 
