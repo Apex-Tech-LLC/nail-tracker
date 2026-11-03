@@ -78,6 +78,28 @@ export function monthRange(
   return { start: toIso(year, month, 1), end: toIso(year, month, lastDay) }
 }
 
+/** Number of days in a month of the chosen calendar. */
+export function daysInMonth(year: number, month: number, calendar: Calendar): number {
+  return calendar === 'jalali'
+    ? jalaaliMonthLength(year, month)
+    : new Date(Date.UTC(year, month, 0)).getUTCDate()
+}
+
+/** ISO date from year, month and day in the chosen calendar. */
+export function fromCalendar(year: number, month: number, day: number, calendar: Calendar): IsoDate {
+  if (calendar === 'jalali') return jalaliToIso(year, month, day)
+  const iso = toIso(year, month, day)
+  parseIsoDate(iso)
+  return iso
+}
+
+/** The ISO date a number of days before the given one. */
+export function addDays(iso: IsoDate, days: number): IsoDate {
+  const { year, month, day } = parseIsoDate(iso)
+  const date = new Date(Date.UTC(year, month - 1, day + days))
+  return toIso(date.getUTCFullYear(), date.getUTCMonth() + 1, date.getUTCDate())
+}
+
 /** The month before, wrapping the year. */
 export function previousMonth(year: number, month: number): { year: number; month: number } {
   return month === 1 ? { year: year - 1, month: 12 } : { year, month: month - 1 }

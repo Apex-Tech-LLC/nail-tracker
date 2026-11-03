@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import {
+  addDays,
+  daysInMonth,
+  fromCalendar,
   formatDate,
   formatMonth,
   isoToJalali,
@@ -99,5 +102,26 @@ describe('formatting', () => {
 
   it('can drop the weekday and the year', () => {
     expect(formatDate('2026-11-03', 'fa', 'jalali', { weekday: false, year: false })).toBe('۱۲ آبان')
+  })
+})
+
+describe('calendar helpers for the date picker', () => {
+  it('knows month lengths in both calendars', () => {
+    expect(daysInMonth(1403, 12, 'jalali')).toBe(30)
+    expect(daysInMonth(1404, 12, 'jalali')).toBe(29)
+    expect(daysInMonth(1405, 1, 'jalali')).toBe(31)
+    expect(daysInMonth(2024, 2, 'gregorian')).toBe(29)
+  })
+
+  it('builds ISO dates from either calendar and rejects impossible ones', () => {
+    expect(fromCalendar(1405, 8, 12, 'jalali')).toBe('2026-11-03')
+    expect(fromCalendar(2026, 11, 3, 'gregorian')).toBe('2026-11-03')
+    expect(() => fromCalendar(2026, 2, 30, 'gregorian')).toThrow()
+  })
+
+  it('moves across month and year boundaries', () => {
+    expect(addDays('2026-11-03', -1)).toBe('2026-11-02')
+    expect(addDays('2026-03-01', -1)).toBe('2026-02-28')
+    expect(addDays('2026-01-01', -1)).toBe('2025-12-31')
   })
 })
