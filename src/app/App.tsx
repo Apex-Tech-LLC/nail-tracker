@@ -4,6 +4,7 @@ import { useHashLocation } from 'wouter/use-hash-location'
 import { db, type Expense } from '../db/schema.ts'
 import { restoreExpense } from '../features/expenses/expenseStore.ts'
 import { UndoToast } from '../features/expenses/UndoToast.tsx'
+import { UpdatePrompt } from '../pwa/UpdatePrompt.tsx'
 import { BottomNav } from './BottomNav.tsx'
 import { paths } from './navigation.ts'
 import { Routes } from './routes.tsx'
@@ -34,6 +35,8 @@ function Shell() {
   return (
     <>
       <main className={`mx-auto flex min-h-dvh max-w-md flex-col gap-4 p-4 ${onTab ? 'pb-24' : ''}`}>
+        {/* Mounted on every screen to keep the worker registered; shown only on the tabs, never over the form. */}
+        <UpdatePrompt visible={onTab} />
         <Routes onDeleted={setDeleted} />
       </main>
       {/* The form is a focused task: no tabs while it is open. */}

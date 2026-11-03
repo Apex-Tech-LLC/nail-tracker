@@ -49,6 +49,10 @@ const strings = {
     addFirstExpense: 'ثبت اولین هزینه',
     worksOffline: 'بدون اینترنت هم کار می‌کند',
     noExpensesThisMonth: 'این ماه هنوز هزینه‌ای ثبت نشده.',
+    updateReady: 'نسخه جدید آماده است',
+    reload: 'بارگذاری',
+    later: 'بعداً',
+    version: 'نسخه',
   },
   en: {
     appName: 'Daftar',
@@ -97,6 +101,10 @@ const strings = {
     addFirstExpense: 'Add your first expense',
     worksOffline: 'Works without internet',
     noExpensesThisMonth: 'No expenses this month yet.',
+    updateReady: 'A new version is ready',
+    reload: 'Reload',
+    later: 'Later',
+    version: 'Version',
   },
 } satisfies Record<Locale, Record<string, string>>
 
