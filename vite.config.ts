@@ -10,9 +10,25 @@ export default defineConfig({
     react(),
     tailwindcss(),
     VitePWA({
-      // Registration and the update prompt are added in #11 and #12.
+      // A new version waits until the user agrees to reload (#12): an
+      // automatic reload could wipe a half-filled form. Registration is done
+      // in src/pwa/registerServiceWorker.ts, not injected.
+      registerType: 'prompt',
       injectRegister: false,
-      includeAssets: ['favicon.ico', 'favicon.svg', 'apple-touch-icon-180x180.png'],
+      workbox: {
+        // Everything the app needs is precached at install, fonts included,
+        // so it opens fully offline from the second visit on. Data never
+        // comes from the network, so there is no runtime caching.
+        // The manifest is added by the plugin itself.
+        globPatterns: ['**/*.{html,js,css,woff2,svg,png,ico}'],
+        // Any navigation is answered with the cached app shell. Routes live
+        // in the hash, so this mainly covers reloads while offline.
+        navigateFallback: 'index.html',
+        cleanupOutdatedCaches: true,
+      },
+      // globPatterns already precaches every icon; listing them here too
+      // would add each one to the precache twice.
+      includeManifestIcons: false,
       manifest: {
         id: './',
         name: 'Daftar · دفتر خرج‌وخرج',

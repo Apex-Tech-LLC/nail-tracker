@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './app/App.tsx'
 import { applyToDocument, getSettings } from './app/settings.ts'
+import { registerServiceWorker } from './pwa/registerServiceWorker.ts'
 
 // Before the first render, so the page never flashes in the wrong direction.
 applyToDocument(getSettings())
@@ -12,3 +13,5 @@ createRoot(document.getElementById('root')!).render(
     <App />
   </StrictMode>,
 )
+
+registerServiceWorker()
