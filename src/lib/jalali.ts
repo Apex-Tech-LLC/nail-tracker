@@ -105,6 +105,11 @@ export function previousMonth(year: number, month: number): { year: number; mont
   return month === 1 ? { year: year - 1, month: 12 } : { year, month: month - 1 }
 }
 
+/** The month after, wrapping the year. */
+export function nextMonth(year: number, month: number): { year: number; month: number } {
+  return month === 12 ? { year: year + 1, month: 1 } : { year, month: month + 1 }
+}
+
 const MONTHS: Record<Calendar, Record<Locale, readonly string[]>> = {
   jalali: {
     fa: ['فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور', 'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند'],

@@ -9,6 +9,7 @@ import {
   jalaliToIso,
   monthRange,
   parseIsoDate,
+  nextMonth,
   previousMonth,
   todayIso,
 } from '../../src/lib/jalali.ts'
@@ -62,6 +63,13 @@ describe('monthRange', () => {
     expect('2026-10-22' >= start).toBe(false)
     expect('2026-11-03' >= start && '2026-11-03' <= end).toBe(true)
     expect('2026-11-22' <= end).toBe(false)
+  })
+})
+
+describe('nextMonth', () => {
+  it('wraps Esfand to Farvardin of the next year', () => {
+    expect(nextMonth(1404, 12)).toEqual({ year: 1405, month: 1 })
+    expect(nextMonth(1405, 8)).toEqual({ year: 1405, month: 9 })
   })
 })
 
