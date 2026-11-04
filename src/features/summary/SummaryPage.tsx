@@ -170,8 +170,6 @@ function CategoryChart({
                 </div>
                 <svg width="100%" height="8" aria-hidden="true" className="mt-1.5 block rtl:-scale-x-100">
                   <rect width={`${width}%`} height="8" rx="4" className="fill-brand-600" />
-                  {/* Square off the baseline end, so only the data end is rounded. */}
-                  {width > 2 && <rect width="4" height="8" className="fill-brand-600" />}
                 </svg>
               </div>
             </li>
