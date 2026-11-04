@@ -4,6 +4,7 @@ An offline-first expense tracker for the phone, with Jalali dates and Toman amou
 
 [![CI](https://github.com/atefeh-sa93/daftar/actions/workflows/ci.yml/badge.svg)](https://github.com/atefeh-sa93/daftar/actions/workflows/ci.yml)
 [![Deploy](https://github.com/atefeh-sa93/daftar/actions/workflows/deploy.yml/badge.svg)](https://github.com/atefeh-sa93/daftar/actions/workflows/deploy.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-534ab7.svg)](LICENSE)
 
 **Live demo:** https://atefeh-sa93.github.io/daftar/. Open it once, install it, then turn on airplane mode.
 
@@ -131,5 +132,9 @@ CI runs lint, typecheck, unit tests and build, and the E2E suite in a separate j
 - [x] M1: add, edit, delete, and list expenses, with Jalali dates
 - [x] M2: offline PWA, install, update prompt, persistent storage, real device test
 - [x] M3: monthly summary and chart, JSON/CSV backup, Playwright E2E in CI, accessibility audit
-- [ ] v1.0.0 release
+- [x] v1.0.0 release
 - Later: monthly budget, dark mode, optional sync between devices
+
+## License
+
+[MIT](LICENSE) © 2026 Atefeh Atashi
