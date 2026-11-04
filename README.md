@@ -75,7 +75,7 @@ tests/unit/   Vitest tests for lib, db, and stores
 - **Cache strategy.** The Workbox `generateSW` precaches the built app shell: 16 files, including the self-hosted Vazirmatn font. Navigation falls back to the cached `index.html`, and outdated caches are cleaned up. Nothing is fetched from a CDN at runtime.
 - **Hash routes** (`#/add`, `#/settings`). GitHub Pages has no SPA fallback, so a deep link like `/daftar/add` would return 404 there.
 - **Relative manifest paths.** `start_url`, `scope`, and `id` are `./`, so the same build works under `/daftar/`.
-- **Accessibility.** Status is never shown by color alone. Live regions announce the offline state and undo, and animations respect `prefers-reduced-motion`.
+- **Accessibility.** Status is never shown by color alone. Live regions announce the offline state and undo, and animations respect `prefers-reduced-motion`. Every screen, in both languages, is checked with axe (WCAG 2.1 AA) in the E2E suite, and any violation fails CI.
 
 ## Known limitations
 
@@ -109,7 +109,7 @@ The service worker only runs in the production build, so test offline behavior w
 
 ```bash
 pnpm test        # Vitest unit tests (fake-indexeddb for the database)
-pnpm test:e2e    # Playwright against the production build: offline, backup, manifest
+pnpm test:e2e    # Playwright against the production build: offline, backup, manifest, axe
 pnpm lint        # oxlint
 pnpm typecheck   # tsc, strict
 ```
