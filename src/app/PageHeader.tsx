@@ -11,7 +11,9 @@ export function LanguageButton() {
     <button
       type="button"
       onClick={() => updateSettings({ locale: other })}
-      aria-label={t(locale, 'switchLanguage')}
+      // The spoken name starts with the visible label, so "EN" works for
+      // voice control, then says what the button does.
+      aria-label={`${t(locale, 'otherLanguageShort')}, ${t(locale, 'switchLanguage')}`}
       lang={other}
       className="flex items-center gap-1 rounded-full border border-border-strong px-2.5 py-1 text-xs"
     >
