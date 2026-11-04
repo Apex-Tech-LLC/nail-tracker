@@ -6,6 +6,7 @@ import { t } from '../../lib/i18n.ts'
 import type { Calendar } from '../../lib/jalali.ts'
 import type { Locale } from '../../lib/locale.ts'
 import { usePersistState } from '../../pwa/persistStorage.ts'
+import { BackupSection } from '../backup/BackupSection.tsx'
 
 interface TileOption<T extends string> {
   value: T
@@ -80,8 +81,10 @@ export function SettingsPage() {
         ]}
       />
       <StorageStatus />
-      <p className="mt-auto text-center text-xs text-text-muted" dir="ltr">
-        {t(locale, 'version')} {__BUILD_ID__} · {__BUILD_DATE__}
+      <BackupSection />
+      {/* Only the build id is forced LTR; the label stays in the page direction. */}
+      <p className="mt-auto text-center text-xs text-text-muted">
+        {t(locale, 'version')} <span dir="ltr">{__BUILD_ID__} · {__BUILD_DATE__}</span>
       </p>
     </>
   )
