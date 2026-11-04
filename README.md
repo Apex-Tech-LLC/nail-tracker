@@ -109,11 +109,14 @@ The service worker only runs in the production build, so test offline behavior w
 
 ```bash
 pnpm test        # Vitest unit tests (fake-indexeddb for the database)
+pnpm test:e2e    # Playwright against the production build: offline, backup, manifest
 pnpm lint        # oxlint
 pnpm typecheck   # tsc, strict
 ```
 
-CI runs lint, typecheck, tests, and build on every pull request. Every push to `main` deploys to GitHub Pages.
+The first time, `pnpm exec playwright install chromium` downloads the browser for the E2E tests.
+
+CI runs lint, typecheck, unit tests and build, and the E2E suite in a separate job, on every pull request. Every push to `main` deploys to GitHub Pages.
 
 ## Roadmap
 
