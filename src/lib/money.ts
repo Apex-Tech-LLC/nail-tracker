@@ -70,3 +70,13 @@ const TOMAN: Record<Locale, string> = { fa: 'تومان', en: 'Toman' }
 export function formatToman(amount: number, locale: Locale): string {
   return `${formatAmount(amount, locale)} ${TOMAN[locale]}`
 }
+
+const percentFormatters: Record<Locale, Intl.NumberFormat> = {
+  fa: new Intl.NumberFormat('fa-IR', { style: 'percent', maximumFractionDigits: 0 }),
+  en: new Intl.NumberFormat('en-US', { style: 'percent', maximumFractionDigits: 0 }),
+}
+
+/** Formats a ratio as a whole percent, e.g. 0.18 as "۱۸٪" or "18%". */
+export function formatPercent(ratio: number, locale: Locale): string {
+  return percentFormatters[locale].format(ratio)
+}
