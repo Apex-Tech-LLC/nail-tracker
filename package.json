@@ -12,6 +12,7 @@
     "typecheck": "tsc -b",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:e2e": "playwright test",
     "generate-icons": "pwa-assets-generator"
   },
   "dependencies": {
@@ -26,6 +27,7 @@
     "wouter": "^3.13.0"
   },
   "devDependencies": {
+    "@playwright/test": "1.64.1",
     "@tailwindcss/vite": "^4.3.3",
     "@types/jalaali-js": "^1.2.0",
     "@types/node": "^24.19.2",
