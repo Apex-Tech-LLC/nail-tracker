@@ -1,4 +1,5 @@
 import type { Category, Expense } from '../../db/schema.ts'
+import { toCalendar, type Calendar, type IsoDate } from '../../lib/jalali.ts'
 
 /**
  * Version of the backup file format. It follows the database schema: when
@@ -15,9 +16,20 @@ export interface Backup {
   categories: Category[]
 }
 
-/** File name with today's date, e.g. "daftar-backup-2026-11-04.json". */
-export function backupFileName(kind: 'backup' | 'expenses', extension: 'json' | 'csv', today: string): string {
-  return `daftar-${kind}-${today}.${extension}`
+/**
+ * File name with the date in the user's calendar, e.g.
+ * "daftar-backup-1405-08-14.json" or "daftar-backup-2026-11-05.json".
+ * Digits stay Latin so the name works on every file system and sorts.
+ */
+export function backupFileName(
+  kind: 'backup' | 'expenses',
+  extension: 'json' | 'csv',
+  today: IsoDate,
+  calendar: Calendar,
+): string {
+  const { year, month, day } = toCalendar(today, calendar)
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `daftar-${kind}-${year}-${pad(month)}-${pad(day)}.${extension}`
 }
 
 /** Hands a file to the browser as a download. */

@@ -2,6 +2,7 @@ import 'fake-indexeddb/auto'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { createDb, type DaftarDb, type Expense } from '../../src/db/schema.ts'
 import { DEFAULT_CATEGORIES } from '../../src/db/seed.ts'
+import { backupFileName } from '../../src/features/backup/backupFormat.ts'
 import { csvCell, exportCsv } from '../../src/features/backup/exportCsv.ts'
 import { exportJson } from '../../src/features/backup/exportJson.ts'
 import { ImportError, importJson, parseBackup } from '../../src/features/backup/importJson.ts'
@@ -179,5 +180,13 @@ describe('exportCsv', () => {
     expect(csvCell('=HYPERLINK("http://x")')).toBe(`"'=HYPERLINK(""http://x"")"`)
     expect(csvCell('+98 912')).toBe("'+98 912")
     expect(csvCell(120000)).toBe('120000')
+  })
+})
+
+describe('backupFileName', () => {
+  it('dates the file in the chosen calendar, with Latin digits', () => {
+    expect(backupFileName('expenses', 'csv', '2026-11-04', 'jalali')).toBe('daftar-expenses-1405-08-13.csv')
+    expect(backupFileName('backup', 'json', '2026-11-04', 'gregorian')).toBe('daftar-backup-2026-11-04.json')
+    expect(backupFileName('backup', 'json', '2026-03-21', 'jalali')).toBe('daftar-backup-1405-01-01.json')
   })
 })
