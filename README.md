@@ -8,9 +8,14 @@ An offline-first expense tracker for the phone, with Jalali dates and Toman amou
 **Live demo:** https://atefeh-sa93.github.io/daftar/. Open it once, install it, then turn on airplane mode.
 
 <p>
-  <img src="docs/screenshots/list-fa.png" width="240" alt="Expense list in Persian, with the month total and today's expenses">
-  <img src="docs/screenshots/form-fa.png" width="240" alt="New expense form, with the amount spelled out in Persian words and category chips">
-  <img src="docs/screenshots/list-en.png" width="240" alt="The same list in English">
+  <img src="docs/demo.gif" width="270" alt="Demo: airplane mode is turned on, a ۸۵٬۰۰۰ Toman transport expense is added and saved with no internet, then the monthly summary shows it in the category chart">
+</p>
+
+<p>
+  <img src="docs/screenshots/list-fa.png" width="200" alt="Expense list in Persian, with the month total and today's expenses">
+  <img src="docs/screenshots/form-fa.png" width="200" alt="New expense form, with the amount spelled out in Persian words and category chips">
+  <img src="docs/screenshots/summary-fa.png" width="200" alt="Monthly summary in Persian: the month total and a bar per category with its amount and share">
+  <img src="docs/screenshots/settings-en.png" width="200" alt="Settings in English: language, calendar, storage status and the backup buttons">
 </p>
 
 ## The problem
@@ -23,20 +28,20 @@ Most expense apps need an account, a server, and a stable connection. Many of th
 - **Installable.** It installs as a real app on Android and as a home screen app on iOS, with its own icon and a standalone window.
 - **Jalali dates and Toman amounts.** You see Persian month names and digits, plus the amount spelled out in words (`دو میلیون و هفتصد و پنجاه هزار تومان`) to catch extra zeros.
 - **Bilingual: Persian (RTL) and English (LTR).** The language is detected from the browser and can be switched from any page. The calendar (Jalali or Gregorian) is a separate setting.
-- **Fast entry.** The form needs an amount, a category chip, and a date (Today, Yesterday, or another day), with an optional note.
+- **Fast entry.** The form needs an amount, a category chip, and a date (Today, Yesterday, or another day), with an optional note. Digits typed on a phone keypad are shown in the UI language as you type.
+- **Monthly summary.** The month's total, the change from last month (with an arrow, not just color), and a hand-drawn SVG bar per category. You can step back through earlier months. Months follow the chosen calendar, so Aban is one month, not split across October and November.
+- **Backup and restore.** A JSON backup brings everything back on a new phone. Restoring checks the whole file first and never deletes anything: new expenses are added, and a copy is replaced only if it was edited later. A CSV export (with Jalali dates, UTF-8 for Excel) is for reading in a spreadsheet.
 - **Delete with undo.** A deleted expense can be brought back for a few seconds.
 - **Safe updates.** A new version never reloads the page on its own. You get a prompt, and it never appears while you are filling in the form.
 - **Durable storage.** After the first expense, the app asks the browser to keep its data even when disk space runs low. Settings shows whether that was granted.
 - **Offline badge.** The header shows when you are offline, in text as well as color.
-
-Coming in [milestone M3](https://github.com/atefeh-sa93/daftar/milestones): monthly summary with a category chart, and JSON/CSV backup.
 
 ## Architecture
 
 ```mermaid
 flowchart LR
   subgraph Device
-    UI["React UI<br/>(list, form, settings)"]
+    UI["React UI<br/>(list, form, summary, settings)"]
     Hooks["useLiveQuery<br/>(dexie-react-hooks)"]
     DB[("IndexedDB<br/>via Dexie")]
     LS[("localStorage<br/>settings")]
@@ -59,7 +64,8 @@ src/
   db/         Dexie schema, default categories
   features/
     expenses/ list, form, undo, data hooks
-    summary/  monthly summary (M3)
+    summary/  monthly totals and category chart
+    backup/   JSON export/import with validation, CSV export
     settings/ language, calendar, storage status, version
   lib/        money parsing and formatting, Jalali dates, number to words, i18n strings
   pwa/        update prompt, offline badge, persistent storage
@@ -79,7 +85,7 @@ tests/unit/   Vitest tests for lib, db, and stores
 
 ## Known limitations
 
-- **Data lives on one device.** There is no sync. If you clear the browser data or lose the phone, the data is gone. JSON backup (#18) is the planned answer.
+- **Data lives on one device.** There is no sync. If you clear the browser data or lose the phone without a backup file, the data is gone. Backups are manual; the app does not remind you.
 - **Android installs need Google's servers.** Chrome builds the installed app (a WebAPK) through Google. When that is blocked, or Play Services are missing, Chrome quietly adds a plain shortcut with a Chrome badge instead. Offline still works in that case.
 - **iOS** has no install prompt. You have to use Share → Add to Home Screen, and Safari may clear storage for sites that are not added to the home screen.
 - **Categories are fixed** to the seven defaults for now.
@@ -93,7 +99,8 @@ I built this with [Claude Code](https://claude.com/claude-code) as a pair progra
 - For each issue, Claude wrote the code and tests on a separate branch and opened a pull request that closes the issue.
 - I reviewed and merged every PR myself.
 - Design choices were made together and checked against current UX guidance: bilingual support, the indigo palette, no flags for languages, and a header language button instead of a picker screen.
-- Behavior that unit tests cannot see was checked with throwaway Playwright scripts: offline reload, the update flow, and persistent storage. I tested installing and using the app in airplane mode on a real Android phone.
+- Behavior that unit tests cannot see was first checked with throwaway Playwright scripts. Those later became the E2E suite in CI. The update flow is still only checked by hand.
+- I tested installing and using the app in airplane mode on a real Android phone. Using it on the phone found things no test did: Latin digits in the amount field, file names dated in the wrong calendar, and an unclear backup button. Each became a fix.
 
 ## Run locally
 
@@ -123,5 +130,6 @@ CI runs lint, typecheck, unit tests and build, and the E2E suite in a separate j
 - [x] M0: project setup, CI, deploy
 - [x] M1: add, edit, delete, and list expenses, with Jalali dates
 - [x] M2: offline PWA, install, update prompt, persistent storage, real device test
-- [ ] M3: monthly summary and chart, JSON/CSV backup, Playwright E2E in CI, accessibility audit, v1.0.0
+- [x] M3: monthly summary and chart, JSON/CSV backup, Playwright E2E in CI, accessibility audit
+- [ ] v1.0.0 release
 - Later: monthly budget, dark mode, optional sync between devices

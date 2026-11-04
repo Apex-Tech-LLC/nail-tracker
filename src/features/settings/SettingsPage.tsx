@@ -3,7 +3,7 @@ import type { ReactNode } from 'react'
 import { PageHeader } from '../../app/PageHeader.tsx'
 import { updateSettings, useSettings } from '../../app/settings.ts'
 import { t } from '../../lib/i18n.ts'
-import type { Calendar } from '../../lib/jalali.ts'
+import { formatDate, todayIso, type Calendar } from '../../lib/jalali.ts'
 import type { Locale } from '../../lib/locale.ts'
 import { usePersistState } from '../../pwa/persistStorage.ts'
 import { BackupSection } from '../backup/BackupSection.tsx'
@@ -55,6 +55,8 @@ function TileGroup<T extends string>({
 
 export function SettingsPage() {
   const { locale, calendar } = useSettings()
+  const today = todayIso()
+  const short = { weekday: false, year: false }
 
   return (
     <>
@@ -76,8 +78,9 @@ export function SettingsPage() {
         value={calendar}
         onChange={(value) => updateSettings({ calendar: value })}
         options={[
-          { value: 'jalali', glyph: locale === 'fa' ? '۱۲ آبان' : '12 Aban', label: t(locale, 'jalali') },
-          { value: 'gregorian', glyph: locale === 'fa' ? '۳ نوامبر' : '3 Nov', label: t(locale, 'gregorian') },
+          // Today's date in each calendar, so the choice shows what it means.
+          { value: 'jalali', glyph: formatDate(today, locale, 'jalali', short), label: t(locale, 'jalali') },
+          { value: 'gregorian', glyph: formatDate(today, locale, 'gregorian', short), label: t(locale, 'gregorian') },
         ]}
       />
       <StorageStatus />
