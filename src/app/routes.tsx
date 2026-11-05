@@ -1,4 +1,5 @@
 import { Link, Route, Switch } from 'wouter'
+import { AdjustmentForm } from '../features/adjustments/AdjustmentForm.tsx'
 import { EarningsPage } from '../features/earnings/EarningsPage.tsx'
 import { HistoryPage } from '../features/history/HistoryPage.tsx'
 import { PaydayPage } from '../features/payday/PaydayPage.tsx'
@@ -25,6 +26,12 @@ export function Routes() {
       <Route path={paths.add}>{() => <TurnForm onDone={goBack} />}</Route>
       <Route path="/edit/:id">
         {(params) => <TurnForm key={params.id} turnId={params.id} onDone={goBack} />}
+      </Route>
+      <Route path={paths.adjustmentNew}>{() => <AdjustmentForm onDone={goBack} />}</Route>
+      <Route path="/adjustment/:id">
+        {(params) => (
+          <AdjustmentForm key={params.id} adjustmentId={params.id} onDone={goBack} />
+        )}
       </Route>
       <Route>
         <p>{t(locale, 'notFound')}</p>

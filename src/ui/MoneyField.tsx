@@ -8,9 +8,18 @@ interface Props {
   error?: string
   autoFocus?: boolean
   inputRef?: RefObject<HTMLInputElement | null>
+  inputMode?: 'decimal' | 'text'
 }
 
-export function MoneyField({ label: labelText, value, onChange, error, autoFocus, inputRef }: Props) {
+export function MoneyField({
+  label: labelText,
+  value,
+  onChange,
+  error,
+  autoFocus,
+  inputRef,
+  inputMode = 'decimal',
+}: Props) {
   const id = useId()
   return (
     <div>
@@ -28,7 +37,7 @@ export function MoneyField({ label: labelText, value, onChange, error, autoFocus
           ref={inputRef}
           id={id}
           type="text"
-          inputMode="decimal"
+          inputMode={inputMode}
           autoComplete="off"
           autoFocus={autoFocus}
           value={value}
