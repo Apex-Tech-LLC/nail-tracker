@@ -1,4 +1,4 @@
-import { useId, useState, type FormEvent } from 'react'
+import { useId, useRef, useState, type FormEvent } from 'react'
 import { useSettings } from '../../app/settings.ts'
 import { db, type ServicePreset } from '../../db/schema.ts'
 import { centsToInput, parseCents, parseRateBp, rateToInput } from '../../domain/money.ts'
@@ -42,7 +42,13 @@ export function PresetEditor({ preset, onDone }: Props) {
   const [errors, setErrors] = useState<Errors>({})
   const [confirmingRemove, setConfirmingRemove] = useState(false)
 
+  // A quick double tap submits twice before React can re-render. The ref is
+  // set synchronously, so the second submit does nothing.
+  const saveInFlight = useRef(false)
+
   async function save(): Promise<void> {
+    if (saveInFlight.current) return
+
     const trimmedEn = nameEn.trim()
     const trimmedVi = nameVi.trim()
     const priceText = price.trim()
@@ -67,8 +73,14 @@ export function PresetEditor({ preset, onDone }: Props) {
       defaultCommissionRateBp: rateBp,
     }
 
-    if (preset) await updatePreset(db, preset.id, input)
-    else await addPreset(db, input)
+    saveInFlight.current = true
+    try {
+      if (preset) await updatePreset(db, preset.id, input)
+      else await addPreset(db, input)
+    } catch (error) {
+      saveInFlight.current = false
+      throw error
+    }
     onDone()
   }
 
