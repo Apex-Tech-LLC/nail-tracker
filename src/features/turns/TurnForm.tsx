@@ -12,14 +12,7 @@ import {
   type TurnService,
 } from '../../db/schema.ts'
 import { turnTotals } from '../../domain/commission.ts'
-import {
-  addDays,
-  isIsoDate,
-  localDateTimeToMs,
-  timeOf,
-  todayIso,
-  type IsoDate,
-} from '../../domain/dates.ts'
+import { isIsoDate, localDateTimeToMs, timeOf, todayIso, type IsoDate } from '../../domain/dates.ts'
 import { centsToInput, formatUsd, parseCents, parseRateBp, rateToInput } from '../../domain/money.ts'
 import { t } from '../../lib/i18n.ts'
 import type { Locale } from '../../lib/locale.ts'
@@ -27,6 +20,7 @@ import { requestPersistence } from '../../pwa/persistStorage.ts'
 import { ConfirmDialog } from '../../ui/ConfirmDialog.tsx'
 import { MoneyField } from '../../ui/MoneyField.tsx'
 import { PercentField } from '../../ui/PercentField.tsx'
+import { WorkDateField } from '../../ui/WorkDateField.tsx'
 import {
   card,
   chip,
@@ -165,7 +159,6 @@ function TurnFormFields({ presets, existing, onDone }: FieldsProps) {
   } = useSettings()
   const id = useId()
   const today = todayIso()
-  const yesterday = addDays(today, -1)
   const turn = existing?.turn
   const initialPreset = presets.find((preset) => preset.id === lastServicePresetId) ?? presets[0]
 
@@ -186,9 +179,6 @@ function TurnFormFields({ presets, existing, onDone }: FieldsProps) {
     turn && turn.cardTipCents > 0 ? centsToInput(turn.cardTipCents) : '',
   )
   const [date, setDate] = useState<IsoDate>(turn?.localWorkDate ?? today)
-  const [pickOtherDay, setPickOtherDay] = useState(
-    turn ? turn.localWorkDate !== today && turn.localWorkDate !== yesterday : false,
-  )
   const [turnCountText, setTurnCountText] = useState(String(turn?.turnCount ?? 1))
   const [time, setTime] = useState(turn ? timeOf(turn.occurredAt) : '')
   const [clientType, setClientType] = useState<ClientType>(turn?.clientType ?? 'unspecified')
@@ -471,70 +461,15 @@ function TurnFormFields({ presets, existing, onDone }: FieldsProps) {
         )}
       </header>
 
-      <div>
-        <p className={label}>{t(locale, 'date')}</p>
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            aria-pressed={!pickOtherDay && date === today}
-            className={`${chip} ${!pickOtherDay && date === today ? chipOn : chipOff}`}
-            onClick={() => {
-              setPickOtherDay(false)
-              setDate(today)
-              clearError('date')
-              changed()
-            }}
-          >
-            {t(locale, 'today')}
-          </button>
-          <button
-            type="button"
-            aria-pressed={!pickOtherDay && date === yesterday}
-            className={`${chip} ${!pickOtherDay && date === yesterday ? chipOn : chipOff}`}
-            onClick={() => {
-              setPickOtherDay(false)
-              setDate(yesterday)
-              clearError('date')
-              changed()
-            }}
-          >
-            {t(locale, 'yesterday')}
-          </button>
-          <button
-            type="button"
-            aria-pressed={pickOtherDay}
-            className={`${chip} ${pickOtherDay ? chipOn : chipOff}`}
-            onClick={() => setPickOtherDay(true)}
-          >
-            {t(locale, 'otherDay')}
-          </button>
-        </div>
-        {pickOtherDay && (
-          <div className="mt-3">
-            <label htmlFor={`${id}-date`} className={label}>
-              {t(locale, 'workDate')}
-            </label>
-            <input
-              id={`${id}-date`}
-              type="date"
-              value={date}
-              onChange={(event) => {
-                setDate(event.target.value)
-                clearError('date')
-                changed()
-              }}
-              aria-invalid={!!errors.date}
-              aria-describedby={errors.date ? `${id}-date-error` : undefined}
-              className={field}
-            />
-            {errors.date && (
-              <p id={`${id}-date-error`} className={errorText}>
-                {errors.date}
-              </p>
-            )}
-          </div>
-        )}
-      </div>
+      <WorkDateField
+        value={date}
+        onChange={(value) => {
+          setDate(value)
+          clearError('date')
+          changed()
+        }}
+        error={errors.date}
+      />
 
       {lines.map((line, index) => (
         <ServiceLineFields
