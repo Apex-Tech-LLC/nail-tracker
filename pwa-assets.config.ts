@@ -7,8 +7,8 @@ export default defineConfig({
   preset: {
     ...minimal2023Preset,
     transparent: { ...minimal2023Preset.transparent, padding: 0 },
-    maskable: { ...minimal2023Preset.maskable, padding: 0, resizeOptions: { background: '#534ab7' } },
-    apple: { ...minimal2023Preset.apple, padding: 0, resizeOptions: { background: '#534ab7' } },
+    maskable: { ...minimal2023Preset.maskable, padding: 0, resizeOptions: { background: '#7a3b72' } },
+    apple: { ...minimal2023Preset.apple, padding: 0, resizeOptions: { background: '#7a3b72' } },
   },
   images: ['public/icon.svg'],
 })

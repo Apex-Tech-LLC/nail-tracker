@@ -1,9 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="112" fill="#534ab7"/>
-  <!-- Notebook, kept inside the central 80% so maskable crops never cut it. -->
-  <rect x="156" y="124" width="200" height="264" rx="24" fill="#ffffff"/>
-  <rect x="156" y="124" width="44" height="264" rx="22" fill="#cecbf6"/>
-  <rect x="226" y="184" width="100" height="18" rx="9" fill="#7f77dd"/>
-  <rect x="226" y="234" width="100" height="18" rx="9" fill="#afa9ec"/>
-  <rect x="226" y="284" width="64" height="18" rx="9" fill="#afa9ec"/>
+  <rect width="512" height="512" rx="112" fill="#7a3b72"/>
+  <!-- A single nail, kept inside the central 80% so maskable crops never cut it. -->
+  <path d="M176 392V232c0-66 36-120 80-120s80 54 80 120v160a24 24 0 0 1-24 24H200a24 24 0 0 1-24-24z" fill="#fbf8f4"/>
+  <path d="M256 168c-30 0-48 36-48 76v12h96v-12c0-40-18-76-48-76z" fill="#dcb6d2"/>
 </svg>

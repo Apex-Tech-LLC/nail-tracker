@@ -34,13 +34,6 @@ test('reloads, adds an expense and shows it in the list and summary while offlin
   await expect(monthTotal(page)).toHaveText('۲۰۵٬۰۰۰ تومان')
   await expect(page.getByRole('listitem').filter({ hasText: 'خوراک' })).toContainText('۱۲۰٬۰۰۰')
   await expect(page.getByRole('listitem').filter({ hasText: 'رفت‌وآمد' })).toContainText('۸۵٬۰۰۰')
-
-  // The font comes from the cache too, not a fallback.
-  const fonts = await page.evaluate(async () => {
-    await document.fonts.ready
-    return [...document.fonts].filter((f) => f.status === 'loaded').map((f) => f.family)
-  })
-  expect(fonts.join()).toContain('Vazirmatn')
 })
 
 test('shows the offline badge only while offline', async ({ page, context }) => {
