@@ -1,13 +1,22 @@
-import { IconPlus, IconX } from '@tabler/icons-react'
+import { IconPlus, IconTrash, IconX } from '@tabler/icons-react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useId, useRef, useState, type FormEvent } from 'react'
+import { Link } from 'wouter'
+import { paths } from '../../app/navigation.ts'
 import { updateSettings, useSettings } from '../../app/settings.ts'
-import { db, type ClientType, type ServicePreset } from '../../db/schema.ts'
+import {
+  db,
+  type ClientType,
+  type ServicePreset,
+  type Turn,
+  type TurnService,
+} from '../../db/schema.ts'
 import { turnTotals } from '../../domain/commission.ts'
 import {
   addDays,
   isIsoDate,
   localDateTimeToMs,
+  timeOf,
   todayIso,
   type IsoDate,
 } from '../../domain/dates.ts'
@@ -15,6 +24,7 @@ import { centsToInput, formatUsd, parseCents, parseRateBp, rateToInput } from '.
 import { t } from '../../lib/i18n.ts'
 import type { Locale } from '../../lib/locale.ts'
 import { requestPersistence } from '../../pwa/persistStorage.ts'
+import { ConfirmDialog } from '../../ui/ConfirmDialog.tsx'
 import { MoneyField } from '../../ui/MoneyField.tsx'
 import { PercentField } from '../../ui/PercentField.tsx'
 import {
@@ -33,7 +43,7 @@ import {
   type LineErrors,
   type LineState,
 } from './ServiceLineFields.tsx'
-import { addTurn, type TurnLineInput } from './turnStore.ts'
+import { addTurn, deleteTurn, updateTurn, type TurnLineInput } from './turnStore.ts'
 
 interface Errors {
   date?: string
@@ -60,6 +70,24 @@ function newLine(choice: string, rateBp: number): LineState {
     amount: '',
     rate: rateToInput(rateBp),
     rateTouched: false,
+    originalChoice: choice,
+    originalName: '',
+  }
+}
+
+/** A saved service row back into form state. Its rate is "touched" so it cannot change. */
+function lineFromService(service: TurnService, presets: ServicePreset[]): LineState {
+  const preset = presets.find((item) => item.id === service.servicePresetId)
+  const choice = preset ? preset.id : 'other'
+  return {
+    key: crypto.randomUUID(),
+    choice,
+    customName: preset ? '' : service.serviceNameSnapshot,
+    amount: centsToInput(service.servicePriceCents),
+    rate: rateToInput(service.commissionRateSnapshotBp),
+    rateTouched: true,
+    originalChoice: choice,
+    originalName: service.serviceNameSnapshot,
   }
 }
 
@@ -72,29 +100,61 @@ function occurredAtFor(date: IsoDate, time: string): number {
   return time ? localDateTimeToMs(date, time) : Date.now()
 }
 
+/**
+ * Editing keeps the saved moment unless the time or the day was changed.
+ * A cleared time box keeps the original moment too.
+ */
+function occurredAtForEdit(date: IsoDate, time: string, turn: Turn): number {
+  if (time === '') return turn.occurredAt
+  if (time === timeOf(turn.occurredAt) && date === turn.localWorkDate) return turn.occurredAt
+  return localDateTimeToMs(date, time)
+}
+
 interface Props {
+  turnId?: string
   onDone: () => void
 }
 
-/** Loads the service presets first, so the form starts on real values. */
-export function TurnForm({ onDone }: Props) {
+/** Loads the service presets and, when editing, the saved turn before the form starts. */
+export function TurnForm({ turnId, onDone }: Props) {
+  const { locale } = useSettings()
   const presets = useLiveQuery(() =>
     db.servicePresets
       .orderBy('sortOrder')
       .filter((preset) => preset.isActive)
       .toArray(),
   )
+  const existing = useLiveQuery(async () => {
+    if (!turnId) return null
+    const turn = await db.turns.get(turnId)
+    if (!turn) return null
+    const services = await db.turnServices.where('turnId').equals(turnId).sortBy('sortOrder')
+    return { turn, services }
+  }, [turnId])
 
-  if (!presets) return null
-  return <TurnFormFields presets={presets} onDone={onDone} />
+  if (!presets || existing === undefined) return null
+
+  if (turnId && existing === null) {
+    return (
+      <>
+        <p>{t(locale, 'entryNotFound')}</p>
+        <Link href={paths.today} replace className="text-brand-600 underline">
+          {t(locale, 'backToToday')}
+        </Link>
+      </>
+    )
+  }
+
+  return <TurnFormFields presets={presets} existing={existing} onDone={onDone} />
 }
 
 interface FieldsProps {
   presets: ServicePreset[]
+  existing: { turn: Turn; services: TurnService[] } | null
   onDone: () => void
 }
 
-function TurnFormFields({ presets, onDone }: FieldsProps) {
+function TurnFormFields({ presets, existing, onDone }: FieldsProps) {
   const {
     locale,
     defaultCommissionRateBp,
@@ -106,26 +166,49 @@ function TurnFormFields({ presets, onDone }: FieldsProps) {
   const id = useId()
   const today = todayIso()
   const yesterday = addDays(today, -1)
+  const turn = existing?.turn
   const initialPreset = presets.find((preset) => preset.id === lastServicePresetId) ?? presets[0]
 
-  const [lines, setLines] = useState<LineState[]>(() => [
-    newLine(
-      initialPreset?.id ?? 'other',
-      initialPreset?.defaultCommissionRateBp ?? defaultCommissionRateBp,
-    ),
-  ])
-  const [cashText, setCashText] = useState('')
-  const [cardText, setCardText] = useState('')
-  const [date, setDate] = useState<IsoDate>(today)
-  const [pickOtherDay, setPickOtherDay] = useState(false)
-  const [turnCountText, setTurnCountText] = useState('1')
-  const [time, setTime] = useState('')
-  const [clientType, setClientType] = useState<ClientType>('unspecified')
-  const [cashTipReceived, setCashTipReceived] = useState(cashTipHandling === 'inHand')
-  const [cardTipReceived, setCardTipReceived] = useState(cardTipHandling === 'inHand')
-  const [note, setNote] = useState('')
-  const [moreOpen, setMoreOpen] = useState(false)
+  const [lines, setLines] = useState<LineState[]>(() =>
+    existing && existing.services.length > 0
+      ? existing.services.map((service) => lineFromService(service, presets))
+      : [
+          newLine(
+            initialPreset?.id ?? 'other',
+            initialPreset?.defaultCommissionRateBp ?? defaultCommissionRateBp,
+          ),
+        ],
+  )
+  const [cashText, setCashText] = useState(
+    turn && turn.cashTipCents > 0 ? centsToInput(turn.cashTipCents) : '',
+  )
+  const [cardText, setCardText] = useState(
+    turn && turn.cardTipCents > 0 ? centsToInput(turn.cardTipCents) : '',
+  )
+  const [date, setDate] = useState<IsoDate>(turn?.localWorkDate ?? today)
+  const [pickOtherDay, setPickOtherDay] = useState(
+    turn ? turn.localWorkDate !== today && turn.localWorkDate !== yesterday : false,
+  )
+  const [turnCountText, setTurnCountText] = useState(String(turn?.turnCount ?? 1))
+  const [time, setTime] = useState(turn ? timeOf(turn.occurredAt) : '')
+  const [clientType, setClientType] = useState<ClientType>(turn?.clientType ?? 'unspecified')
+  const [cashTipReceived, setCashTipReceived] = useState(
+    turn ? turn.cashTipReceived : cashTipHandling === 'inHand',
+  )
+  const [cardTipReceived, setCardTipReceived] = useState(
+    turn ? turn.cardTipReceived : cardTipHandling === 'inHand',
+  )
+  const [note, setNote] = useState(turn?.note ?? '')
+  const [moreOpen, setMoreOpen] = useState(
+    turn
+      ? turn.turnCount !== 1 ||
+          turn.clientType !== 'unspecified' ||
+          (turn.note ?? '').trim() !== ''
+      : false,
+  )
   const [savedAddAnother, setSavedAddAnother] = useState(false)
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const [errors, setErrors] = useState<Errors>({ lines: {} })
 
   // A quick double tap fires submit twice before React can re-render. The ref
@@ -251,9 +334,17 @@ function TurnFormFields({ presets, onDone }: FieldsProps) {
       }
 
       const preset = presets.find((item) => item.id === line.choice)
+      // An unchanged preset keeps the name saved on the turn, so editing a tip
+      // never rewrites history with a renamed preset.
+      const name =
+        preset && line.choice === line.originalChoice && line.originalName
+          ? line.originalName
+          : preset
+            ? presetName(preset, locale)
+            : line.customName.trim()
       nextLines.push({
         servicePresetId: preset?.id ?? null,
-        name: preset ? presetName(preset, locale) : line.customName.trim(),
+        name,
         priceCents,
         rateBp,
       })
@@ -285,26 +376,30 @@ function TurnFormFields({ presets, onDone }: FieldsProps) {
     lastSavedChoice.current = lastLine.choice
 
     saveInFlight.current = true
+    const input = {
+      occurredAt: turn ? occurredAtForEdit(date, time, turn) : occurredAtFor(date, time),
+      localWorkDate: date,
+      turnCount,
+      clientType,
+      note,
+      cashTipCents: cashCents,
+      cardTipCents: cardCents,
+      cashTipReceived,
+      cardTipReceived,
+      lines: nextLines,
+    }
     try {
-      await addTurn(db, {
-        occurredAt: occurredAtFor(date, time),
-        localWorkDate: date,
-        turnCount,
-        clientType,
-        note,
-        cashTipCents: cashCents,
-        cardTipCents: cardCents,
-        cashTipReceived,
-        cardTipReceived,
-        lines: nextLines,
-      })
+      if (turn) await updateTurn(db, turn.id, input)
+      else await addTurn(db, input)
     } catch (error) {
       saveInFlight.current = false
       throw error
     }
 
-    if (lastPreset) updateSettings({ lastServicePresetId: lastPreset.id })
-    void requestPersistence()
+    if (!turn) {
+      if (lastPreset) updateSettings({ lastServicePresetId: lastPreset.id })
+      void requestPersistence()
+    }
     return true
   }
 
@@ -339,6 +434,18 @@ function TurnFormFields({ presets, onDone }: FieldsProps) {
     saveInFlight.current = false
   }
 
+  async function confirmDelete() {
+    if (!turn || deleting) return
+    setDeleting(true)
+    try {
+      await deleteTurn(db, turn.id)
+      onDone()
+    } catch (error) {
+      setDeleting(false)
+      throw error
+    }
+  }
+
   return (
     <form
       onSubmit={submit}
@@ -349,8 +456,19 @@ function TurnFormFields({ presets, onDone }: FieldsProps) {
         <button type="button" onClick={onDone} aria-label={t(locale, 'close')} className="p-1">
           <IconX size={22} aria-hidden="true" />
         </button>
-        <h1 className="font-medium">{t(locale, 'newTurn')}</h1>
-        <span className="w-7" />
+        <h1 className="font-medium">{t(locale, turn ? 'editTurn' : 'newTurn')}</h1>
+        {turn ? (
+          <button
+            type="button"
+            aria-label={t(locale, 'delete')}
+            onClick={() => setConfirmingDelete(true)}
+            className="p-1 text-danger-text"
+          >
+            <IconTrash size={22} aria-hidden="true" />
+          </button>
+        ) : (
+          <span className="w-7" />
+        )}
       </header>
 
       <div>
@@ -646,16 +764,34 @@ function TurnFormFields({ presets, onDone }: FieldsProps) {
       )}
 
       <div className="mt-auto flex flex-col gap-3">
-        <p role="status" className="text-sm text-positive-text">
-          {savedAddAnother ? t(locale, 'savedAddAnother') : ''}
-        </p>
+        {!turn && (
+          <p role="status" className="text-sm text-positive-text">
+            {savedAddAnother ? t(locale, 'savedAddAnother') : ''}
+          </p>
+        )}
         <button type="submit" className={primaryButton}>
           {t(locale, 'save')}
         </button>
-        <button type="button" onClick={saveAndAddAnother} className={secondaryButton}>
-          {t(locale, 'saveAndAddAnother')}
-        </button>
+        {!turn && (
+          <button type="button" onClick={saveAndAddAnother} className={secondaryButton}>
+            {t(locale, 'saveAndAddAnother')}
+          </button>
+        )}
       </div>
+
+      {turn && (
+        <ConfirmDialog
+          open={confirmingDelete}
+          title={t(locale, 'deleteTurnTitle')}
+          body={t(locale, 'deleteTurnBody')}
+          confirmLabel={t(locale, 'delete')}
+          cancelLabel={t(locale, 'cancel')}
+          danger
+          confirmDisabled={deleting}
+          onConfirm={confirmDelete}
+          onCancel={() => setConfirmingDelete(false)}
+        />
+      )}
     </form>
   )
 }
