@@ -1,0 +1,119 @@
+# Nail Tracker
+
+**Status key:** ⬜ pending · 🔄 in progress · ✅ verified · 🚫 blocked
+
+Read `README.md` in this same folder first. It holds the rules, patterns and traps. This file is only the plan. Each task has its own brief, `T##-*.md`, which holds every detail the builder needs.
+
+## Goal
+
+Turn the Daftar fork into Nail Tracker: a free, private, offline phone app for one nail technician to record turns, tips and commission, and to check what the salon still owes. English and Vietnamese. The product document is `docs/product-spec.md`.
+
+## Who does what
+
+- **Builder (DeepSeek V4.1 Flash in the DeepSeek Harness):** one task per session, from one brief. Commits to the task branch. Does not push.
+- **Manager:** starts each session, checks the work, pushes, opens the pull request, waits for checks, merges, updates this file.
+
+Tasks run **one at a time, in order.** All builders share one checkout.
+
+## Validation commands
+
+- All four checks: `pnpm gate`
+- Lint: `pnpm lint`
+- Typecheck: `pnpm typecheck`
+- Unit tests: `pnpm test`
+- Build: `pnpm build`
+- Browser tests: `pnpm exec playwright test --workers=2`
+
+## Manager's loop for each task
+
+1. Confirm `main` is clean and up to date: `git checkout main`, `git pull`.
+2. Start one builder session with this message, changing the task:
+   ```
+   You are the builder for the Nail Tracker app in "C:/Bay/Projects/Nail Tracker".
+   Read tasks/nail-tracker/README.md, then tasks/nail-tracker/T01-identity.md.
+   Do exactly that one task and follow the handbook's rules.
+   Finish with the final report in the handbook's format.
+   ```
+3. On `Status: BLOCKED`, read the error, then either fix the brief and restart the task, or split the task.
+4. On `Status: DONE`, check the work yourself. Do not trust the report:
+   - `git log main..HEAD --stat` shows only the files the brief allows.
+   - Run `pnpm gate`, then the brief's browser test command.
+   - Read the diff against the brief, looking for skipped steps, changed tests, and money done with floats.
+5. If it is wrong, start a new session for that task with the list of what to fix, on the same branch.
+6. If it is right: `git push -u origin <branch>`, then `gh pr create --repo Unity7/nail-tracker --base main --head <branch>`. Always pass `--repo`.
+7. Wait for the checks on GitHub to pass, then `gh pr merge --repo Unity7/nail-tracker --squash --delete-branch`.
+8. Confirm the merge on GitHub. Update the status table and Execution Log below in a small commit on `main`.
+
+## Tasks
+
+### Milestone 1: Foundation
+
+| # | Task | Depends on | Status | Verify |
+|---|---|---|---|---|
+| T01 | [Rename the app and give it its look](T01-identity.md) | none | ⬜ | `pnpm gate` and all browser tests pass |
+| T02 | [Money and date helpers](T02-money-dates.md) | T01 | ⬜ | Ready-made tests pass, `pnpm gate` passes |
+| T03 | [Commission and totals maths](T03-commission-totals.md) | T02 | ⬜ | Ready-made tests pass, `pnpm gate` passes |
+| T04 | [Swap to the new empty shell](T04-new-shell.md) | T03 | ⬜ | `pnpm gate` and all browser tests pass, no old words left in `src` |
+| T05 | [Database, seed data, turn store](T05-database.md) | T04 | ⬜ | Store tests pass, `pnpm gate` passes |
+
+### Milestone 2: Core tracking
+
+| # | Task | Depends on | Status | Verify |
+|---|---|---|---|---|
+| T06 | [Add Turn form, basic](T06-add-turn-basic.md) | T05 | ⬜ | `add-turn` browser tests pass |
+| T07 | [Today dashboard](T07-today.md) | T06 | ⬜ | `today` browser tests pass |
+| T08 | [Several services, More options, Save & Add Another](T08-add-turn-full.md) | T07 | ⬜ | `add-turn` and `today` browser tests pass |
+| T09 | [Edit and delete a turn](T09-edit-delete.md) | T08 | ⬜ | `edit-turn` browser tests pass |
+| T10 | [History](T10-history.md) | T09 | ⬜ | `history` browser tests pass |
+| T11 | [Service presets screen](T11-presets.md) | T10 | ⬜ | `presets` browser tests pass |
+| T12 | [Adjustments](T12-adjustments.md) | T11 | ⬜ | `adjustments` browser tests pass |
+
+### Milestone 3: Earnings and payday
+
+| # | Task | Depends on | Status | Verify |
+|---|---|---|---|---|
+| T13 | [Earnings screen](T13-earnings.md) | T12 | ⬜ | `earnings` browser tests pass |
+| T14 | [Pay period logic and store](T14-pay-periods.md) | T13 | ⬜ | Ready-made tests and store tests pass |
+| T15 | [Payday list and period detail](T15-payday-screens.md) | T14 | ⬜ | `payday` browser tests pass |
+| T16 | [Payments and allocations](T16-payments.md) | T15 | ⬜ | `payday` and `earnings` browser tests pass |
+| T17 | [Full Settings screen](T17-settings.md) | T16 | ⬜ | `settings` browser tests pass |
+| T18 | [First-launch onboarding](T18-onboarding.md) | T17 | ⬜ | All browser tests pass |
+
+### Milestone 4: Offline and backup
+
+| # | Task | Depends on | Status | Verify |
+|---|---|---|---|---|
+| T19 | [JSON backup, restore, migrations](T19-backup-json.md) | T18 | ⬜ | `backup` unit tests pass |
+| T20 | [CSV, backup buttons, delete all](T20-csv-backup-ui.md) | T19 | ⬜ | `backup` and `settings` browser tests pass |
+| T21 | [Offline and install checks](T21-offline.md) | T20 | ⬜ | `offline` and `manifest` browser tests pass |
+
+### Milestone 5: Testing and polish
+
+| # | Task | Depends on | Status | Verify |
+|---|---|---|---|---|
+| T22 | [End-to-end acceptance and edge cases](T22-acceptance.md) | T21 | ⬜ | All browser tests pass |
+| T23 | [Accessibility and iPhone width](T23-a11y-mobile.md) | T22 | ⬜ | All browser tests pass |
+| T24 | [Charts on Earnings](T24-charts.md) | T23 | ⬜ | `earnings` and `a11y` browser tests pass, no new package |
+| T25 | [Final sweep and deployment](T25-final.md) | T24 | ⬜ | All searches clean, all browser tests pass, site live |
+
+## Definition of done
+
+All 25 tasks are ✅, and on the live site at https://unity7.github.io/nail-tracker/ a person can:
+
+- Open the app with no account, and pick Vietnamese or English.
+- Set a 60/40 or custom commission.
+- Add several turns with service amounts, cash tips and card tips.
+- See correct daily and weekly earnings.
+- Review and edit history.
+- See what the salon still owes on payday.
+- Export and restore all data.
+- Use it offline, installed on an iPhone.
+
+A Vietnamese speaker should read the wording before real users see it. The translations have not been checked by one.
+
+## Execution Log
+
+_(One row per attempted task.)_
+
+| Date | Task | Outcome | Agent | Evidence / notes |
+|---|---|---|---|---|
