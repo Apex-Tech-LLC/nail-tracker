@@ -21,6 +21,9 @@ export function Routes() {
       <Route path={paths.payday} component={PaydayPage} />
       <Route path={paths.settings} component={SettingsPage} />
       <Route path={paths.add}>{() => <TurnForm onDone={goBack} />}</Route>
+      <Route path="/edit/:id">
+        {(params) => <TurnForm key={params.id} turnId={params.id} onDone={goBack} />}
+      </Route>
       <Route>
         <p>{t(locale, 'notFound')}</p>
         <Link href={paths.today} replace className="text-brand-600 underline">

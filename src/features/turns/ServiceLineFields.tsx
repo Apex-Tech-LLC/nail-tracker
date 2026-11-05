@@ -14,6 +14,9 @@ export interface LineState {
   amount: string
   rate: string
   rateTouched: boolean
+  // What the saved line was, so editing a tip does not rewrite a saved name.
+  originalChoice: string
+  originalName: string
 }
 
 export interface LineErrors {
