@@ -53,7 +53,7 @@ Tasks run **one at a time, in order.** All builders share one checkout.
 | T01 | [Rename the app and give it its look](T01-identity.md) | none | ✅ | `pnpm gate` and all browser tests pass |
 | T02 | [Money and date helpers](T02-money-dates.md) | T01 | ✅ | Ready-made tests pass, `pnpm gate` passes |
 | T03 | [Commission and totals maths](T03-commission-totals.md) | T02 | ✅ | Ready-made tests pass, `pnpm gate` passes |
-| T04 | [Swap to the new empty shell](T04-new-shell.md) | T03 | ⬜ | `pnpm gate` and all browser tests pass, no old words left in `src` |
+| T04 | [Swap to the new empty shell](T04-new-shell.md) | T03 | ✅ | `pnpm gate` and all browser tests pass, no old words left in `src` |
 | T05 | [Database, seed data, turn store](T05-database.md) | T04 | ⬜ | Store tests pass, `pnpm gate` passes |
 
 ### Milestone 2: Core tracking
@@ -120,3 +120,4 @@ _(One row per attempted task.)_
 | 2026-11-05 | T01 | ✅ merged as PR #1 | DeepSeek V4.1 Flash (DeepSeek Harness) | Manager re-ran gate and browser tests: 16 of 17 passed first run, welcome screen passed on the allowed re-run. GitHub CI passed. CI did not start on this fork until the Actions permission was re-saved. Builder ran the harness sandbox repair on the project folder; backups in C:/Bay/Projects/_acl-recovery. The manager added Nail Tracker to the kit pause config on Bay's instruction, so the FRAMELINE and MeanSpy pause does not hold its merges. |
 | 2026-11-05 | T02 | ✅ merged as PR #2 | DeepSeek V4.1 Flash (DeepSeek Harness) | Manager re-ran the gate: 225 unit tests pass, test files identical to the ready-made ones. GitHub CI passed and started by itself. |
 | 2026-11-05 | T03 | ✅ merged as PR #3 | DeepSeek V4.1 Flash (DeepSeek Harness) | Manager re-ran the gate: 259 unit tests pass, test files identical to the ready-made ones, maths read line by line against the brief. GitHub CI passed. |
+| 2026-11-05 | T04 | ✅ merged as PR #4 | DeepSeek V4.1 Flash (DeepSeek Harness) | Manager re-ran the gate (156 unit tests) and all 4 browser tests, compared the brief's code blocks to the files, and found no old words left. GitHub CI passed. Leftovers for a later task: stale comments in src/pwa/persistStorage.ts and src/main.tsx, unused fade-in animation in src/index.css. |
