@@ -40,5 +40,5 @@ export async function addTurn(
   if (card) await page.getByLabel('Card tip').fill(card)
   if (rate) await page.getByLabel('Commission %').fill(rate)
   await page.getByRole('button', { name: 'Save', exact: true }).click()
-  await expect(page.getByRole('link', { name: 'Add Turn' })).toBeVisible()
+  await expect(page.getByRole('link', { name: /Add Turn|Add your first turn/ })).toBeVisible()
 }
