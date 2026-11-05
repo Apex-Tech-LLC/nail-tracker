@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-test('the manifest is valid, right-to-left Persian, and every icon loads', async ({ page, request }) => {
+test('the manifest is valid and every icon loads', async ({ page, request }) => {
   await page.goto('./')
   const href = await page.locator('link[rel=manifest]').getAttribute('href')
   expect(href).toBeTruthy()
@@ -10,8 +10,8 @@ test('the manifest is valid, right-to-left Persian, and every icon loads', async
   const manifest = await response.json()
 
   expect(manifest).toMatchObject({
-    lang: 'fa',
-    dir: 'rtl',
+    lang: 'en',
+    dir: 'ltr',
     display: 'standalone',
     start_url: './',
     scope: './',

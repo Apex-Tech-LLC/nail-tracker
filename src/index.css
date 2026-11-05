@@ -1,29 +1,31 @@
 @import 'tailwindcss';
-@import '@fontsource-variable/vazirmatn';
+@import '@fontsource-variable/inter';
 
 /*
  * Design tokens. Raw colors live on :root as CSS variables and Tailwind
  * utilities point at them, so dark mode (1.1) only has to redefine the
- * variables. Brand is an indigo ramp; status is never shown by color alone.
+ * variables. Brand is a plum ramp; status is never shown by color alone.
  */
 :root {
-  --brand-50: #eeedfe;
-  --brand-100: #cecbf6;
-  --brand-200: #afa9ec;
-  --brand-400: #7f77dd;
-  --brand-600: #534ab7;
-  --brand-800: #3c3489;
-  --brand-900: #26215c;
+  --brand-50: #f7eef5;
+  --brand-100: #ecd6e6;
+  --brand-200: #dcb6d2;
+  --brand-400: #a8649a;
+  --brand-600: #7a3b72;
+  --brand-800: #5a2a54;
+  --brand-900: #3d1c39;
 
-  --page: #f7f7fb;
+  --page: #fbf8f4;
   --surface: #ffffff;
-  --surface-subtle: #f1f0f7;
-  --text: #1d1b2e;
-  --text-secondary: #5f5d70;
-  --text-muted: #6c6a7e; /* 4.5:1 or better on surface, page and brand-50 */
-  --border: rgb(29 27 46 / 0.12);
-  --border-strong: rgb(29 27 46 / 0.24);
+  --surface-subtle: #f3efe9;
+  --text: #241f26;
+  --text-secondary: #5e5862;
+  --text-muted: #6b6570; /* 4.5:1 or better on surface, page and brand-50 */
+  --border: rgb(36 31 38 / 0.12);
+  --border-strong: rgb(36 31 38 / 0.24);
 
+  --positive-bg: #e6f2ea;
+  --positive-text: #2f6b46;
   --warning-bg: #faeeda;
   --warning-text: #854f0b;
   --danger-bg: #fcebeb;
@@ -31,7 +33,7 @@
 }
 
 @theme inline {
-  --font-sans: 'Vazirmatn Variable', system-ui, sans-serif;
+  --font-sans: 'Inter Variable', system-ui, sans-serif;
 
   --color-brand-50: var(--brand-50);
   --color-brand-100: var(--brand-100);
@@ -50,6 +52,8 @@
   --color-border: var(--border);
   --color-border-strong: var(--border-strong);
 
+  --color-positive-bg: var(--positive-bg);
+  --color-positive-text: var(--positive-text);
   --color-warning-bg: var(--warning-bg);
   --color-warning-text: var(--warning-text);
   --color-danger-bg: var(--danger-bg);

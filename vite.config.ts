@@ -19,10 +19,10 @@ function buildId(): string {
 
 // https://vite.dev/config/
 export default defineConfig(({ command, isPreview }) => ({
-  // GitHub Pages serves the app from /daftar/. Builds and `pnpm preview`
+  // GitHub Pages serves the app from /nail-tracker/. Builds and `pnpm preview`
   // always use it, so preview behaves exactly like the live site; dev
   // stays at /. (Preview runs as command 'serve', hence isPreview.)
-  base: command === 'build' || isPreview ? '/daftar/' : '/',
+  base: command === 'build' || isPreview ? '/nail-tracker/' : '/',
   define: {
     __BUILD_ID__: JSON.stringify(buildId()),
     __BUILD_DATE__: JSON.stringify(new Date().toISOString().slice(0, 10)),
@@ -52,19 +52,19 @@ export default defineConfig(({ command, isPreview }) => ({
       includeManifestIcons: false,
       manifest: {
         id: './',
-        name: 'Daftar · دفتر خرج‌وخرج',
-        short_name: 'Daftar',
-        description: 'Offline-first expense tracker with Jalali dates and Toman amounts.',
-        lang: 'fa',
-        dir: 'rtl',
+        name: 'Nail Tracker',
+        short_name: 'Nail Tracker',
+        description: 'Track your turns, tips and pay. Private, works offline, no account.',
+        lang: 'en',
+        dir: 'ltr',
         // Relative, so the app installs correctly under any base path,
-        // including /daftar/ on GitHub Pages.
+        // including /nail-tracker/ on GitHub Pages.
         start_url: './',
         scope: './',
         display: 'standalone',
         orientation: 'portrait',
-        theme_color: '#f7f7fb',
-        background_color: '#f7f7fb',
+        theme_color: '#fbf8f4',
+        background_color: '#fbf8f4',
         categories: ['finance', 'productivity'],
         icons: [
           { src: 'pwa-64x64.png', sizes: '64x64', type: 'image/png' },

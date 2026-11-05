@@ -1,7 +1,7 @@
 import { defineConfig, devices } from '@playwright/test'
 
 // End-to-end tests run against the production build, because the service
-// worker only exists there (it is off in `pnpm dev`). Same /daftar/ base as
+// worker only exists there (it is off in `pnpm dev`). Same /nail-tracker/ base as
 // GitHub Pages, so paths and the worker scope match the live site.
 const PORT = 4173
 
@@ -13,7 +13,7 @@ export default defineConfig({
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? [['github'], ['html', { open: 'never' }]] : 'list',
   use: {
-    baseURL: `http://localhost:${PORT}/daftar/`,
+    baseURL: `http://localhost:${PORT}/nail-tracker/`,
     locale: 'fa-IR',
     viewport: { width: 390, height: 844 },
     trace: 'retain-on-failure',
@@ -21,7 +21,7 @@ export default defineConfig({
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'], viewport: { width: 390, height: 844 } } }],
   webServer: {
     command: `pnpm build && pnpm preview --port ${PORT} --strictPort`,
-    url: `http://localhost:${PORT}/daftar/`,
+    url: `http://localhost:${PORT}/nail-tracker/`,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
   },

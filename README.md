@@ -1,140 +1,17 @@
-# Daftar · دفتر
+# Nail Tracker
 
-An offline-first expense tracker for the phone, with Jalali dates and Toman amounts. Install it once and it works with no internet at all. There is no server, and your data never leaves the device.
+A free, private pay tracker for nail technicians. Record each turn, and see your commission, cash tips, card tips, what you earned, and what the salon still owes you. English and Vietnamese. Works offline. No account. Your data stays on your phone.
 
-[![CI](https://github.com/atefeh-sa93/daftar/actions/workflows/ci.yml/badge.svg)](https://github.com/atefeh-sa93/daftar/actions/workflows/ci.yml)
-[![Deploy](https://github.com/atefeh-sa93/daftar/actions/workflows/deploy.yml/badge.svg)](https://github.com/atefeh-sa93/daftar/actions/workflows/deploy.yml)
-[![License: MIT](https://img.shields.io/badge/license-MIT-534ab7.svg)](LICENSE)
+## Develop
 
-**Live demo:** https://atefeh-sa93.github.io/daftar/. Open it once, install it, then turn on airplane mode.
+    pnpm install
+    pnpm dev
+    pnpm gate
 
-<p>
-  <img src="docs/demo.gif" width="270" alt="Demo: airplane mode is turned on, a ۸۵٬۰۰۰ Toman transport expense is added and saved with no internet, then the monthly summary shows it in the category chart">
-</p>
+`pnpm gate` runs lint, typecheck, unit tests and the build. Browser tests: `pnpm exec playwright test --workers=2`.
 
-<p>
-  <img src="docs/screenshots/list-fa.png" width="200" alt="Expense list in Persian, with the month total and today's expenses">
-  <img src="docs/screenshots/form-fa.png" width="200" alt="New expense form, with the amount spelled out in Persian words and category chips">
-  <img src="docs/screenshots/summary-fa.png" width="200" alt="Monthly summary in Persian: the month total and a bar per category with its amount and share">
-  <img src="docs/screenshots/settings-en.png" width="200" alt="Settings in English: language, calendar, storage status and the backup buttons">
-</p>
+The product document is [docs/product-spec.md](docs/product-spec.md). The build plan is in [tasks/nail-tracker](tasks/nail-tracker/tasks.md).
 
-## The problem
+## Credit
 
-Most expense apps need an account, a server, and a stable connection. Many of them also get Persian users wrong: they use the Gregorian calendar, Rial instead of Toman, Latin digits, or a layout that breaks in right-to-left. I wanted something that opens instantly, works on a bad connection or none, and feels native in Persian. Writing down a ۸۵٬۰۰۰ تومان taxi ride should take five seconds.
-
-## Features
-
-- **Works fully offline.** After the first visit, the whole app (HTML, JS, CSS, font, icons) is served from the cache. You can reload, add, edit, and delete with the network off.
-- **Installable.** It installs as a real app on Android and as a home screen app on iOS, with its own icon and a standalone window.
-- **Jalali dates and Toman amounts.** You see Persian month names and digits, plus the amount spelled out in words (`دو میلیون و هفتصد و پنجاه هزار تومان`) to catch extra zeros.
-- **Bilingual: Persian (RTL) and English (LTR).** The language is detected from the browser and can be switched from any page. The calendar (Jalali or Gregorian) is a separate setting.
-- **Fast entry.** The form needs an amount, a category chip, and a date (Today, Yesterday, or another day), with an optional note. Digits typed on a phone keypad are shown in the UI language as you type.
-- **Monthly summary.** The month's total, the change from last month (with an arrow, not just color), and a hand-drawn SVG bar per category. You can step back through earlier months. Months follow the chosen calendar, so Aban is one month, not split across October and November.
-- **Backup and restore.** A JSON backup brings everything back on a new phone. Restoring checks the whole file first and never deletes anything: new expenses are added, and a copy is replaced only if it was edited later. A CSV export (with Jalali dates, UTF-8 for Excel) is for reading in a spreadsheet.
-- **Delete with undo.** A deleted expense can be brought back for a few seconds.
-- **Safe updates.** A new version never reloads the page on its own. You get a prompt, and it never appears while you are filling in the form.
-- **Durable storage.** After the first expense, the app asks the browser to keep its data even when disk space runs low. Settings shows whether that was granted.
-- **Offline badge.** The header shows when you are offline, in text as well as color.
-
-## Architecture
-
-```mermaid
-flowchart LR
-  subgraph Device
-    UI["React UI<br/>(list, form, summary, settings)"]
-    Hooks["useLiveQuery<br/>(dexie-react-hooks)"]
-    DB[("IndexedDB<br/>via Dexie")]
-    LS[("localStorage<br/>settings")]
-    SW["Service worker<br/>(Workbox precache)"]
-  end
-  Pages["GitHub Pages<br/>static files"]
-
-  UI -- "add / update / delete" --> DB
-  DB -- "live results" --> Hooks --> UI
-  UI <--> LS
-  SW -- "serves app shell offline" --> UI
-  Pages -. "first visit and updates only" .-> SW
-```
-
-There is no backend. IndexedDB is the single source of truth, and components read from it through live queries, so a write anywhere shows up everywhere without a state library.
-
-```
-src/
-  app/        shell, routes (hash-based), bottom nav, settings store
-  db/         Dexie schema, default categories
-  features/
-    expenses/ list, form, undo, data hooks
-    summary/  monthly totals and category chart
-    backup/   JSON export/import with validation, CSV export
-    settings/ language, calendar, storage status, version
-  lib/        money parsing and formatting, Jalali dates, number to words, i18n strings
-  pwa/        update prompt, offline badge, persistent storage
-tests/unit/   Vitest tests for lib, db, and stores
-```
-
-## Technical decisions
-
-- **Money is an integer number of Toman.** It is never a float, so there are no rounding errors. `parseAmount` accepts Persian, Arabic, and Latin digits and thousands separators, and rejects decimals and negative numbers.
-- **Dates are stored as ISO `YYYY-MM-DD` (Gregorian).** Jalali is only a display layer, built on `jalaali-js`. This keeps sorting, indexing, and month ranges simple, and makes backups readable by other tools.
-- **No state library.** Dexie and `useLiveQuery` already give reactive reads from the database. Settings are a small `useSyncExternalStore` over localStorage, read before the first render so the page never flashes in the wrong language or direction.
-- **Updates are controlled by the user.** The service worker uses `registerType: 'prompt'`. A new version waits until the user taps Reload, and the prompt is hidden on the form so a half-typed expense is never lost. The app checks for updates hourly while online.
-- **Cache strategy.** The Workbox `generateSW` precaches the built app shell: 16 files, including the self-hosted Vazirmatn font. Navigation falls back to the cached `index.html`, and outdated caches are cleaned up. Nothing is fetched from a CDN at runtime.
-- **Hash routes** (`#/add`, `#/settings`). GitHub Pages has no SPA fallback, so a deep link like `/daftar/add` would return 404 there.
-- **Relative manifest paths.** `start_url`, `scope`, and `id` are `./`, so the same build works under `/daftar/`.
-- **Accessibility.** Status is never shown by color alone. Live regions announce the offline state and undo, and animations respect `prefers-reduced-motion`. Every screen, in both languages, is checked with axe (WCAG 2.1 AA) in the E2E suite, and any violation fails CI.
-
-## Known limitations
-
-- **Data lives on one device.** There is no sync. If you clear the browser data or lose the phone without a backup file, the data is gone. Backups are manual; the app does not remind you.
-- **Android installs need Google's servers.** Chrome builds the installed app (a WebAPK) through Google. When that is blocked, or Play Services are missing, Chrome quietly adds a plain shortcut with a Chrome badge instead. Offline still works in that case.
-- **iOS** has no install prompt. You have to use Share → Add to Home Screen, and Safari may clear storage for sites that are not added to the home screen.
-- **Categories are fixed** to the seven defaults for now.
-- **Expenses only.** There is no income or budget yet.
-
-## How I used AI
-
-I built this with [Claude Code](https://claude.com/claude-code) as a pair programmer.
-
-- I wrote the design doc, the scope, and the three-day plan. That plan became the GitHub [issues and milestones](https://github.com/atefeh-sa93/daftar/milestones).
-- For each issue, Claude wrote the code and tests on a separate branch and opened a pull request that closes the issue.
-- I reviewed and merged every PR myself.
-- Design choices were made together and checked against current UX guidance: bilingual support, the indigo palette, no flags for languages, and a header language button instead of a picker screen.
-- Behavior that unit tests cannot see was first checked with throwaway Playwright scripts. Those later became the E2E suite in CI. The update flow is still only checked by hand.
-- I tested installing and using the app in airplane mode on a real Android phone. Using it on the phone found things no test did: Latin digits in the amount field, file names dated in the wrong calendar, and an unclear backup button. Each became a fix.
-
-## Run locally
-
-Requires Node 22+ and pnpm (the version is pinned in `package.json`).
-
-```bash
-pnpm install
-pnpm dev                     # http://localhost:5173/
-pnpm build && pnpm preview   # http://localhost:4173/daftar/, same as the live site
-```
-
-The service worker only runs in the production build, so test offline behavior with `pnpm preview`.
-
-```bash
-pnpm test        # Vitest unit tests (fake-indexeddb for the database)
-pnpm test:e2e    # Playwright against the production build: offline, backup, manifest, axe
-pnpm lint        # oxlint
-pnpm typecheck   # tsc, strict
-```
-
-The first time, `pnpm exec playwright install chromium` downloads the browser for the E2E tests.
-
-CI runs lint, typecheck, unit tests and build, and the E2E suite in a separate job, on every pull request. Every push to `main` deploys to GitHub Pages.
-
-## Roadmap
-
-- [x] M0: project setup, CI, deploy
-- [x] M1: add, edit, delete, and list expenses, with Jalali dates
-- [x] M2: offline PWA, install, update prompt, persistent storage, real device test
-- [x] M3: monthly summary and chart, JSON/CSV backup, Playwright E2E in CI, accessibility audit
-- [x] v1.0.0 release
-- Later: monthly budget, dark mode, optional sync between devices
-
-## License
-
-[MIT](LICENSE) © 2026 Atefeh Atashi
+Started as a fork of [Daftar](https://github.com/atefeh-sa93/daftar) by atefeh-sa93, under the MIT license. See [LICENSE](LICENSE).
