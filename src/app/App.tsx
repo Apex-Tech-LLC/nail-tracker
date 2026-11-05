@@ -1,13 +1,12 @@
 import { Router, useLocation } from 'wouter'
-import { useHashLocation } from 'wouter/use-hash-location'
 import { UpdatePrompt } from '../pwa/UpdatePrompt.tsx'
 import { BottomNav } from './BottomNav.tsx'
-import { paths } from './navigation.ts'
+import { paths, useAppLocation } from './navigation.ts'
 import { Routes } from './routes.tsx'
 
 export default function App() {
   return (
-    <Router hook={useHashLocation}>
+    <Router hook={useAppLocation}>
       <Shell />
     </Router>
   )
