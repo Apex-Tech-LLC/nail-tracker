@@ -2,6 +2,7 @@ import { Link, Route, Switch } from 'wouter'
 import { EarningsPage } from '../features/earnings/EarningsPage.tsx'
 import { HistoryPage } from '../features/history/HistoryPage.tsx'
 import { PaydayPage } from '../features/payday/PaydayPage.tsx'
+import { PresetsPage } from '../features/presets/PresetsPage.tsx'
 import { SettingsPage } from '../features/settings/SettingsPage.tsx'
 import { TodayPage } from '../features/today/TodayPage.tsx'
 import { TurnForm } from '../features/turns/TurnForm.tsx'
@@ -19,6 +20,7 @@ export function Routes() {
       <Route path={paths.history} component={HistoryPage} />
       <Route path={paths.earnings} component={EarningsPage} />
       <Route path={paths.payday} component={PaydayPage} />
+      <Route path={paths.services}>{() => <PresetsPage onDone={goBack} />}</Route>
       <Route path={paths.settings} component={SettingsPage} />
       <Route path={paths.add}>{() => <TurnForm onDone={goBack} />}</Route>
       <Route path="/edit/:id">

@@ -1,10 +1,13 @@
 import { IconAlertTriangle, IconShieldCheck } from '@tabler/icons-react'
 import type { ReactNode } from 'react'
+import { Link } from 'wouter'
 import { PageHeader } from '../../app/PageHeader.tsx'
+import { paths } from '../../app/navigation.ts'
 import { updateSettings, useSettings } from '../../app/settings.ts'
 import { t } from '../../lib/i18n.ts'
 import type { Locale } from '../../lib/locale.ts'
 import { usePersistState } from '../../pwa/persistStorage.ts'
+import { secondaryButton } from '../../ui/styles.ts'
 
 interface TileOption<T extends string> {
   value: T
@@ -68,6 +71,9 @@ export function SettingsPage() {
           { value: 'en', glyph: 'Aa', label: 'English', lang: 'en' },
         ]}
       />
+      <Link href={paths.services} className={secondaryButton + ' block text-center'}>
+        {t(locale, 'manageServices')}
+      </Link>
       <StorageStatus />
       {/* Only the build id is forced LTR; the label stays in the page direction. */}
       <p className="mt-auto text-center text-xs text-text-muted">
