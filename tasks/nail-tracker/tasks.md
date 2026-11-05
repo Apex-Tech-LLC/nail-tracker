@@ -61,7 +61,7 @@ Tasks run **one at a time, in order.** All builders share one checkout.
 | # | Task | Depends on | Status | Verify |
 |---|---|---|---|---|
 | T06 | [Add Turn form, basic](T06-add-turn-basic.md) | T05 | ✅ | `add-turn` browser tests pass |
-| T07 | [Today dashboard](T07-today.md) | T06 | ⬜ | `today` browser tests pass |
+| T07 | [Today dashboard](T07-today.md) | T06 | ✅ | `today` browser tests pass |
 | T08 | [Several services, More options, Save & Add Another](T08-add-turn-full.md) | T07 | ⬜ | `add-turn` and `today` browser tests pass |
 | T09 | [Edit and delete a turn](T09-edit-delete.md) | T08 | ⬜ | `edit-turn` browser tests pass |
 | T10 | [History](T10-history.md) | T09 | ⬜ | `history` browser tests pass |
@@ -123,3 +123,4 @@ _(One row per attempted task.)_
 | 2026-11-05 | T04 | ✅ merged as PR #4 | DeepSeek V4.1 Flash (DeepSeek Harness) | Manager re-ran the gate (156 unit tests) and all 4 browser tests, compared the brief's code blocks to the files, and found no old words left. GitHub CI passed. Leftovers for a later task: stale comments in src/pwa/persistStorage.ts and src/main.tsx, unused fade-in animation in src/index.css. |
 | 2026-11-05 | T05 | ✅ merged as PR #5 | DeepSeek V4.1 Flash (DeepSeek Harness) | Manager re-ran the gate (167 unit tests), compared schema and seed to the brief (identical), read the store and tests against it. GitHub CI passed. |
 | 2026-11-05 | T06 | ✅ merged as PR #6 | DeepSeek V4.1 Flash (DeepSeek Harness) | Manager re-ran the gate (167 unit tests) and all 10 browser tests and read the form against the brief. GitHub CI passed. Known gap: a double tap on Save can record a turn twice; to be fixed in T08. |
+| 2026-11-05 | T07 | ✅ merged as PR #7 | DeepSeek V4.1 Flash (DeepSeek Harness) | Today dashboard. Midnight test uses the real browser clock; gate and all 16 browser tests pass. |
