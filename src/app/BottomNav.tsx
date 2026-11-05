@@ -1,12 +1,14 @@
-import { IconChartBar, IconList, IconSettings, type Icon } from '@tabler/icons-react'
+import { IconCalendarDollar, IconChartBar, IconHome, IconList, IconSettings, type Icon } from '@tabler/icons-react'
 import { Link, useLocation } from 'wouter'
 import { t, type StringKey } from '../lib/i18n.ts'
 import { paths } from './navigation.ts'
 import { useSettings } from './settings.ts'
 
 const TABS: { path: string; label: StringKey; icon: Icon }[] = [
-  { path: paths.list, label: 'navList', icon: IconList },
-  { path: paths.summary, label: 'navSummary', icon: IconChartBar },
+  { path: paths.today, label: 'navToday', icon: IconHome },
+  { path: paths.history, label: 'navHistory', icon: IconList },
+  { path: paths.earnings, label: 'navEarnings', icon: IconChartBar },
+  { path: paths.payday, label: 'navPayday', icon: IconCalendarDollar },
   { path: paths.settings, label: 'navSettings', icon: IconSettings },
 ]
 

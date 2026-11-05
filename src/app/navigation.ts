@@ -2,14 +2,23 @@ import { useCallback } from 'react'
 import { useLocation } from 'wouter'
 
 // Routes live in the URL hash (#/add). GitHub Pages has no fallback to
-// index.html for unknown paths, so /daftar/add would 404 on a first visit
-// or reload; /daftar/#/add always loads the app.
+// index.html for unknown paths, so /nail-tracker/add would 404 on a first visit
+// or reload; /nail-tracker/#/add always loads the app.
 export const paths = {
-  list: '/',
+  today: '/',
+  history: '/history',
+  earnings: '/earnings',
+  payday: '/payday',
+  settings: '/settings',
   add: '/add',
   edit: (id: string) => `/edit/${id}`,
-  summary: '/summary',
-  settings: '/settings',
+  adjustmentNew: '/adjustment/new',
+  adjustment: (id: string) => `/adjustment/${id}`,
+  period: (id: string) => `/payday/${id}`,
+  pay: (id: string) => `/payday/${id}/pay`,
+  payment: (id: string) => `/payment/${id}`,
+  services: '/settings/services',
+  onboarding: '/onboarding',
 } as const
 
 let navigatedInApp = false
@@ -29,12 +38,12 @@ export function useNavigate() {
 /**
  * Closes a screen like the phone's Back button would. If the app was opened
  * straight on this screen there is nothing to go back to, so it replaces
- * the entry with the list instead of leaving the app.
+ * the entry with Today instead of leaving the app.
  */
 export function useGoBack() {
   const [, navigate] = useLocation()
   return useCallback(() => {
     if (navigatedInApp) history.back()
-    else navigate(paths.list, { replace: true })
+    else navigate(paths.today, { replace: true })
   }, [navigate])
 }

@@ -3,10 +3,8 @@ import type { ReactNode } from 'react'
 import { PageHeader } from '../../app/PageHeader.tsx'
 import { updateSettings, useSettings } from '../../app/settings.ts'
 import { t } from '../../lib/i18n.ts'
-import { formatDate, todayIso, type Calendar } from '../../lib/jalali.ts'
 import type { Locale } from '../../lib/locale.ts'
 import { usePersistState } from '../../pwa/persistStorage.ts'
-import { BackupSection } from '../backup/BackupSection.tsx'
 
 interface TileOption<T extends string> {
   value: T
@@ -54,37 +52,23 @@ function TileGroup<T extends string>({
 }
 
 export function SettingsPage() {
-  const { locale, calendar } = useSettings()
-  const today = todayIso()
-  const short = { weekday: false, year: false }
+  const { locale } = useSettings()
 
   return (
     <>
       <PageHeader title={t(locale, 'settingsTitle')} languageButton={false} />
-      {/* Language names stay in their own script so anyone can find theirs. No flags. */}
+      {/* Language names stay in their own language so anyone can find theirs. No flags. */}
       <TileGroup<Locale>
         legend={t(locale, 'language')}
         name="language"
         value={locale}
         onChange={(value) => updateSettings({ locale: value })}
         options={[
-          { value: 'fa', glyph: 'ف', label: 'فارسی', lang: 'fa' },
+          { value: 'vi', glyph: 'Vi', label: 'Tiếng Việt', lang: 'vi' },
           { value: 'en', glyph: 'Aa', label: 'English', lang: 'en' },
         ]}
       />
-      <TileGroup<Calendar>
-        legend={t(locale, 'calendar')}
-        name="calendar"
-        value={calendar}
-        onChange={(value) => updateSettings({ calendar: value })}
-        options={[
-          // Today's date in each calendar, so the choice shows what it means.
-          { value: 'jalali', glyph: formatDate(today, locale, 'jalali', short), label: t(locale, 'jalali') },
-          { value: 'gregorian', glyph: formatDate(today, locale, 'gregorian', short), label: t(locale, 'gregorian') },
-        ]}
-      />
       <StorageStatus />
-      <BackupSection />
       {/* Only the build id is forced LTR; the label stays in the page direction. */}
       <p className="mt-auto text-center text-xs text-text-muted">
         {t(locale, 'version')} <span dir="ltr">{__BUILD_ID__} · {__BUILD_DATE__}</span>
