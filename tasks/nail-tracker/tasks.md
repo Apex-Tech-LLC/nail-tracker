@@ -54,7 +54,7 @@ Tasks run **one at a time, in order.** All builders share one checkout.
 | T02 | [Money and date helpers](T02-money-dates.md) | T01 | ✅ | Ready-made tests pass, `pnpm gate` passes |
 | T03 | [Commission and totals maths](T03-commission-totals.md) | T02 | ✅ | Ready-made tests pass, `pnpm gate` passes |
 | T04 | [Swap to the new empty shell](T04-new-shell.md) | T03 | ✅ | `pnpm gate` and all browser tests pass, no old words left in `src` |
-| T05 | [Database, seed data, turn store](T05-database.md) | T04 | ⬜ | Store tests pass, `pnpm gate` passes |
+| T05 | [Database, seed data, turn store](T05-database.md) | T04 | ✅ | Store tests pass, `pnpm gate` passes |
 
 ### Milestone 2: Core tracking
 
@@ -121,3 +121,4 @@ _(One row per attempted task.)_
 | 2026-11-05 | T02 | ✅ merged as PR #2 | DeepSeek V4.1 Flash (DeepSeek Harness) | Manager re-ran the gate: 225 unit tests pass, test files identical to the ready-made ones. GitHub CI passed and started by itself. |
 | 2026-11-05 | T03 | ✅ merged as PR #3 | DeepSeek V4.1 Flash (DeepSeek Harness) | Manager re-ran the gate: 259 unit tests pass, test files identical to the ready-made ones, maths read line by line against the brief. GitHub CI passed. |
 | 2026-11-05 | T04 | ✅ merged as PR #4 | DeepSeek V4.1 Flash (DeepSeek Harness) | Manager re-ran the gate (156 unit tests) and all 4 browser tests, compared the brief's code blocks to the files, and found no old words left. GitHub CI passed. Leftovers for a later task: stale comments in src/pwa/persistStorage.ts and src/main.tsx, unused fade-in animation in src/index.css. |
+| 2026-11-05 | T05 | ✅ merged as PR #5 | DeepSeek V4.1 Flash (DeepSeek Harness) | Manager re-ran the gate (167 unit tests), compared schema and seed to the brief (identical), read the store and tests against it. GitHub CI passed. |
