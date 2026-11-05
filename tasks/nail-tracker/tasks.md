@@ -65,7 +65,7 @@ Tasks run **one at a time, in order.** All builders share one checkout.
 | T08 | [Several services, More options, Save & Add Another](T08-add-turn-full.md) | T07 | ✅ | `add-turn` and `today` browser tests pass |
 | T09 | [Edit and delete a turn](T09-edit-delete.md) | T08 | ✅ | `edit-turn` browser tests pass |
 | T10 | [History](T10-history.md) | T09 | ✅ | `history` browser tests pass |
-| T11 | [Service presets screen](T11-presets.md) | T10 | ⬜ | `presets` browser tests pass |
+| T11 | [Service presets screen](T11-presets.md) | T10 | ✅ | `presets` browser tests pass |
 | T12 | [Adjustments](T12-adjustments.md) | T11 | ⬜ | `adjustments` browser tests pass |
 
 ### Milestone 3: Earnings and payday
@@ -127,3 +127,4 @@ _(One row per attempted task.)_
 | 2026-11-05 | T08 | ✅ merged as PR #8 | DeepSeek V4.1 Flash (DeepSeek Harness) | Full Add Turn form, plus the double-tap Save guard the manager added. Gate and all 23 browser tests pass. |
 | 2026-11-05 | T09 | ✅ merged as PR #9 | DeepSeek V4.1 Flash (DeepSeek Harness) | Edit and delete a turn. Gate and all 28 browser tests pass. |
 | 2026-11-05 | T10 | ✅ merged as PR #10 | DeepSeek V4.1 Flash (DeepSeek Harness) | History screen. Took a second builder round: closing a screen now returns to where it was opened, and fixing a bad date range no longer blanks the page. Gate and all 35 browser tests pass. |
+| 2026-11-05 | T11 | ✅ merged as PR #11 | DeepSeek V4.1 Flash (DeepSeek Harness) | Service presets screen. Second builder round stopped a double tap on Save adding a service twice. Gate and all 40 browser tests pass. |
