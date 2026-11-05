@@ -1,26 +1,40 @@
 import { useSyncExternalStore } from 'react'
-import type { Calendar } from '../lib/jalali.ts'
+import type { IsoDate } from '../domain/dates.ts'
 import type { Locale } from '../lib/locale.ts'
+
+export type PayPeriodType = 'weekly' | 'biweekly' | 'custom' | 'none'
+export type TipHandling = 'inHand' | 'fromSalon'
 
 export interface Settings {
   locale: Locale
-  calendar: Calendar
+  defaultCommissionRateBp: number
+  perServiceRates: boolean
+  weekStartDay: 0 | 1
+  payPeriodType: PayPeriodType
+  payPeriodAnchorDate: IsoDate | null
+  cashTipHandling: TipHandling
+  cardTipHandling: TipHandling
+  lastServicePresetId: string | null
+  onboardingDone: boolean
 }
 
-const STORAGE_KEY = 'daftar.settings'
+const STORAGE_KEY = 'nail-tracker.settings'
 
-/** Persian if the browser's first language is Persian, English otherwise. */
+/** Vietnamese if the browser's first language is Vietnamese, English otherwise. */
 export function detectLocale(languages: readonly string[]): Locale {
-  return languages[0]?.toLowerCase().startsWith('fa') ? 'fa' : 'en'
+  return languages[0]?.toLowerCase().startsWith('vi') ? 'vi' : 'en'
 }
 
-/**
- * Saved choices win over detection. The calendar defaults to Jalali in
- * both languages because amounts are in Toman. Anything malformed in
- * storage is ignored rather than trusted.
- */
+const isTipHandling = (value: unknown): value is TipHandling => value === 'inHand' || value === 'fromSalon'
+const isPeriodType = (value: unknown): value is PayPeriodType =>
+  value === 'weekly' || value === 'biweekly' || value === 'custom' || value === 'none'
+const isRate = (value: unknown): value is number =>
+  typeof value === 'number' && Number.isInteger(value) && value >= 0 && value <= 10_000
+const isDateText = (value: unknown): value is IsoDate => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)
+
+/** Saved choices win over defaults. Anything malformed in storage is ignored rather than trusted. */
 export function resolveSettings(saved: string | null, languages: readonly string[]): Settings {
-  let parsed: Partial<Settings> = {}
+  let parsed: Partial<Record<keyof Settings, unknown>> = {}
   try {
     const value: unknown = saved ? JSON.parse(saved) : null
     if (value && typeof value === 'object') parsed = value
@@ -28,15 +42,23 @@ export function resolveSettings(saved: string | null, languages: readonly string
     // Corrupt value: fall back to defaults.
   }
   return {
-    locale: parsed.locale === 'fa' || parsed.locale === 'en' ? parsed.locale : detectLocale(languages),
-    calendar: parsed.calendar === 'gregorian' ? 'gregorian' : 'jalali',
+    locale: parsed.locale === 'vi' || parsed.locale === 'en' ? parsed.locale : detectLocale(languages),
+    defaultCommissionRateBp: isRate(parsed.defaultCommissionRateBp) ? parsed.defaultCommissionRateBp : 6000,
+    perServiceRates: parsed.perServiceRates === true,
+    weekStartDay: parsed.weekStartDay === 1 ? 1 : 0,
+    payPeriodType: isPeriodType(parsed.payPeriodType) ? parsed.payPeriodType : 'none',
+    payPeriodAnchorDate: isDateText(parsed.payPeriodAnchorDate) ? parsed.payPeriodAnchorDate : null,
+    cashTipHandling: isTipHandling(parsed.cashTipHandling) ? parsed.cashTipHandling : 'inHand',
+    cardTipHandling: isTipHandling(parsed.cardTipHandling) ? parsed.cardTipHandling : 'fromSalon',
+    lastServicePresetId: typeof parsed.lastServicePresetId === 'string' ? parsed.lastServicePresetId : null,
+    onboardingDone: parsed.onboardingDone === true,
   }
 }
 
 // Settings live in localStorage, not IndexedDB: they are read synchronously
-// before the first render, so the page never flashes in the wrong language
-// or direction. Storage can throw (private mode, blocked site data), so
-// every access is guarded and the app still works with defaults.
+// before the first render, so the page never flashes in the wrong language.
+// Storage can throw (private mode, blocked site data), so every access is
+// guarded and the app still works with defaults.
 function readStorage(): string | null {
   try {
     return localStorage.getItem(STORAGE_KEY)
@@ -63,10 +85,9 @@ export function updateSettings(change: Partial<Settings>): void {
   listeners.forEach((listener) => listener())
 }
 
-/** Sets <html lang dir>, which flips the whole layout. */
+/** Sets <html lang>. Both languages read left to right. */
 export function applyToDocument({ locale }: Settings): void {
   document.documentElement.lang = locale
-  document.documentElement.dir = locale === 'fa' ? 'rtl' : 'ltr'
 }
 
 function subscribe(listener: () => void) {

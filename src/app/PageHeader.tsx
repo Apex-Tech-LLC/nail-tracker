@@ -6,7 +6,7 @@ import { updateSettings, useSettings } from './settings.ts'
 /** One tap to the other language, for when detection guessed wrong. */
 export function LanguageButton() {
   const { locale } = useSettings()
-  const other = locale === 'fa' ? 'en' : 'fa'
+  const other = locale === 'vi' ? 'en' : 'vi'
   return (
     <button
       type="button"

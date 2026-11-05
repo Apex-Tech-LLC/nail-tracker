@@ -14,7 +14,8 @@ export default defineConfig({
   reporter: process.env.CI ? [['github'], ['html', { open: 'never' }]] : 'list',
   use: {
     baseURL: `http://localhost:${PORT}/nail-tracker/`,
-    locale: 'fa-IR',
+    locale: 'en-US',
+    timezoneId: 'America/Chicago',
     viewport: { width: 390, height: 844 },
     trace: 'retain-on-failure',
   },

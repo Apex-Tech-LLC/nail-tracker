@@ -3,10 +3,9 @@ import { detectLocale, resolveSettings } from '../../src/app/settings.ts'
 
 describe('detectLocale', () => {
   it.each([
-    [['fa-IR', 'en-US'], 'fa'],
-    [['fa'], 'fa'],
-    [['FA-ir'], 'fa'],
-    [['en-US', 'fa-IR'], 'en'],
+    [['vi-VN', 'en-US'], 'vi'],
+    [['VI'], 'vi'],
+    [['en-US', 'vi-VN'], 'en'],
     [['de-DE'], 'en'],
     [[], 'en'],
   ] as const)('%j → %s', (languages, locale) => {
@@ -15,16 +14,34 @@ describe('detectLocale', () => {
 })
 
 describe('resolveSettings', () => {
-  it('detects language and uses Jalali when nothing is saved', () => {
-    expect(resolveSettings(null, ['en-GB'])).toEqual({ locale: 'en', calendar: 'jalali' })
+  const defaults = {
+    locale: 'en',
+    defaultCommissionRateBp: 6000,
+    perServiceRates: false,
+    weekStartDay: 0,
+    payPeriodType: 'none',
+    payPeriodAnchorDate: null,
+    cashTipHandling: 'inHand',
+    cardTipHandling: 'fromSalon',
+    lastServicePresetId: null,
+    onboardingDone: false,
+  }
+
+  it('uses English defaults when nothing is saved', () => {
+    expect(resolveSettings(null, ['en-GB'])).toEqual(defaults)
   })
 
   it('prefers the saved choice over the browser language', () => {
-    const saved = JSON.stringify({ locale: 'en', calendar: 'gregorian' })
-    expect(resolveSettings(saved, ['fa-IR'])).toEqual({ locale: 'en', calendar: 'gregorian' })
+    const saved = JSON.stringify({ locale: 'en', defaultCommissionRateBp: 5000, weekStartDay: 1 })
+    expect(resolveSettings(saved, ['vi-VN'])).toMatchObject({ locale: 'en', defaultCommissionRateBp: 5000, weekStartDay: 1 })
   })
 
-  it.each(['not json', '{"locale":"de","calendar":"lunar"}', '42', 'null'])('ignores bad saved value %j', (saved) => {
-    expect(resolveSettings(saved, ['fa-IR'])).toEqual({ locale: 'fa', calendar: 'jalali' })
+  it.each([
+    'not json',
+    '42',
+    'null',
+    '{"locale":"fa","defaultCommissionRateBp":20000,"payPeriodType":"daily"}',
+  ])('ignores bad saved value %j', (saved) => {
+    expect(resolveSettings(saved, ['vi-VN'])).toMatchObject({ locale: 'vi', defaultCommissionRateBp: 6000, payPeriodType: 'none' })
   })
 })

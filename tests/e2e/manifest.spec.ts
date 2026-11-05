@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { seedSettings } from './helpers.ts'
 
 test('the manifest is valid and every icon loads', async ({ page, request }) => {
   await page.goto('./')
@@ -38,11 +39,10 @@ test('Chromium sees no installability problems', async ({ page }) => {
   expect(installabilityErrors).toEqual([])
 })
 
-test('the document direction and language follow the UI language', async ({ page }) => {
+test('the document language follows the UI language', async ({ page }) => {
+  await seedSettings(page)
   await page.goto('./')
-  await expect(page.locator('html')).toHaveAttribute('dir', 'rtl')
-  await expect(page.locator('html')).toHaveAttribute('lang', 'fa')
-  await page.getByRole('button', { name: 'Switch to English' }).click()
-  await expect(page.locator('html')).toHaveAttribute('dir', 'ltr')
   await expect(page.locator('html')).toHaveAttribute('lang', 'en')
+  await page.getByRole('button', { name: /Switch to Vietnamese/ }).click()
+  await expect(page.locator('html')).toHaveAttribute('lang', 'vi')
 })

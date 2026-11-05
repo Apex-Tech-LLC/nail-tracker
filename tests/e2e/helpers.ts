@@ -13,15 +13,9 @@ export async function installApp(page: Page): Promise<void> {
   await expect.poll(() => page.evaluate(() => !!navigator.serviceWorker.controller)).toBe(true)
 }
 
-/** Fills and saves the new-expense form (Persian UI). */
-export async function addExpense(page: Page, amount: string, category: string, note?: string): Promise<void> {
-  await page.goto('./#/add')
-  await page.getByLabel(/مبلغ/).fill(amount)
-  await page.getByText(category, { exact: true }).click()
-  if (note) await page.getByLabel(/یادداشت/).fill(note)
-  await page.getByRole('button', { name: 'ذخیره' }).click()
-  await expect(page.getByRole('heading', { name: 'دفتر' })).toBeVisible()
+/** Call before the first page.goto(). Sets starting settings unless the app has already saved some. */
+export async function seedSettings(page: Page, overrides: Record<string, unknown> = {}): Promise<void> {
+  await page.addInitScript((settings) => {
+    if (!localStorage.getItem('nail-tracker.settings')) localStorage.setItem('nail-tracker.settings', JSON.stringify(settings))
+  }, { locale: 'en', onboardingDone: true, ...overrides })
 }
-
-/** The month-total card on the list or summary page. */
-export const monthTotal = (page: Page) => page.locator('section.bg-brand-50 p.text-2xl')
