@@ -50,7 +50,7 @@ Tasks run **one at a time, in order.** All builders share one checkout.
 
 | # | Task | Depends on | Status | Verify |
 |---|---|---|---|---|
-| T01 | [Rename the app and give it its look](T01-identity.md) | none | ⬜ | `pnpm gate` and all browser tests pass |
+| T01 | [Rename the app and give it its look](T01-identity.md) | none | ✅ | `pnpm gate` and all browser tests pass |
 | T02 | [Money and date helpers](T02-money-dates.md) | T01 | ⬜ | Ready-made tests pass, `pnpm gate` passes |
 | T03 | [Commission and totals maths](T03-commission-totals.md) | T02 | ⬜ | Ready-made tests pass, `pnpm gate` passes |
 | T04 | [Swap to the new empty shell](T04-new-shell.md) | T03 | ⬜ | `pnpm gate` and all browser tests pass, no old words left in `src` |
@@ -117,3 +117,4 @@ _(One row per attempted task.)_
 
 | Date | Task | Outcome | Agent | Evidence / notes |
 |---|---|---|---|---|
+| 2026-11-05 | T01 | ✅ merged as PR #1 | DeepSeek V4.1 Flash (DeepSeek Harness) | Manager re-ran gate and browser tests: 16 of 17 passed first run, welcome screen passed on the allowed re-run. GitHub CI passed. CI did not start on this fork until the Actions permission was re-saved. Builder ran the harness sandbox repair on the project folder; backups in C:/Bay/Projects/_acl-recovery. Bay added Nail Tracker to the kit pause config so the FRAMELINE and MeanSpy pause does not hold its merges. |
