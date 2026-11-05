@@ -52,7 +52,9 @@ test('yesterday with nothing recorded says so', async ({ page }) => {
   await expect(page.getByText('Nothing recorded for these dates.')).toBeVisible()
 })
 
-test('a custom range that ends before it starts shows an error', async ({ page }) => {
+test('a custom range that ends before it starts shows an error and keeps the inputs', async ({
+  page,
+}) => {
   await seedSettings(page)
   await page.clock.setFixedTime(NOON)
   await page.goto('./#/history')
@@ -61,7 +63,17 @@ test('a custom range that ends before it starts shows an error', async ({ page }
   await page.getByLabel('From').fill('2026-11-05')
   await page.getByLabel('To', { exact: true }).fill('2026-11-01')
 
-  await expect(page.getByText('The end date must be on or after the start date.')).toBeVisible()
+  const rangeError = page.getByText('The end date must be on or after the start date.')
+  await expect(rangeError).toBeVisible()
+  await expect(page.getByLabel('From')).toHaveValue('2026-11-05')
+  await expect(page.getByLabel('To', { exact: true })).toHaveValue('2026-11-01')
+  await expect(page.getByText('Nothing recorded for these dates.')).toHaveCount(0)
+
+  // Correcting the range must not unmount the box being typed in.
+  await page.getByLabel('To', { exact: true }).fill('2026-11-06')
+  await expect(page.getByLabel('To', { exact: true })).toBeFocused()
+  await expect(rangeError).toHaveCount(0)
+  await expect(page.getByText('Nothing recorded for these dates.')).toBeVisible()
 })
 
 test('deleting a turn updates History', async ({ page }) => {
@@ -73,8 +85,22 @@ test('deleting a turn updates History', async ({ page }) => {
   await page.getByRole('link', { name: /Turn #1/ }).click()
   await page.getByRole('button', { name: 'Delete', exact: true }).click()
   await page.getByRole('dialog').getByRole('button', { name: 'Delete' }).click()
-  await expect(page.getByText('No turns yet')).toBeVisible()
 
-  await page.goto('./#/history')
+  await expect(page.getByRole('heading', { name: 'History' })).toBeVisible()
   await expect(page.getByText('Nothing recorded for these dates.')).toBeVisible()
+  await expect(page).toHaveURL(/#\/history$/)
+})
+
+test('saving a turn opened from History goes back to History', async ({ page }) => {
+  await seedSettings(page)
+  await page.clock.setFixedTime(NOON)
+  await addTurn(page, { amount: '100' })
+  await page.goto('./#/history')
+
+  await page.getByRole('link', { name: /Turn #1/ }).click()
+  await page.getByRole('button', { name: 'Save', exact: true }).click()
+
+  await expect(page.getByRole('heading', { name: 'History' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Wednesday, November 4' })).toBeVisible()
+  await expect(page).toHaveURL(/#\/history$/)
 })

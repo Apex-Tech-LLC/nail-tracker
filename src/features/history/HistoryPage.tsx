@@ -52,7 +52,9 @@ export function HistoryPage() {
     [start, end, invalidRange],
   )
 
-  if (!invalidRange && (data === undefined || data === null)) return null
+  // A null result is a rejected range: keep the page and its date inputs
+  // on screen, just without a list or an empty message.
+  if (!invalidRange && data === undefined) return null
 
   const hasSearch = search.trim() !== ''
   const grouped = data ? servicesByTurn(data.services) : new Map<string, TurnService[]>()
@@ -152,7 +154,7 @@ export function HistoryPage() {
         {t(locale, 'addAdjustment')}
       </Link>
 
-      {!invalidRange && groups.length === 0 && (
+      {!invalidRange && data !== null && groups.length === 0 && (
         <p className="text-text-secondary">
           {t(locale, hasSearch ? 'noMatches' : 'noEntries')}
         </p>
