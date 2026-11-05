@@ -54,3 +54,101 @@ test('the next visit remembers the last service used', async ({ page }) => {
     'true',
   )
 })
+
+test('three services add up on one turn', async ({ page }) => {
+  await seedSettings(page)
+  await page.goto('./#/add')
+  const lines = page.getByTestId('service-line')
+
+  await lines.nth(0).getByRole('button', { name: 'Gel Manicure', exact: true }).click()
+  await lines.nth(0).getByLabel('Service amount').fill('40')
+  await page.getByRole('button', { name: 'Add service' }).click()
+  await lines.nth(1).getByRole('button', { name: 'Pedicure', exact: true }).click()
+  await lines.nth(1).getByLabel('Service amount').fill('50')
+  await page.getByRole('button', { name: 'Add service' }).click()
+  await lines.nth(2).getByRole('button', { name: 'Nail Art / Design', exact: true }).click()
+  await lines.nth(2).getByLabel('Service amount').fill('15')
+  await page.getByLabel('Card tip').fill('15')
+
+  await expect(page.getByText('$105.00')).toBeVisible()
+  await expect(page.getByText('$63.00')).toBeVisible()
+  await expect(page.getByText('$78.00')).toBeVisible()
+
+  await page.getByRole('button', { name: 'Save', exact: true }).click()
+  await expect(page.getByText('$78.00').first()).toBeVisible()
+  await expect(page.locator('p.text-3xl')).toHaveText('1')
+  await expect(page.getByText('Turn #1')).toBeVisible()
+})
+
+test('each service can have its own commission rate', async ({ page }) => {
+  await seedSettings(page, { perServiceRates: true })
+  await page.goto('./#/add')
+  const lines = page.getByTestId('service-line')
+
+  await lines.nth(0).getByRole('button', { name: 'Gel-X', exact: true }).click()
+  await lines.nth(0).getByLabel('Service amount').fill('75')
+  await lines.nth(0).getByLabel('Commission %').fill('60')
+  await page.getByRole('button', { name: 'Add service' }).click()
+  await lines.nth(1).getByRole('button', { name: 'Nail Art / Design', exact: true }).click()
+  await lines.nth(1).getByLabel('Service amount').fill('20')
+  await lines.nth(1).getByLabel('Commission %').fill('70')
+
+  await expect(page.getByText('$59.00').first()).toBeVisible()
+})
+
+test('a service can be removed', async ({ page }) => {
+  await seedSettings(page)
+  await page.goto('./#/add')
+
+  await page.getByRole('button', { name: 'Add service' }).click()
+  await expect(page.getByTestId('service-line')).toHaveCount(2)
+  await page.getByRole('button', { name: 'Remove this service' }).first().click()
+
+  await expect(page.getByTestId('service-line')).toHaveCount(1)
+})
+
+test('a zero turn count saves the turn without a number', async ({ page }) => {
+  await seedSettings(page)
+  await page.goto('./#/add')
+  await page.getByLabel('Service amount').fill('20')
+  await page.getByRole('button', { name: 'More options' }).click()
+  await page.getByLabel('Turn count').fill('0')
+  await page.getByRole('button', { name: 'Save', exact: true }).click()
+
+  await expect(page.getByText('No turn')).toBeVisible()
+})
+
+test('a bad turn count shows an error', async ({ page }) => {
+  await seedSettings(page)
+  await page.goto('./#/add')
+  await page.getByRole('button', { name: 'More options' }).click()
+  await page.getByLabel('Turn count').fill('abc')
+  await page.getByRole('button', { name: 'Save', exact: true }).click()
+
+  await expect(page.getByText('Enter a whole number from 0 to 99.')).toBeVisible()
+})
+
+test('Save & Add Another keeps the form open for the next turn', async ({ page }) => {
+  await seedSettings(page)
+  await page.goto('./#/add')
+  await page.getByLabel('Service amount').fill('30')
+  await page.getByRole('button', { name: 'Save & Add Another' }).click()
+
+  await expect(page).toHaveURL(/#\/add$/)
+  await expect(page.getByText('Saved. Add the next turn.')).toBeVisible()
+  await expect(page.getByLabel('Service amount')).toHaveValue('')
+
+  await page.getByLabel('Service amount').fill('40')
+  await page.getByRole('button', { name: 'Save', exact: true }).click()
+  await expect(page.getByText('Turn #2')).toBeVisible()
+})
+
+test('a double tap on Save records the turn once', async ({ page }) => {
+  await seedSettings(page)
+  await page.goto('./#/add')
+  await page.getByLabel('Service amount').fill('30')
+  await page.getByRole('button', { name: 'Save', exact: true }).dblclick()
+
+  await expect(page.getByText('Turn #1')).toBeVisible()
+  await expect(page.getByText('Turn #2')).toHaveCount(0)
+})

@@ -1,4 +1,4 @@
-import { useId } from 'react'
+import { useId, type RefObject } from 'react'
 import { errorText, field, label } from './styles.ts'
 
 interface Props {
@@ -7,9 +7,10 @@ interface Props {
   onChange: (value: string) => void
   error?: string
   autoFocus?: boolean
+  inputRef?: RefObject<HTMLInputElement | null>
 }
 
-export function MoneyField({ label: labelText, value, onChange, error, autoFocus }: Props) {
+export function MoneyField({ label: labelText, value, onChange, error, autoFocus, inputRef }: Props) {
   const id = useId()
   return (
     <div>
@@ -24,6 +25,7 @@ export function MoneyField({ label: labelText, value, onChange, error, autoFocus
           $
         </span>
         <input
+          ref={inputRef}
           id={id}
           type="text"
           inputMode="decimal"
