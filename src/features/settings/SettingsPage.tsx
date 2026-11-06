@@ -14,6 +14,8 @@ import { PercentField } from '../../ui/PercentField.tsx'
 import { Row } from '../../ui/Row.tsx'
 import { TileGroup } from '../../ui/TileGroup.tsx'
 import { card, field, label, secondaryButton } from '../../ui/styles.ts'
+import { BackupSection } from '../backup/BackupSection.tsx'
+import { DeleteAllSection } from '../backup/DeleteAllSection.tsx'
 import { TipHandlingFields } from './TipHandlingFields.tsx'
 
 type RateChoice = '6000' | '5000' | 'custom'
@@ -185,6 +187,8 @@ export function SettingsPage() {
       </div>
 
       <StorageStatus />
+      <BackupSection />
+      <DeleteAllSection />
       {/* Only the build id is forced LTR; the label stays in the page direction. */}
       <p className="mt-auto text-center text-xs text-text-muted">
         {t(locale, 'version')} <span dir="ltr">{__BUILD_ID__} · {__BUILD_DATE__}</span>

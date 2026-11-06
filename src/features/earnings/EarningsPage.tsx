@@ -1,6 +1,6 @@
 import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { useId, useState } from 'react'
+import { useId, useRef, useState } from 'react'
 import { PageHeader } from '../../app/PageHeader.tsx'
 import { useSettings } from '../../app/settings.ts'
 import { useToday } from '../../app/useToday.ts'
@@ -9,6 +9,7 @@ import {
   formatDayLong,
   formatMonthYear,
   formatRange,
+  todayIso,
   type DateLocale,
   type IsoDate,
 } from '../../domain/dates.ts'
@@ -23,7 +24,11 @@ import {
   errorText,
   field,
   label,
+  secondaryButton,
 } from '../../ui/styles.ts'
+import { backupFileName, download } from '../backup/backupFormat.ts'
+import { exportCsv } from '../backup/exportCsv.ts'
+import { loadRange } from '../turns/turnStore.ts'
 import { loadEarnings } from './earningsData.ts'
 import { rangeOf, stepDate, type PeriodChoice } from './earningsRange.ts'
 
@@ -73,6 +78,24 @@ export function EarningsPage() {
     () => (invalidRange ? null : loadEarnings(db, start, end)),
     [start, end, invalidRange],
   )
+
+  // A quick double tap runs the download twice before React can re-render.
+  const exportInFlight = useRef(false)
+
+  async function exportRange() {
+    if (exportInFlight.current) return
+    exportInFlight.current = true
+    try {
+      const loaded = await loadRange(db, start, end)
+      download(
+        exportCsv(loaded.turns, loaded.services, loaded.adjustments, locale),
+        backupFileName('turns', 'csv', todayIso()),
+        'text/csv',
+      )
+    } finally {
+      exportInFlight.current = false
+    }
+  }
 
   // An invalid custom range keeps the picker and its error on screen, just
   // without figures; a valid one waits for its first database result.
@@ -219,6 +242,10 @@ export function EarningsPage() {
               value={formatUsd(data.averages.earnedPerWorkDayCents)}
             />
           </div>
+
+          <button type="button" onClick={exportRange} className={secondaryButton}>
+            {t(locale, 'exportCsvRange')}
+          </button>
         </>
       )}
     </>

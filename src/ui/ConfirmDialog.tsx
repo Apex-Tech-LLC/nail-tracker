@@ -63,7 +63,7 @@ export function ConfirmDialog({
           type="button"
           onClick={onConfirm}
           disabled={confirmDisabled}
-          className={danger ? dangerButton : primaryButton}
+          className={`${danger ? dangerButton : primaryButton} disabled:opacity-50`}
         >
           {confirmLabel}
         </button>

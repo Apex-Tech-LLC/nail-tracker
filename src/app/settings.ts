@@ -86,6 +86,18 @@ export function updateSettings(change: Partial<Settings>): void {
   listeners.forEach((listener) => listener())
 }
 
+/** Back to first-launch defaults, except the language, which stays as the person chose it. */
+export function resetSettings(): void {
+  const { locale } = current
+  current = resolveSettings(JSON.stringify({ locale }), [])
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(current))
+  } catch {
+    // Not saved, but still applied for this session.
+  }
+  listeners.forEach((listener) => listener())
+}
+
 /** Sets <html lang>. Both languages read left to right. */
 export function applyToDocument({ locale }: Settings): void {
   document.documentElement.lang = locale
