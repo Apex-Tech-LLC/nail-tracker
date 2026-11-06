@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Locator, type Page } from '@playwright/test'
 import { addTurn, seedSettings, weeklyPay } from './helpers.ts'
 
 // Noon on 2026-11-04 in the browser's America/Chicago timezone.
@@ -21,6 +21,14 @@ async function addAdjustment(page: Page, amount: string, category: string): Prom
   await page.getByRole('button', { name: category, exact: true }).click()
   await page.getByRole('button', { name: 'Save', exact: true }).click()
   await expect(page.getByRole('link', { name: /Add Turn|Add your first turn/ })).toBeVisible()
+}
+
+/**
+ * The amount on the period row whose label is exactly `label`, so a matching
+ * amount on another row (commission often equals the payout) cannot pass.
+ */
+function rowAmount(page: Page, label: string): Locator {
+  return page.getByText(label, { exact: true }).locator('..').locator('span').last()
 }
 
 async function addCustomPeriod(page: Page, from: string, to: string): Promise<void> {
@@ -60,7 +68,7 @@ test('the period shows the spec example figures', async ({ page }) => {
   await expect(page.getByText('$180.00').first()).toBeVisible()
   await expect(page.getByText('$1,620.00')).toBeVisible()
   // Expected salon payout and outstanding are both $1,440.
-  await expect(page.getByText('$1,440.00').first()).toBeVisible()
+  await expect(rowAmount(page, 'Expected salon payout')).toHaveText('$1,440.00')
   await expect(page.getByText('Outstanding')).toBeVisible()
 })
 
@@ -76,8 +84,7 @@ test('a cash tip the salon holds is part of what it owes', async ({ page }) => {
   await expect(page.getByRole('link', { name: /Add Turn|Add your first turn/ })).toBeVisible()
 
   await openWeekPeriod(page)
-  await expect(page.getByText('Expected salon payout')).toBeVisible()
-  await expect(page.getByText('$70.00').first()).toBeVisible()
+  await expect(rowAmount(page, 'Expected salon payout')).toHaveText('$70.00')
 })
 
 test('a card tip already in hand is not owed again', async ({ page }) => {
@@ -85,8 +92,7 @@ test('a card tip already in hand is not owed again', async ({ page }) => {
   await addTurn(page, { amount: '100', card: '15' })
   await openWeekPeriod(page)
 
-  await expect(page.getByText('Expected salon payout')).toBeVisible()
-  await expect(page.getByText('$60.00').first()).toBeVisible()
+  await expect(rowAmount(page, 'Expected salon payout')).toHaveText('$60.00')
 })
 
 test('a bookkeeping deduction lowers earned but not the salon payout', async ({ page }) => {
@@ -95,8 +101,8 @@ test('a bookkeeping deduction lowers earned but not the salon payout', async ({ 
   await addAdjustment(page, '-10', 'Bookkeeping deduction')
   await openWeekPeriod(page)
 
-  await expect(page.getByText('$50.00')).toBeVisible()
-  await expect(page.getByText('$60.00').first()).toBeVisible()
+  await expect(rowAmount(page, 'Total earned')).toHaveText('$50.00')
+  await expect(rowAmount(page, 'Expected salon payout')).toHaveText('$60.00')
 })
 
 test('a period closes and reopens', async ({ page }) => {
