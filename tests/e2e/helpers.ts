@@ -1,4 +1,4 @@
-import { expect, type Page } from '@playwright/test'
+import { expect, type Locator, type Page } from '@playwright/test'
 
 /**
  * Opens the app and waits until the service worker has precached it and
@@ -22,6 +22,19 @@ export async function seedSettings(page: Page, overrides: Record<string, unknown
 
 /** Pay period settings used by the payday tests: weekly, November 1 to 7 contains the fixed test date. */
 export const weeklyPay = { payPeriodType: 'weekly', payPeriodAnchorDate: '2026-11-01' }
+
+/**
+ * The amount on the row whose label is exactly `label`, so a matching amount
+ * elsewhere on the screen cannot pass. Pass `section` when the same label
+ * appears in more than one card; the period's received and owed cards both
+ * show "Salon paid".
+ */
+export function rowAmount(page: Page, label: string, section?: string): Locator {
+  const root = section
+    ? page.getByRole('heading', { name: section, exact: true }).locator('..')
+    : page
+  return root.getByText(label, { exact: true }).locator('..').locator('span').last()
+}
 
 interface TurnOptions {
   service?: string
