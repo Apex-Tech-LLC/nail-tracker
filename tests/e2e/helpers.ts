@@ -20,6 +20,9 @@ export async function seedSettings(page: Page, overrides: Record<string, unknown
   }, { locale: 'en', onboardingDone: true, ...overrides })
 }
 
+/** Pay period settings used by the payday tests: weekly, November 1 to 7 contains the fixed test date. */
+export const weeklyPay = { payPeriodType: 'weekly', payPeriodAnchorDate: '2026-11-01' }
+
 interface TurnOptions {
   service?: string
   amount: string
