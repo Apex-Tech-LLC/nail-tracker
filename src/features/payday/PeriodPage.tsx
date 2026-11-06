@@ -5,7 +5,7 @@ import { Link } from 'wouter'
 import { paths } from '../../app/navigation.ts'
 import { useSettings } from '../../app/settings.ts'
 import { db } from '../../db/schema.ts'
-import { formatRange } from '../../domain/dates.ts'
+import { formatDayShort, formatRange } from '../../domain/dates.ts'
 import { formatUsd } from '../../domain/money.ts'
 import { t, tf } from '../../lib/i18n.ts'
 import { ConfirmDialog } from '../../ui/ConfirmDialog.tsx'
@@ -17,7 +17,8 @@ import {
   primaryButton,
   secondaryButton,
 } from '../../ui/styles.ts'
-import { PAY_STATE_COLOR, PAY_STATE_LABEL } from './payStateLabels.ts'
+import { PAYMENT_METHOD_LABEL, PAY_STATE_COLOR, PAY_STATE_LABEL } from './payStateLabels.ts'
+import { loadPaymentsForPeriod } from './paymentStore.ts'
 import { deletePeriod, loadPeriodSummaries, setPeriodStatus } from './periodStore.ts'
 
 interface Props {
@@ -35,7 +36,12 @@ export function PeriodPage({ periodId, onDone }: Props) {
     return all.find((item) => item.period.id === periodId) ?? null
   }, [periodId])
 
-  if (summary === undefined) return null
+  const payments = useLiveQuery(
+    () => loadPaymentsForPeriod(db, periodId),
+    [periodId],
+  )
+
+  if (summary === undefined || payments === undefined) return null
 
   if (summary === null) {
     return (
@@ -134,9 +140,32 @@ export function PeriodPage({ periodId, onDone }: Props) {
         {t(locale, 'recordPayment')}
       </Link>
 
-      <section className={card}>
+      <section className="flex flex-col gap-2">
         <h2 className="font-medium">{t(locale, 'payments')}</h2>
-        <p className="text-sm text-text-secondary">{t(locale, 'noPayments')}</p>
+        {payments.length === 0 ? (
+          <p className="text-sm text-text-secondary">{t(locale, 'noPayments')}</p>
+        ) : (
+          payments.map(({ payment, allocatedCents }) => (
+            <Link
+              key={payment.id}
+              href={paths.payment(payment.id)}
+              className={`${card} flex items-center justify-between gap-2`}
+            >
+              <span className="min-w-0">
+                {formatDayShort(payment.paymentDate, locale)} ·{' '}
+                {t(locale, PAYMENT_METHOD_LABEL[payment.paymentMethod])}
+              </span>
+              <span className="shrink-0 text-right">
+                <span className="block tabular-nums">{formatUsd(allocatedCents)}</span>
+                {payment.amountCents > allocatedCents && (
+                  <span className="block text-xs text-text-secondary">
+                    {formatUsd(payment.amountCents)}
+                  </span>
+                )}
+              </span>
+            </Link>
+          ))
+        )}
       </section>
 
       <button type="button" onClick={() => void toggleStatus()} className={secondaryButton}>
