@@ -1,4 +1,4 @@
-import { Link, Route, Switch } from 'wouter'
+import { Link, Route, Switch, useLocation } from 'wouter'
 import { AdjustmentForm } from '../features/adjustments/AdjustmentForm.tsx'
 import { EarningsPage } from '../features/earnings/EarningsPage.tsx'
 import { HistoryPage } from '../features/history/HistoryPage.tsx'
@@ -17,6 +17,7 @@ import { useSettings } from './settings.ts'
 export function Routes() {
   const { locale } = useSettings()
   const goBack = useGoBack()
+  const [, navigate] = useLocation()
 
   return (
     <Switch>
@@ -45,6 +46,16 @@ export function Routes() {
       <Route path={paths.add}>{() => <TurnForm onDone={goBack} />}</Route>
       <Route path="/edit/:id">
         {(params) => <TurnForm key={params.id} turnId={params.id} onDone={goBack} />}
+      </Route>
+      <Route path="/copy/:id">
+        {(params) => (
+          <TurnForm
+            key={`copy-${params.id}`}
+            copyId={params.id}
+            onDone={() => navigate(paths.today, { replace: true })}
+            onClose={goBack}
+          />
+        )}
       </Route>
       <Route path={paths.adjustmentNew}>{() => <AdjustmentForm onDone={goBack} />}</Route>
       <Route path="/adjustment/:id">

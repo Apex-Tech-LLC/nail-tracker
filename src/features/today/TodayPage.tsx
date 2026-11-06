@@ -11,7 +11,7 @@ import { formatDayLong, isIsoDate, type IsoDate } from '../../domain/dates.ts'
 import { formatUsd } from '../../domain/money.ts'
 import { numberTurns, sumTotals } from '../../domain/totals.ts'
 import { t } from '../../lib/i18n.ts'
-import { card, field, primaryButton } from '../../ui/styles.ts'
+import { card, field, primaryButton, secondaryButton } from '../../ui/styles.ts'
 import { loadRange, servicesByTurn } from '../turns/turnStore.ts'
 import { TurnRow } from '../turns/TurnRow.tsx'
 
@@ -24,6 +24,8 @@ export function TodayPage() {
   const day = picked ?? today
   // Live query: saving a turn elsewhere updates this screen without a refresh.
   const data = useLiveQuery(() => loadRange(db, day, day), [day])
+  // The most recent turn ever, not just on this day, so Repeat works on any day.
+  const latestTurn = useLiveQuery(() => db.turns.orderBy('occurredAt').last(), [])
 
   if (data === undefined) return null
 
@@ -103,6 +105,15 @@ export function TodayPage() {
         <IconPlus size={20} aria-hidden="true" />
         {hasTurns ? t(locale, 'addTurn') : t(locale, 'addFirstTurn')}
       </Link>
+
+      {latestTurn && (
+        <Link
+          href={paths.copy(latestTurn.id)}
+          className={`${secondaryButton} flex min-h-11 items-center justify-center`}
+        >
+          {t(locale, 'repeatLastTurn')}
+        </Link>
+      )}
 
       {recentTurns.length > 0 && (
         <section className="flex flex-col gap-2">

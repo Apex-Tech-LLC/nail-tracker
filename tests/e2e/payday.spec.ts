@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
-import { addTurn, rowAmount, seedSettings, weeklyPay } from './helpers.ts'
+import { addTurn, rowAmount, seedSettings, selectServices, weeklyPay } from './helpers.ts'
 
 // Noon on 2026-11-04 in the browser's America/Chicago timezone.
 const NOON = new Date('2026-11-04T12:00:00')
@@ -91,7 +91,7 @@ test('the period shows the spec example figures', async ({ page }) => {
 test('a cash tip the salon holds is part of what it owes', async ({ page }) => {
   await start(page, weeklyPay)
   await page.goto('./#/add')
-  await page.getByRole('button', { name: 'Manicure', exact: true }).click()
+  await selectServices(page, ['Manicure'])
   await page.getByLabel('Service amount').fill('100')
   await page.getByLabel('Cash tip').fill('10')
   await page.getByRole('button', { name: 'More options' }).click()

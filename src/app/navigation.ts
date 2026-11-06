@@ -13,6 +13,7 @@ export const paths = {
   settings: '/settings',
   add: '/add',
   edit: (id: string) => `/edit/${id}`,
+  copy: (id: string) => `/copy/${id}`,
   adjustmentNew: '/adjustment/new',
   adjustment: (id: string) => `/adjustment/${id}`,
   period: (id: string) => `/payday/${id}`,

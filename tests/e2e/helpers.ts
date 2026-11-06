@@ -36,6 +36,32 @@ export function rowAmount(page: Page, label: string, section?: string): Locator 
   return root.getByText(label, { exact: true }).locator('..').locator('span').last()
 }
 
+/** The service chips above the service lines. */
+export function servicePicker(page: Page): Locator {
+  return page.getByRole('group', { name: 'Services (pick one or more)' })
+}
+
+/**
+ * Leaves exactly the named service chips on. Chips that are on but not wanted
+ * are turned off, then any wanted chip that is off is turned on.
+ */
+export async function selectServices(page: Page, names: readonly string[]): Promise<void> {
+  const picker = servicePicker(page)
+  const wanted = new Set(names)
+  // Wait for the form's chips before reading them: .all() does not wait.
+  await picker.getByRole('button').first().waitFor()
+
+  for (const chip of await picker.locator('button[aria-pressed="true"]').all()) {
+    const label = ((await chip.textContent()) ?? '').trim()
+    if (!wanted.has(label)) await chip.click()
+  }
+
+  for (const name of names) {
+    const chip = picker.getByRole('button', { name, exact: true })
+    if ((await chip.getAttribute('aria-pressed')) !== 'true') await chip.click()
+  }
+}
+
 interface TurnOptions {
   service?: string
   amount: string
@@ -50,7 +76,7 @@ export async function addTurn(
   { service = 'Manicure', amount, cash, card, rate }: TurnOptions,
 ): Promise<void> {
   await page.goto('./#/add')
-  await page.getByRole('button', { name: service, exact: true }).click()
+  await selectServices(page, [service])
   await page.getByLabel('Service amount').fill(amount)
   if (cash) await page.getByLabel('Cash tip').fill(cash)
   if (card) await page.getByLabel('Card tip').fill(card)
