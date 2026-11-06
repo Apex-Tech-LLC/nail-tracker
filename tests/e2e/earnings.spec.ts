@@ -1,8 +1,9 @@
 import { expect, test, type Page } from '@playwright/test'
 import { addTurn, seedSettings } from './helpers.ts'
 
-// Noon on Wednesday 2026-11-04 in the browser's America/Chicago timezone.
-const NOON = new Date('2026-11-04T12:00:00')
+// Noon on Wednesday 2026-11-04 in Chicago. The offset is explicit so the
+// machine running the tests (UTC on GitHub) cannot move the fixed day.
+const NOON = new Date('2026-11-04T12:00:00-06:00')
 
 async function startEarnings(page: Page): Promise<void> {
   await seedSettings(page)
@@ -60,4 +61,31 @@ test('with no data the page still shows zero', async ({ page }) => {
 
   await expect(page.getByRole('heading', { name: 'Earnings' })).toBeVisible()
   await expect(page.getByText('$0.00').first()).toBeVisible()
+})
+
+test('shows the daily chart with the highest day', async ({ page }) => {
+  await startEarnings(page)
+  await addTurn(page, { amount: '100' })
+  await page.goto('./#/earnings')
+
+  await expect(page.getByText('Earned each day')).toBeVisible()
+  // Both charts share the same summary, so check the first one.
+  await expect(page.getByRole('img', { name: /Highest day \$60\.00/ }).first()).toBeVisible()
+})
+
+test('says when there is not enough data for a chart yet', async ({ page }) => {
+  await startEarnings(page)
+  await page.goto('./#/earnings')
+
+  await expect(page.getByText('Not enough data for a chart yet.')).toBeVisible()
+})
+
+test('the one-day view shows no chart', async ({ page }) => {
+  await startEarnings(page)
+  await addTurn(page, { amount: '100' })
+  await page.goto('./#/earnings')
+
+  await page.getByRole('button', { name: 'Daily' }).click()
+
+  await expect(page.getByRole('img', { name: /Highest day/ })).toHaveCount(0)
 })

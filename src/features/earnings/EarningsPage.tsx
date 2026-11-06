@@ -14,7 +14,7 @@ import {
   type IsoDate,
 } from '../../domain/dates.ts'
 import { formatUsd } from '../../domain/money.ts'
-import { t, type StringKey } from '../../lib/i18n.ts'
+import { t, tf, type StringKey } from '../../lib/i18n.ts'
 import { Row } from '../../ui/Row.tsx'
 import {
   card,
@@ -29,6 +29,7 @@ import {
 import { backupFileName, download } from '../backup/backupFormat.ts'
 import { exportCsv } from '../backup/exportCsv.ts'
 import { loadRange } from '../turns/turnStore.ts'
+import { BarChart } from './BarChart.tsx'
 import { loadEarnings } from './earningsData.ts'
 import { rangeOf, stepDate, type PeriodChoice } from './earningsRange.ts'
 
@@ -75,9 +76,16 @@ export function EarningsPage() {
   const { start, end } = range
   const invalidRange = end < start
   const data = useLiveQuery(
-    () => (invalidRange ? null : loadEarnings(db, start, end)),
-    [start, end, invalidRange],
+    () => (invalidRange ? null : loadEarnings(db, start, end, weekStartDay, locale)),
+    [start, end, invalidRange, weekStartDay, locale],
   )
+
+  const hasChartData =
+    data?.bars.some((bar) => bar.earnedCents > 0 || bar.revenueCents > 0) ?? false
+  const highestEarned =
+    data && data.bars.length > 0
+      ? data.bars.reduce((max, bar) => Math.max(max, bar.earnedCents), Number.NEGATIVE_INFINITY)
+      : 0
 
   // A quick double tap runs the download twice before React can re-render.
   const exportInFlight = useRef(false)
@@ -242,6 +250,35 @@ export function EarningsPage() {
               value={formatUsd(data.averages.earnedPerWorkDayCents)}
             />
           </div>
+
+          {choice !== 'daily' && (
+            <div className={`${card} flex flex-col gap-4`}>
+              {hasChartData ? (
+                <>
+                  <BarChart
+                    title={t(locale, 'chartDaily')}
+                    summary={tf(locale, 'chartSummary', {
+                      days: data.bars.length,
+                      amount: formatUsd(highestEarned),
+                    })}
+                    bars={data.bars}
+                    series={['earned']}
+                  />
+                  <BarChart
+                    title={t(locale, 'chartRevenueVsEarned')}
+                    summary={tf(locale, 'chartSummary', {
+                      days: data.bars.length,
+                      amount: formatUsd(highestEarned),
+                    })}
+                    bars={data.bars}
+                    series={['revenue', 'earned']}
+                  />
+                </>
+              ) : (
+                <p className="text-sm text-text-secondary">{t(locale, 'chartNoData')}</p>
+              )}
+            </div>
+          )}
 
           <button type="button" onClick={exportRange} className={secondaryButton}>
             {t(locale, 'exportCsvRange')}
