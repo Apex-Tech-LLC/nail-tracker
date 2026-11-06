@@ -44,7 +44,7 @@ describe('loadEarnings', () => {
     const fresh = openFresh()
     await seedWeek(fresh)
 
-    const earnings = await loadEarnings(fresh, '2026-11-01', '2026-11-07')
+    const earnings = await loadEarnings(fresh, '2026-11-01', '2026-11-07', 0, 'en')
 
     expect(earnings.totals.earnedCents).toBe(8500)
     expect(earnings.paidInRangeCents).toBe(4000)
@@ -56,7 +56,7 @@ describe('loadEarnings', () => {
     const fresh = openFresh()
     await seedWeek(fresh)
 
-    const earnings = await loadEarnings(fresh, '2026-12-01', '2026-12-07')
+    const earnings = await loadEarnings(fresh, '2026-12-01', '2026-12-07', 0, 'en')
 
     expect(earnings.totals.earnedCents).toBe(0)
     expect(earnings.paidInRangeCents).toBe(0)
