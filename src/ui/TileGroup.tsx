@@ -14,17 +14,19 @@ export function TileGroup<T extends string>({
   value,
   options,
   onChange,
+  stacked = false,
 }: {
   legend: string
   name: string
   value: T
   options: TileOption<T>[]
   onChange: (value: T) => void
+  stacked?: boolean
 }): ReactNode {
   return (
     <fieldset>
       <legend className="mb-2 text-xs text-text-secondary">{legend}</legend>
-      <div className="flex gap-2">
+      <div className={stacked ? 'flex flex-col gap-2' : 'flex gap-2'}>
         {options.map((option) => {
           const on = option.value === value
           return (
