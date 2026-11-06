@@ -85,7 +85,7 @@ Tasks run **one at a time, in order.** All builders share one checkout.
 |---|---|---|---|---|
 | T19 | [JSON backup, restore, migrations](T19-backup-json.md) | T18 | ✅ | `backup` unit tests pass |
 | T20 | [CSV, backup buttons, delete all](T20-csv-backup-ui.md) | T19 | ✅ | `backup` and `settings` browser tests pass |
-| T21 | [Offline and install checks](T21-offline.md) | T20 | ⬜ | `offline` and `manifest` browser tests pass |
+| T21 | [Offline and install checks](T21-offline.md) | T20 | ✅ | `offline` and `manifest` browser tests pass |
 
 ### Milestone 5: Testing and polish
 
@@ -137,3 +137,4 @@ _(One row per attempted task.)_
 | 2026-11-05 | T18 | ✅ merged as PR #18 | DeepSeek V4.1 Flash (DeepSeek Harness) | Passed review first time. 91 browser tests pass |
 | 2026-11-05 | T19 | ✅ merged as PR #19 | DeepSeek V4.1 Flash (DeepSeek Harness) | JSON backup and restore; 23 unit tests; manager edge checks passed |
 | 2026-11-05 | T20 | ✅ merged as PR #20 | DeepSeek V4.1 Flash (DeepSeek Harness) | CSV export, backup buttons, delete all data; round 2 fixed silent restore failure, dead restore button on old iPhones, Vietnamese delete word |
+| 2026-11-05 | T21 | ✅ merged as PR #21 | DeepSeek V4.1 Flash (DeepSeek Harness) | offline, install and no-network tests; no app changes needed |
