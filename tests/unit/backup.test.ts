@@ -4,12 +4,14 @@ import type { Settings } from '../../src/app/settings.ts'
 import { createDb, type NailDb } from '../../src/db/schema.ts'
 import { addAdjustment } from '../../src/features/adjustments/adjustmentStore.ts'
 import { backupFileName, type Backup } from '../../src/features/backup/backupFormat.ts'
+import { deleteAllData } from '../../src/features/backup/deleteAllData.ts'
 import { exportJson } from '../../src/features/backup/exportJson.ts'
 import { ImportError } from '../../src/features/backup/importError.ts'
 import { importJson } from '../../src/features/backup/importJson.ts'
 import { migrateBackup } from '../../src/features/backup/migrateBackup.ts'
 import { addPayment } from '../../src/features/payday/paymentStore.ts'
 import { addCustomPeriod } from '../../src/features/payday/periodStore.ts'
+import { removePreset } from '../../src/features/presets/presetStore.ts'
 import { addTurn, updateTurn, type TurnInput } from '../../src/features/turns/turnStore.ts'
 
 const settings: Settings = {
@@ -313,6 +315,23 @@ describe('importJson refuses a bad file', () => {
     await expect(importJson(fresh, JSON.stringify(data))).rejects.toMatchObject({
       code: 'invalidRecord',
     })
+  })
+})
+
+describe('deleteAllData', () => {
+  it('empties every record and puts the first-launch salon and presets back', async () => {
+    const fresh = openFresh()
+    await addTurn(fresh, turnInput(), 1000)
+    await removePreset(fresh, 'manicure')
+
+    await deleteAllData(fresh)
+
+    expect(await fresh.turns.count()).toBe(0)
+    expect(await fresh.turnServices.count()).toBe(0)
+    expect(await fresh.salons.count()).toBe(1)
+    const presets = await fresh.servicePresets.toArray()
+    expect(presets).toHaveLength(10)
+    expect(presets.every((preset) => preset.isActive)).toBe(true)
   })
 })
 
