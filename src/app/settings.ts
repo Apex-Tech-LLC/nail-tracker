@@ -1,8 +1,9 @@
 import { useSyncExternalStore } from 'react'
 import type { IsoDate } from '../domain/dates.ts'
 import type { Locale } from '../lib/locale.ts'
+import type { PayPeriodType } from '../domain/payPeriods.ts'
+export type { PayPeriodType }
 
-export type PayPeriodType = 'weekly' | 'biweekly' | 'custom' | 'none'
 export type TipHandling = 'inHand' | 'fromSalon'
 
 export interface Settings {
