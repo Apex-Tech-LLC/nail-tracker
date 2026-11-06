@@ -94,7 +94,7 @@ Tasks run **one at a time, in order.** All builders share one checkout.
 | T22 | [End-to-end acceptance and edge cases](T22-acceptance.md) | T21 | ✅ | All browser tests pass |
 | T23 | [Accessibility and iPhone width](T23-a11y-mobile.md) | T22 | ✅ | All browser tests pass |
 | T24 | [Charts on Earnings](T24-charts.md) | T23 | ✅ | `earnings` and `a11y` browser tests pass, no new package |
-| T25 | [Final sweep and deployment](T25-final.md) | T24 | ⬜ | All searches clean, all browser tests pass, site live |
+| T25 | [Final sweep and deployment](T25-final.md) | T24 | ✅ | All searches clean, all browser tests pass, site live |
 
 ## Definition of done
 
@@ -141,3 +141,4 @@ _(One row per attempted task.)_
 | 2026-11-05 | T22 | ✅ merged as PR #22 | DeepSeek V4.1 Flash (DeepSeek Harness) | 13 acceptance tests, no app bugs; round 2 pinned test clocks to Chicago time after GitHub (UTC) failed one |
 | 2026-11-05 | T23 | ✅ merged as PR #23 | DeepSeek V4.1 Flash (DeepSeek Harness) | accessibility audit and 375px checks in both languages; all small buttons now 44px |
 | 2026-11-05 | T24 | ✅ merged as PR #24 | DeepSeek V4.1 Flash (DeepSeek Harness) | two hand-drawn charts on Earnings; round 2 fixed cut-off labels, spoken summary and chart title |
+| 2026-11-05 | T25 | ✅ merged as PR #25 | DeepSeek V4.1 Flash (DeepSeek Harness) | final sweep; deploy back on; Pages on; live site loads, saves a turn and works offline |
