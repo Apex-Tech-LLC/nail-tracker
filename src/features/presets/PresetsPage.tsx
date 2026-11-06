@@ -38,11 +38,16 @@ export function PresetsPage({ onDone }: { onDone: () => void }) {
   return (
     <>
       <header className="flex items-center justify-between">
-        <button type="button" onClick={onDone} aria-label={t(locale, 'close')} className="p-1">
+        <button
+          type="button"
+          onClick={onDone}
+          aria-label={t(locale, 'close')}
+          className="flex min-h-11 min-w-11 items-center justify-center"
+        >
           <IconX size={22} aria-hidden="true" />
         </button>
         <h1 className="font-medium">{t(locale, 'servicePresets')}</h1>
-        <span className="w-7" />
+        <span className="w-11" />
       </header>
 
       <div className="flex flex-col gap-2">
