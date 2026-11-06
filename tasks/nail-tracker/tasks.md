@@ -91,7 +91,7 @@ Tasks run **one at a time, in order.** All builders share one checkout.
 
 | # | Task | Depends on | Status | Verify |
 |---|---|---|---|---|
-| T22 | [End-to-end acceptance and edge cases](T22-acceptance.md) | T21 | ⬜ | All browser tests pass |
+| T22 | [End-to-end acceptance and edge cases](T22-acceptance.md) | T21 | ✅ | All browser tests pass |
 | T23 | [Accessibility and iPhone width](T23-a11y-mobile.md) | T22 | ⬜ | All browser tests pass |
 | T24 | [Charts on Earnings](T24-charts.md) | T23 | ⬜ | `earnings` and `a11y` browser tests pass, no new package |
 | T25 | [Final sweep and deployment](T25-final.md) | T24 | ⬜ | All searches clean, all browser tests pass, site live |
@@ -138,3 +138,4 @@ _(One row per attempted task.)_
 | 2026-11-05 | T19 | ✅ merged as PR #19 | DeepSeek V4.1 Flash (DeepSeek Harness) | JSON backup and restore; 23 unit tests; manager edge checks passed |
 | 2026-11-05 | T20 | ✅ merged as PR #20 | DeepSeek V4.1 Flash (DeepSeek Harness) | CSV export, backup buttons, delete all data; round 2 fixed silent restore failure, dead restore button on old iPhones, Vietnamese delete word |
 | 2026-11-05 | T21 | ✅ merged as PR #21 | DeepSeek V4.1 Flash (DeepSeek Harness) | offline, install and no-network tests; no app changes needed |
+| 2026-11-05 | T22 | ✅ merged as PR #22 | DeepSeek V4.1 Flash (DeepSeek Harness) | 13 acceptance tests, no app bugs; round 2 pinned test clocks to Chicago time after GitHub (UTC) failed one |
