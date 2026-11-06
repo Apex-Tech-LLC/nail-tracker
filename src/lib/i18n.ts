@@ -22,17 +22,14 @@ const strings = {
     updateReady: 'A new version is ready.',
     later: 'Later',
     reload: 'Reload',
-    comingSoon: 'Coming soon',
 
     // Shared actions and labels
     save: 'Save',
     saveAndAddAnother: 'Save & Add Another',
     cancel: 'Cancel',
     close: 'Close',
-    back: 'Back',
     edit: 'Edit',
     delete: 'Delete',
-    confirm: 'Confirm',
     next: 'Next',
     skip: 'Skip',
     remove: 'Remove',
@@ -44,7 +41,6 @@ const strings = {
     date: 'Date',
     time: 'Time',
     note: 'Note',
-    optional: 'optional',
     from: 'From',
     to: 'To',
     allTime: 'all time',
@@ -105,7 +101,6 @@ const strings = {
     errorRate: 'Enter a percent from 0 to 100, like 60 or 62.5.',
     errorTurnCount: 'Enter a whole number from 0 to 99.',
     errorDate: 'Pick a date.',
-    errorTime: 'Pick a time.',
     deleteTurnTitle: 'Delete this turn?',
     deleteTurnBody: 'Every total that includes it will be updated. This cannot be undone.',
     entryNotFound: 'This entry no longer exists.',
@@ -318,7 +313,6 @@ const strings = {
     deleteAllBody: 'This cannot be undone. Save a backup first. Type {word} to confirm.',
     deleteAllWord: 'DELETE',
     deleteAllInput: 'Type the word here',
-    deleteAllDone: 'All data was deleted.',
 
     // CSV column headers
     csvType: 'Type',
@@ -354,17 +348,14 @@ const strings = {
     updateReady: 'Đã có phiên bản mới.',
     later: 'Để sau',
     reload: 'Tải lại',
-    comingSoon: 'Sắp có',
 
     // Shared actions and labels
     save: 'Lưu',
     saveAndAddAnother: 'Lưu & Thêm tiếp',
     cancel: 'Hủy',
     close: 'Đóng',
-    back: 'Quay lại',
     edit: 'Chỉnh sửa',
     delete: 'Xóa',
-    confirm: 'Xác nhận',
     next: 'Tiếp',
     skip: 'Bỏ qua',
     remove: 'Bỏ',
@@ -376,7 +367,6 @@ const strings = {
     date: 'Ngày',
     time: 'Giờ',
     note: 'Ghi chú',
-    optional: 'không bắt buộc',
     from: 'Từ',
     to: 'Đến',
     allTime: 'toàn bộ',
@@ -437,7 +427,6 @@ const strings = {
     errorRate: 'Nhập phần trăm từ 0 đến 100, ví dụ 60 hoặc 62.5.',
     errorTurnCount: 'Nhập số nguyên từ 0 đến 99.',
     errorDate: 'Chọn ngày.',
-    errorTime: 'Chọn giờ.',
     deleteTurnTitle: 'Xóa turn này?',
     deleteTurnBody: 'Mọi số tổng có turn này sẽ được cập nhật. Không thể hoàn tác.',
     entryNotFound: 'Mục này không còn nữa.',
@@ -650,7 +639,6 @@ const strings = {
     deleteAllBody: 'Không thể hoàn tác. Hãy sao lưu trước. Gõ {word} để xác nhận.',
     deleteAllWord: 'XÓA',
     deleteAllInput: 'Gõ từ đó vào đây',
-    deleteAllDone: 'Đã xóa toàn bộ dữ liệu.',
 
     // CSV column headers
     csvType: 'Loại',

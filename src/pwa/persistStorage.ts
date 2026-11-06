@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 // Browsers may evict a site's data under storage pressure (Safari also
 // after weeks without use). Persistent storage opts out of that. Chrome
 // decides silently from engagement and installation; Firefox asks the user,
-// which is why we only ask after the first expense, once the data is worth
+// which is why we only ask after the first turn, once the data is worth
 // keeping, and not on the first visit.
 
 type StorageApi = Pick<StorageManager, 'persist' | 'persisted'>

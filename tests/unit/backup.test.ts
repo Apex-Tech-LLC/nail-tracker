@@ -242,7 +242,7 @@ describe('importJson refuses a bad file', () => {
 
   it('refuses JSON that is not a Nail Tracker backup', async () => {
     const fresh = openFresh()
-    await expect(importJson(fresh, '{"app":"daftar","version":1}')).rejects.toMatchObject({
+    await expect(importJson(fresh, '{"app":"other-app","version":1}')).rejects.toMatchObject({
       code: 'notBackup',
     })
   })
