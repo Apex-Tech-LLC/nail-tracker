@@ -1,3 +1,4 @@
+import { IconChevronLeft } from '@tabler/icons-react'
 import { useState } from 'react'
 import { useLocation } from 'wouter'
 import { paths } from '../../app/navigation.ts'
@@ -109,7 +110,19 @@ export function OnboardingPage() {
 
   return (
     <>
-      <p className="text-sm text-text-secondary">{tf(locale, 'onboardingStep', { n: step })}</p>
+      <div className="flex items-center gap-1">
+        {step > 1 && (
+          <button
+            type="button"
+            onClick={() => setStep(step - 1)}
+            className="flex min-h-11 min-w-11 items-center justify-center gap-1 rounded-control px-2 text-sm text-text-secondary"
+          >
+            <IconChevronLeft size={20} aria-hidden="true" />
+            {t(locale, 'back')}
+          </button>
+        )}
+        <p className="text-sm text-text-secondary">{tf(locale, 'onboardingStep', { n: step })}</p>
+      </div>
 
       {step === 1 && (
         <>
