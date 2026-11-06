@@ -5,6 +5,11 @@ import { addTurn, seedSettings } from './helpers.ts'
 // Noon on 2026-11-04 in the browser's America/Chicago timezone.
 const NOON = new Date('2026-11-04T12:00:00')
 
+// The delete word XÓA, the other accent placement XOÁ, and XÓA typed with a separate accent.
+const VI_DELETE_WORD = '\u0058\u00D3\u0041'
+const VI_OTHER_SPELLING = '\u0058\u004F\u00C1'
+const VI_SEPARATE_ACCENT = '\u0058\u004F\u0301\u0041'
+
 /** The Today figure whose label is exactly `label`, never a matching amount elsewhere. */
 function todayFigure(page: Page, label: string): Locator {
   return page.getByText(label, { exact: true }).locator('..').locator('span').last()
@@ -96,6 +101,26 @@ test('a backup from another app is refused', async ({ page }) => {
   await expect(status(page)).toContainText('This is not a Nail Tracker backup file.')
 })
 
+test('a restore that fails on the database changes nothing and says so', async ({ page }, testInfo) => {
+  await seedSettings(page)
+  await page.clock.setFixedTime(NOON)
+  await addTurn(page, { amount: '100', cash: '10' })
+  const file = testInfo.outputPath('db-failure.json')
+  await saveBackup(page, file)
+
+  // A valid file, but the database refuses the read that starts the merge.
+  await page.evaluate(() => {
+    IDBObjectStore.prototype.count = () => {
+      throw new DOMException('The database could not be read.', 'UnknownError')
+    }
+  })
+  await fileInput(page).setInputFiles(file)
+
+  await expect(status(page)).toContainText('Your current data was not changed.')
+  await expect(status(page).locator('span')).toHaveClass(/text-danger-text/)
+  await expect(status(page)).not.toContainText('This file is damaged or is not JSON.')
+})
+
 test('the history CSV downloads', async ({ page }, testInfo) => {
   await seedSettings(page)
   await page.clock.setFixedTime(NOON)
@@ -132,10 +157,17 @@ test('the Vietnamese delete word unlocks the dialog', async ({ page }) => {
   await page.goto('./#/settings')
   await page.getByRole('button', { name: 'Xóa toàn bộ dữ liệu', exact: true }).click()
   const dialog = page.getByRole('dialog')
+  const confirm = dialog.getByRole('button', { name: 'Xóa toàn bộ dữ liệu' })
+  const input = dialog.getByLabel('Gõ từ đó vào đây')
 
-  await dialog.getByLabel('Gõ từ đó vào đây').fill('XÓA')
-
-  await expect(dialog.getByRole('button', { name: 'Xóa toàn bộ dữ liệu' })).toBeEnabled()
+  await input.fill(VI_DELETE_WORD)
+  await expect(confirm).toBeEnabled()
+  await input.fill(VI_OTHER_SPELLING)
+  await expect(confirm).toBeEnabled()
+  await input.fill(VI_SEPARATE_ACCENT)
+  await expect(confirm).toBeEnabled()
+  await input.fill(VI_DELETE_WORD.toLowerCase())
+  await expect(confirm).toBeDisabled()
 })
 
 test('delete all data starts onboarding with no turns', async ({ page }) => {
@@ -201,6 +233,22 @@ test('a double tap on restore opens one file picker and restores once', async ({
   await choosers[0].setFiles(file)
   await expect(status(page)).toContainText('Restore finished')
   await expect(fileInput(page)).toHaveValue('')
+})
+
+test('a dismissed picker does not leave restore dead', async ({ page }) => {
+  await seedSettings(page)
+  await page.goto('./#/settings')
+  const choosers: FileChooser[] = []
+  page.on('filechooser', (chooser) => choosers.push(chooser))
+  const restore = page.getByRole('button', { name: 'Restore from backup file' })
+
+  await restore.click()
+  await expect.poll(() => choosers.length).toBe(1)
+
+  // The picker was dismissed without a file; the guard must expire on its own.
+  await page.waitForTimeout(1100)
+  await restore.click()
+  await expect.poll(() => choosers.length).toBe(2)
 })
 
 test('picking the same backup file twice restores again', async ({ page }, testInfo) => {

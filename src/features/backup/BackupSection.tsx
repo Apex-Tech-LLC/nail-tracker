@@ -1,5 +1,5 @@
 import { IconDownload, IconFileSpreadsheet, IconUpload, type Icon } from '@tabler/icons-react'
-import { useEffect, useRef, useState, type ChangeEvent } from 'react'
+import { useRef, useState, type ChangeEvent } from 'react'
 import { getSettings, updateSettings, useSettings } from '../../app/settings.ts'
 import { db } from '../../db/schema.ts'
 import { todayIso } from '../../domain/dates.ts'
@@ -17,7 +17,8 @@ const ERROR_TEXT: Record<ImportErrorCode, StringKey> = {
   invalidRecord: 'importInvalidRecord',
 }
 
-type Outcome = { ok: true; result: ImportOutcome } | { ok: false; code: ImportErrorCode }
+/** A null code is a failure that is not about the file, such as a database error. */
+type Outcome = { ok: true; result: ImportOutcome } | { ok: false; code: ImportErrorCode | null }
 
 export function BackupSection() {
   const { locale } = useSettings()
@@ -26,18 +27,8 @@ export function BackupSection() {
   // is set synchronously, so the second tap does nothing.
   const busy = useRef(false)
   const pickingFile = useRef(false)
+  const pickTimer = useRef<number | undefined>(undefined)
   const [outcome, setOutcome] = useState<Outcome | null>(null)
-
-  // Dismissing the picker must not leave the restore button guarded forever.
-  useEffect(() => {
-    const input = fileInput.current
-    if (!input) return
-    const handleCancel = () => {
-      pickingFile.current = false
-    }
-    input.addEventListener('cancel', handleCancel)
-    return () => input.removeEventListener('cancel', handleCancel)
-  }, [])
 
   async function saveBackup() {
     if (busy.current) return
@@ -75,6 +66,12 @@ export function BackupSection() {
   function chooseFile() {
     if (busy.current || pickingFile.current) return
     pickingFile.current = true
+    // Older Safari never fires `cancel` when the picker is dismissed, so the
+    // guard has to expire on its own or Restore would stay dead for good.
+    window.clearTimeout(pickTimer.current)
+    pickTimer.current = window.setTimeout(() => {
+      pickingFile.current = false
+    }, 1000)
     fileInput.current?.click()
   }
 
@@ -82,6 +79,7 @@ export function BackupSection() {
     const file = event.target.files?.[0]
     // Clearing the value means picking the same file again still fires.
     event.target.value = ''
+    window.clearTimeout(pickTimer.current)
     pickingFile.current = false
     if (!file || busy.current) return
 
@@ -92,8 +90,9 @@ export function BackupSection() {
       else updateSettings({ onboardingDone: true })
       setOutcome({ ok: true, result })
     } catch (error) {
-      if (!(error instanceof ImportError)) throw error
-      setOutcome({ ok: false, code: error.code })
+      // The merge is all or nothing, so a database failure left the data as it
+      // was. Say that instead of leaving the person with no message at all.
+      setOutcome({ ok: false, code: error instanceof ImportError ? error.code : null })
     } finally {
       busy.current = false
     }
@@ -126,7 +125,8 @@ export function BackupSection() {
             `${t(locale, 'importDone')}: ${outcome.result.added} ${t(locale, 'importAdded')}, ${outcome.result.updated} ${t(locale, 'importUpdated')}, ${outcome.result.unchanged} ${t(locale, 'importUnchanged')}`}
           {outcome?.ok === false && (
             <span className="text-danger-text">
-              {t(locale, ERROR_TEXT[outcome.code])} {t(locale, 'importFailed')}
+              {outcome.code !== null && `${t(locale, ERROR_TEXT[outcome.code])} `}
+              {t(locale, 'importFailed')}
             </span>
           )}
         </p>

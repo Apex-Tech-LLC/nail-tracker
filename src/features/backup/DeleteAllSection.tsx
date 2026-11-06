@@ -17,7 +17,10 @@ export function DeleteAllSection() {
   const deleteInFlight = useRef(false)
 
   const word = t(locale, 'deleteAllWord')
-  const confirmed = typed.trim() === word
+  // Vietnamese keyboards may put the accent on the other vowel: XÓA or XOÁ.
+  const otherWord = '\u0058\u004F\u00C1'
+  const typedWord = typed.normalize('NFC').trim()
+  const confirmed = typedWord === word || (locale === 'vi' && typedWord === otherWord)
 
   function openDialog() {
     setTyped('')
