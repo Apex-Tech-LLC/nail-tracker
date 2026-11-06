@@ -100,7 +100,7 @@ test('old date', async ({ page }) => {
 })
 
 test('shift past midnight', async ({ page }) => {
-  await page.clock.setFixedTime(new Date('2026-11-05T00:30:00'))
+  await page.clock.setFixedTime(new Date('2026-11-05T00:30:00-06:00'))
   await page.goto('./#/add')
   await page.getByRole('button', { name: 'Yesterday' }).click()
   await page.getByLabel('Service amount').fill('100')
@@ -184,10 +184,10 @@ test('language changes nothing', async ({ page }) => {
 })
 
 test('daylight saving', async ({ page }) => {
-  await page.clock.setFixedTime(new Date('2026-11-01T12:00:00'))
+  await page.clock.setFixedTime(new Date('2026-11-01T12:00:00-06:00'))
   await addTurn(page, { amount: '100' })
 
-  await page.clock.setFixedTime(new Date('2026-11-02T12:00:00'))
+  await page.clock.setFixedTime(new Date('2026-11-02T12:00:00-06:00'))
   await page.goto('./#/history')
   await page.getByRole('button', { name: 'Yesterday' }).click()
 
