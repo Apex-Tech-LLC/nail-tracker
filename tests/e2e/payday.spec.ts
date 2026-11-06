@@ -315,6 +315,47 @@ test('a payment of zero is refused', async ({ page }) => {
   await expect(page.getByText('Enter an amount above zero.', { exact: true })).toBeVisible()
 })
 
+test('a cleared payment date is refused instead of moved to today', async ({ page }) => {
+  await start(page, weeklyPay)
+  await addTurn(page, { amount: '100' })
+  await openWeekPeriod(page)
+  await openPaymentForm(page)
+  await page.getByLabel('Amount received').first().fill('60')
+
+  const dateBox = page.getByLabel('Payment date')
+  await dateBox.fill('')
+  await page.getByRole('button', { name: 'Save', exact: true }).click()
+
+  await expect(page.getByText('Pick a date.', { exact: true })).toBeVisible()
+  await expect(dateBox).toHaveAttribute('aria-invalid', 'true')
+  await expect(dateBox).toHaveAccessibleDescription('Pick a date.')
+
+  // Choosing a date clears the error.
+  await dateBox.fill('2026-11-04')
+  await expect(page.getByText('Pick a date.', { exact: true })).toHaveCount(0)
+
+  // Clearing it again still refuses rather than saving under today.
+  await dateBox.fill('')
+  await page.getByRole('button', { name: 'Save', exact: true }).click()
+  await expect(page.getByText('Pick a date.', { exact: true })).toBeVisible()
+
+  await page.getByRole('button', { name: 'Close', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Payments', exact: true })).toBeVisible()
+  await expect(paymentRows(page)).toHaveCount(0)
+  await expect(rowAmount(page, 'Salon paid', 'Money already received')).toHaveText('$0.00')
+})
+
+test('paying a period that no longer exists shows not found with no Save button', async ({
+  page,
+}) => {
+  await start(page, weeklyPay)
+  await page.goto('./#/payday/period-nope/pay')
+
+  await expect(page.getByText('This entry no longer exists.', { exact: true })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Payday', exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Save', exact: true })).toHaveCount(0)
+})
+
 test('a quick double tap on Save records one payment', async ({ page }) => {
   await start(page, weeklyPay)
   await addTurn(page, { amount: '2000', cash: '180', card: '240' })

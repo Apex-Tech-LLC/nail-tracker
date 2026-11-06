@@ -37,6 +37,7 @@ import { loadPeriodSummaries, type PeriodSummary } from './periodStore.ts'
 const METHODS: PaymentMethod[] = ['cash', 'check', 'directDeposit', 'zelle', 'other']
 
 interface Errors {
+  date?: string
   amount?: string
   allocation?: string
 }
@@ -87,7 +88,11 @@ export function PaymentForm({ periodId, paymentId, onDone }: Props) {
 
   if (loaded === undefined) return null
 
-  if (paymentId && loaded.payment === null) {
+  const missingPayment = paymentId != null && loaded.payment === null
+  const missingPeriod =
+    periodId != null && !loaded.summaries.some((summary) => summary.period.id === periodId)
+
+  if (missingPayment || missingPeriod) {
     return (
       <>
         <p>{t(locale, 'entryNotFound')}</p>
@@ -215,8 +220,10 @@ function PaymentFormFields({
     if (saveInFlight.current) return
 
     const cents = parseCents(amountText)
+    const dateOk = isIsoDate(date)
     const next: Errors = {}
     if (cents === null || cents <= 0) next.amount = t(locale, 'errorPaymentAmount')
+    if (!dateOk) next.date = t(locale, 'errorDate')
 
     let badLine = false
     const checked = lines.map((line) => {
@@ -228,7 +235,7 @@ function PaymentFormFields({
     })
     setLines(checked)
 
-    if (badLine || cents === null || cents <= 0) {
+    if (badLine || cents === null || cents <= 0 || !dateOk) {
       setErrors(next)
       return
     }
@@ -259,7 +266,7 @@ function PaymentFormFields({
 
     setErrors({})
     const input: PaymentInput = {
-      paymentDate: isIsoDate(date) ? date : todayIso(),
+      paymentDate: date,
       amountCents: cents,
       paymentMethod: method,
       notes: noteText,
@@ -329,9 +336,21 @@ function PaymentFormFields({
           id={`${id}-date`}
           type="date"
           value={date}
-          onChange={(event) => setDate(event.target.value)}
+          onChange={(event) => {
+            setDate(event.target.value)
+            setErrors((previous) =>
+              previous.date ? { ...previous, date: undefined } : previous,
+            )
+          }}
+          aria-invalid={!!errors.date}
+          aria-describedby={errors.date ? `${id}-date-error` : undefined}
           className={field}
         />
+        {errors.date && (
+          <p id={`${id}-date-error`} className={errorText}>
+            {errors.date}
+          </p>
+        )}
       </div>
 
       <MoneyField
