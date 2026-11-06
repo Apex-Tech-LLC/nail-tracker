@@ -83,7 +83,7 @@ Tasks run **one at a time, in order.** All builders share one checkout.
 
 | # | Task | Depends on | Status | Verify |
 |---|---|---|---|---|
-| T19 | [JSON backup, restore, migrations](T19-backup-json.md) | T18 | ⬜ | `backup` unit tests pass |
+| T19 | [JSON backup, restore, migrations](T19-backup-json.md) | T18 | ✅ | `backup` unit tests pass |
 | T20 | [CSV, backup buttons, delete all](T20-csv-backup-ui.md) | T19 | ⬜ | `backup` and `settings` browser tests pass |
 | T21 | [Offline and install checks](T21-offline.md) | T20 | ⬜ | `offline` and `manifest` browser tests pass |
 
@@ -135,3 +135,4 @@ _(One row per attempted task.)_
 | 2026-11-05 | T16 | ✅ merged as PR #16 | DeepSeek V4.1 Flash (DeepSeek Harness) | Two rounds: cleared date and missing period are now refused. Save double tap guarded; 73 browser tests pass |
 | 2026-11-05 | T17 | ✅ merged as PR #17 | DeepSeek V4.1 Flash (DeepSeek Harness) | Two rounds: a mistyped year froze Payday, so pay periods now reach back ten years at most. 84 browser tests pass |
 | 2026-11-05 | T18 | ✅ merged as PR #18 | DeepSeek V4.1 Flash (DeepSeek Harness) | Passed review first time. 91 browser tests pass |
+| 2026-11-05 | T19 | ✅ merged as PR #19 | DeepSeek V4.1 Flash (DeepSeek Harness) | JSON backup and restore; 23 unit tests; manager edge checks passed |
