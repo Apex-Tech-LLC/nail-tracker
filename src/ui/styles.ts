@@ -2,7 +2,8 @@
 export const card = 'rounded-card border border-border bg-surface p-4'
 export const field = 'w-full rounded-control border border-border-strong bg-surface px-3 py-3 text-base'
 export const label = 'mb-1 block text-sm text-text-secondary'
-export const chip = 'rounded-full border px-3 py-2 text-sm'
+// min-h-11 keeps every chip a 44px tap target, even with 14px text.
+export const chip = 'min-h-11 rounded-full border px-3 py-2 text-sm'
 export const chipOn = 'border-brand-400 bg-brand-50 text-brand-900'
 export const chipOff = 'border-border-strong'
 export const primaryButton = 'w-full rounded-control bg-brand-600 px-4 py-3 text-base font-medium text-white'

@@ -308,7 +308,12 @@ function PaymentFormFields({
       className="flex min-h-[calc(100dvh-2rem)] flex-col gap-5"
     >
       <header className="flex items-center justify-between gap-2">
-        <button type="button" onClick={onDone} aria-label={t(locale, 'close')} className="p-1">
+        <button
+          type="button"
+          onClick={onDone}
+          aria-label={t(locale, 'close')}
+          className="flex min-h-11 min-w-11 items-center justify-center"
+        >
           <IconX size={22} aria-hidden="true" />
         </button>
         <h1 className="min-w-0 flex-1 truncate text-center font-medium">
@@ -319,12 +324,12 @@ function PaymentFormFields({
             type="button"
             aria-label={t(locale, 'delete')}
             onClick={() => setConfirmingDelete(true)}
-            className="p-1 text-danger-text"
+            className="flex min-h-11 min-w-11 items-center justify-center text-danger-text"
           >
             <IconTrash size={22} aria-hidden="true" />
           </button>
         ) : (
-          <span className="w-7" />
+          <span className="w-11" />
         )}
       </header>
 
@@ -432,7 +437,7 @@ function PaymentFormFields({
                 type="button"
                 aria-label={t(locale, 'remove')}
                 onClick={() => removeLine(line.key)}
-                className="self-start p-2 text-danger-text"
+                className="flex min-h-11 min-w-11 items-center justify-center self-start text-danger-text"
               >
                 <IconTrash size={20} aria-hidden="true" />
               </button>

@@ -74,7 +74,12 @@ export function PeriodPage({ periodId, onDone }: Props) {
   return (
     <>
       <header className="flex items-center justify-between gap-2">
-        <button type="button" onClick={onDone} aria-label={t(locale, 'close')} className="p-1">
+        <button
+          type="button"
+          onClick={onDone}
+          aria-label={t(locale, 'close')}
+          className="flex min-h-11 min-w-11 items-center justify-center"
+        >
           <IconX size={22} aria-hidden="true" />
         </button>
         <h1 className="min-w-0 flex-1 truncate text-center font-medium">

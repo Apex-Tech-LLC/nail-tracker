@@ -15,7 +15,7 @@ export function LanguageButton() {
       // voice control, then says what the button does.
       aria-label={`${t(locale, 'otherLanguageShort')}, ${t(locale, 'switchLanguage')}`}
       lang={other}
-      className="flex items-center gap-1 rounded-full border border-border-strong px-2.5 py-1 text-xs"
+      className="flex min-h-11 items-center gap-1 rounded-full border border-border-strong px-2.5 py-1 text-xs"
     >
       <IconWorld size={16} aria-hidden="true" />
       <span className="font-medium">{t(locale, 'otherLanguageShort')}</span>

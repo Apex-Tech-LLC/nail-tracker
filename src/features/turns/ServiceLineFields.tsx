@@ -68,7 +68,7 @@ export function ServiceLineFields({
             type="button"
             aria-label={t(locale, 'removeService')}
             onClick={onRemove}
-            className="p-1"
+            className="flex min-h-11 min-w-11 items-center justify-center"
           >
             <IconTrash size={18} aria-hidden="true" />
           </button>
