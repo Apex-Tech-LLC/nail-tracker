@@ -74,7 +74,7 @@ Tasks run **one at a time, in order.** All builders share one checkout.
 |---|---|---|---|---|
 | T13 | [Earnings screen](T13-earnings.md) | T12 | ✅ | `earnings` browser tests pass |
 | T14 | [Pay period logic and store](T14-pay-periods.md) | T13 | ✅ | Ready-made tests and store tests pass |
-| T15 | [Payday list and period detail](T15-payday-screens.md) | T14 | ⬜ | `payday` browser tests pass |
+| T15 | [Payday list and period detail](T15-payday-screens.md) | T14 | ✅ | `payday` browser tests pass |
 | T16 | [Payments and allocations](T16-payments.md) | T15 | ⬜ | `payday` and `earnings` browser tests pass |
 | T17 | [Full Settings screen](T17-settings.md) | T16 | ⬜ | `settings` browser tests pass |
 | T18 | [First-launch onboarding](T18-onboarding.md) | T17 | ⬜ | All browser tests pass |
@@ -131,3 +131,4 @@ _(One row per attempted task.)_
 | 2026-11-05 | T12 | ✅ merged as PR #12 | DeepSeek V4.1 Flash (DeepSeek Harness) | Adjustments, with the double-tap Save guard the manager added. Gate and all 46 browser tests pass. |
 | 2026-11-05 | T13 | ✅ merged as PR #13 | DeepSeek V4.1 Flash (DeepSeek Harness) | First builder stopped at the sandbox block; second finished. Gate and 51 browser tests pass; invalid custom range, cleared dates and 375px Vietnamese checked |
 | 2026-11-05 | T14 | ✅ merged as PR #14 | DeepSeek V4.1 Flash (DeepSeek Harness) | Ready-made tests unchanged. Schedule start date added to the earliest-date rule, because the brief's own test needs it |
+| 2026-11-05 | T15 | ✅ merged as PR #15 | DeepSeek V4.1 Flash (DeepSeek Harness) | Two rounds: payout tests now read the payout row itself, proved with a deliberately wrong payout. Save double tap guarded |
