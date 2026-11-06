@@ -3,7 +3,7 @@ import { useId, useState } from 'react'
 import { Link } from 'wouter'
 import { PageHeader } from '../../app/PageHeader.tsx'
 import { paths } from '../../app/navigation.ts'
-import type { PayPeriodType, TipHandling } from '../../app/settings.ts'
+import type { PayPeriodType } from '../../app/settings.ts'
 import { updateSettings, useSettings } from '../../app/settings.ts'
 import { isIsoDate, todayIso, weekRange } from '../../domain/dates.ts'
 import { parseRateBp, rateToInput } from '../../domain/money.ts'
@@ -14,6 +14,7 @@ import { PercentField } from '../../ui/PercentField.tsx'
 import { Row } from '../../ui/Row.tsx'
 import { TileGroup } from '../../ui/TileGroup.tsx'
 import { card, field, label, secondaryButton } from '../../ui/styles.ts'
+import { TipHandlingFields } from './TipHandlingFields.tsx'
 
 type RateChoice = '6000' | '5000' | 'custom'
 type WeekStartChoice = 'sunday' | 'monday'
@@ -26,8 +27,6 @@ export function SettingsPage() {
     weekStartDay,
     payPeriodType,
     payPeriodAnchorDate,
-    cashTipHandling,
-    cardTipHandling,
   } = useSettings()
   const [customOpen, setCustomOpen] = useState(rate !== 6000 && rate !== 5000)
   const [customText, setCustomText] = useState(() => rateToInput(rate))
@@ -171,30 +170,7 @@ export function SettingsPage() {
         </div>
       )}
 
-      <TileGroup<TipHandling>
-        legend={t(locale, 'cashTipHandling')}
-        name="cash-tips"
-        value={cashTipHandling}
-        onChange={(value) => updateSettings({ cashTipHandling: value })}
-        options={[
-          { value: 'inHand', label: t(locale, 'tipInHand') },
-          { value: 'fromSalon', label: t(locale, 'tipFromSalon') },
-        ]}
-      />
-
-      <div>
-        <TileGroup<TipHandling>
-          legend={t(locale, 'cardTipHandling')}
-          name="card-tips"
-          value={cardTipHandling}
-          onChange={(value) => updateSettings({ cardTipHandling: value })}
-          options={[
-            { value: 'inHand', label: t(locale, 'tipInHand') },
-            { value: 'fromSalon', label: t(locale, 'tipFromSalon') },
-          ]}
-        />
-        <p className="mt-1 text-sm text-text-secondary">{t(locale, 'tipHandlingHint')}</p>
-      </div>
+      <TipHandlingFields />
 
       <Link href={paths.services} className={secondaryButton + ' block text-center'}>
         {t(locale, 'manageServices')}
