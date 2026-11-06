@@ -309,12 +309,26 @@ function TurnFormFields({ presets, existing, copy, onDone, onClose }: FieldsProp
     })
   }
 
+  /**
+   * A line added in shared-rate mode inherits the rate the technician already
+   * set, or the one a copied or edited turn brought in. Taking a preset default
+   * instead would make the rates differ and flip the form to a box per line.
+   */
+  function sharedRateForNewLine(): string | null {
+    if (perServiceRates || showPerLine) return null
+    const first = lines[0]
+    return first?.rateTouched ? first.rate : null
+  }
+
   function lineForChoice(choice: string): LineState {
     const preset = presets.find((item) => item.id === choice)
     const line = newLine(choice, preset?.defaultCommissionRateBp ?? defaultCommissionRateBp)
+    const sharedRate = sharedRateForNewLine()
+    const withRate =
+      sharedRate === null ? line : { ...line, rate: sharedRate, rateTouched: true }
     return preset?.defaultPriceCents != null
-      ? { ...line, amount: centsToInput(preset.defaultPriceCents) }
-      : line
+      ? { ...withRate, amount: centsToInput(preset.defaultPriceCents) }
+      : withRate
   }
 
   function toggleService(choice: string) {
@@ -332,7 +346,7 @@ function TurnFormFields({ presets, existing, copy, onDone, onClose }: FieldsProp
   }
 
   function addService() {
-    setLines((previous) => [...previous, newLine('other', defaultCommissionRateBp)])
+    setLines((previous) => [...previous, lineForChoice('other')])
     setErrors((previous) =>
       previous.services ? { ...previous, services: undefined } : previous,
     )
