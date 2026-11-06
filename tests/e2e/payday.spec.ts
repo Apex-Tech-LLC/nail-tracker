@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
-import { addTurn, seedSettings, weeklyPay } from './helpers.ts'
+import { addTurn, rowAmount, seedSettings, weeklyPay } from './helpers.ts'
 
 // Noon on 2026-11-04 in the browser's America/Chicago timezone.
 const NOON = new Date('2026-11-04T12:00:00')
@@ -21,19 +21,6 @@ async function addAdjustment(page: Page, amount: string, category: string): Prom
   await page.getByRole('button', { name: category, exact: true }).click()
   await page.getByRole('button', { name: 'Save', exact: true }).click()
   await expect(page.getByRole('link', { name: /Add Turn|Add your first turn/ })).toBeVisible()
-}
-
-/**
- * The amount on the period row whose label is exactly `label`, so a matching
- * amount on another row (commission often equals the payout) cannot pass.
- * Pass `section` when the same label appears in more than one card; the
- * received and owed cards both show "Salon paid".
- */
-function rowAmount(page: Page, label: string, section?: string): Locator {
-  const root = section
-    ? page.getByRole('heading', { name: section, exact: true }).locator('..')
-    : page
-  return root.getByText(label, { exact: true }).locator('..').locator('span').last()
 }
 
 /** The payment rows listed under the period's Payments heading. */
