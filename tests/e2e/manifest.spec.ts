@@ -39,6 +39,13 @@ test('Chromium sees no installability problems', async ({ page }) => {
   expect(installabilityErrors).toEqual([])
 })
 
+test('has what an iPhone needs to add it to the home screen', async ({ page }) => {
+  await page.goto('./')
+  await expect(page.locator('meta[name="apple-mobile-web-app-capable"]')).toHaveAttribute('content', 'yes')
+  await expect(page.locator('meta[name="apple-mobile-web-app-title"]')).toHaveAttribute('content', 'Nail Tracker')
+  await expect(page.locator('link[rel="apple-touch-icon"]')).toHaveCount(1)
+})
+
 test('the document language follows the UI language', async ({ page }) => {
   await seedSettings(page)
   await page.goto('./')
