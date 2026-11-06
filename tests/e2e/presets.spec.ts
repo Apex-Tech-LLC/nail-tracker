@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { seedSettings } from './helpers.ts'
+import { seedSettings, selectServices } from './helpers.ts'
 
 test('a new service shows on Add Turn and fills its usual price', async ({ page }) => {
   await seedSettings(page)
@@ -11,7 +11,7 @@ test('a new service shows on Add Turn and fills its usual price', async ({ page 
 
   await expect(page.getByRole('button', { name: 'Edit: Polish Change' })).toBeVisible()
   await page.goto('./#/add')
-  await page.getByRole('button', { name: 'Polish Change', exact: true }).click()
+  await selectServices(page, ['Polish Change'])
   await expect(page.getByLabel('Service amount')).toHaveValue('15.00')
 })
 
@@ -56,7 +56,7 @@ test('moving a service down puts it first on Add Turn', async ({ page }) => {
 
   await expect(page.getByRole('button', { name: 'Move up: Pedicure' })).toBeDisabled()
   await page.goto('./#/add')
-  await expect(page.getByTestId('service-line').first().locator('button').first()).toHaveText(
-    'Pedicure',
-  )
+  await expect(
+    page.getByTestId('service-line').first().getByRole('heading', { name: 'Pedicure' }),
+  ).toBeVisible()
 })

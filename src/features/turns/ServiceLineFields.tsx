@@ -5,7 +5,7 @@ import { t } from '../../lib/i18n.ts'
 import type { Locale } from '../../lib/locale.ts'
 import { MoneyField } from '../../ui/MoneyField.tsx'
 import { PercentField } from '../../ui/PercentField.tsx'
-import { chip, chipOff, chipOn, errorText, field, label } from '../../ui/styles.ts'
+import { errorText, field, label } from '../../ui/styles.ts'
 
 export interface LineState {
   key: string
@@ -30,95 +30,70 @@ interface Props {
   presets: ServicePreset[]
   locale: Locale
   showPerLine: boolean
-  canRemove: boolean
   errors?: LineErrors
   amountRef?: RefObject<HTMLInputElement | null>
   autoFocus?: boolean
-  onChoose: (choice: string) => void
   onCustomName: (value: string) => void
   onAmount: (value: string) => void
   onRate: (value: string) => void
   onRemove: () => void
 }
 
-/** One service on the turn: its chips, optional custom name, amount and (sometimes) rate. */
+/** One service on the turn: its name, amount and (sometimes) rate. */
 export function ServiceLineFields({
   line,
   presets,
   locale,
   showPerLine,
-  canRemove,
   errors,
   amountRef,
   autoFocus,
-  onChoose,
   onCustomName,
   onAmount,
   onRate,
   onRemove,
 }: Props) {
   const nameId = `${line.key}-service-name`
+  const preset = presets.find((item) => item.id === line.choice)
 
   return (
     <div data-testid="service-line" className="flex flex-col gap-3">
-      <div className="flex items-center justify-between gap-2">
-        <p className={label}>{t(locale, 'service')}</p>
-        {canRemove && (
-          <button
-            type="button"
-            aria-label={t(locale, 'removeService')}
-            onClick={onRemove}
-            className="flex min-h-11 min-w-11 items-center justify-center"
-          >
-            <IconTrash size={18} aria-hidden="true" />
-          </button>
-        )}
-      </div>
-
-      <div className="flex flex-wrap gap-2">
-        {presets.map((preset) => (
-          <button
-            key={preset.id}
-            type="button"
-            aria-pressed={line.choice === preset.id}
-            className={`${chip} ${line.choice === preset.id ? chipOn : chipOff}`}
-            onClick={() => onChoose(preset.id)}
-          >
+      <div className="flex items-start justify-between gap-2">
+        {preset ? (
+          <h2 className="min-w-0 flex-1 text-sm font-medium">
             {locale === 'vi' ? preset.nameVi : preset.nameEn}
-          </button>
-        ))}
+          </h2>
+        ) : (
+          <div className="min-w-0 flex-1">
+            <label htmlFor={nameId} className={label}>
+              {t(locale, 'serviceName')}
+            </label>
+            <input
+              id={nameId}
+              type="text"
+              autoComplete="off"
+              value={line.customName}
+              onChange={(event) => onCustomName(event.target.value)}
+              aria-invalid={!!errors?.serviceName}
+              aria-describedby={errors?.serviceName ? `${nameId}-error` : undefined}
+              className={field}
+            />
+            {errors?.serviceName && (
+              <p id={`${nameId}-error`} className={errorText}>
+                {errors.serviceName}
+              </p>
+            )}
+          </div>
+        )}
         <button
           type="button"
-          aria-pressed={line.choice === 'other'}
-          className={`${chip} ${line.choice === 'other' ? chipOn : chipOff}`}
-          onClick={() => onChoose('other')}
+          aria-label={t(locale, 'removeService')}
+          onClick={onRemove}
+          className="flex min-h-11 min-w-11 items-center justify-center"
         >
-          {t(locale, 'presetOther')}
+          <IconTrash size={18} aria-hidden="true" />
         </button>
       </div>
-
-      {line.choice === 'other' && (
-        <div>
-          <label htmlFor={nameId} className={label}>
-            {t(locale, 'serviceName')}
-          </label>
-          <input
-            id={nameId}
-            type="text"
-            autoComplete="off"
-            value={line.customName}
-            onChange={(event) => onCustomName(event.target.value)}
-            aria-invalid={!!errors?.serviceName}
-            aria-describedby={errors?.serviceName ? `${nameId}-error` : undefined}
-            className={field}
-          />
-          {errors?.serviceName && (
-            <p id={`${nameId}-error`} className={errorText}>
-              {errors.serviceName}
-            </p>
-          )}
-        </div>
-      )}
 
       <MoneyField
         label={t(locale, 'serviceAmount')}

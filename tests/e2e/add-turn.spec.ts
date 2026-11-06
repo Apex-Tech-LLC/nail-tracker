@@ -1,10 +1,10 @@
 import { expect, test } from '@playwright/test'
-import { addTurn, seedSettings } from './helpers.ts'
+import { addTurn, seedSettings, selectServices } from './helpers.ts'
 
 test('the preview shows commission and earnings before saving', async ({ page }) => {
   await seedSettings(page)
   await page.goto('./#/add')
-  await page.getByRole('button', { name: 'Gel-X', exact: true }).click()
+  await selectServices(page, ['Gel-X'])
   await page.getByLabel('Service amount').fill('100')
   await page.getByLabel('Cash tip').fill('10')
   await page.getByLabel('Card tip').fill('15')
@@ -32,7 +32,7 @@ test('saving with no amount shows an error and stays on the form', async ({ page
 test('an Other service needs a name', async ({ page }) => {
   await seedSettings(page)
   await page.goto('./#/add')
-  await page.getByRole('button', { name: 'Other', exact: true }).click()
+  await selectServices(page, ['Other'])
   await page.getByLabel('Service amount').fill('30')
   await page.getByRole('button', { name: 'Save', exact: true }).click()
 
@@ -59,14 +59,10 @@ test('three services add up on one turn', async ({ page }) => {
   await seedSettings(page)
   await page.goto('./#/add')
   const lines = page.getByTestId('service-line')
+  await selectServices(page, ['Gel Manicure', 'Pedicure', 'Nail Art / Design'])
 
-  await lines.nth(0).getByRole('button', { name: 'Gel Manicure', exact: true }).click()
   await lines.nth(0).getByLabel('Service amount').fill('40')
-  await page.getByRole('button', { name: 'Add service' }).click()
-  await lines.nth(1).getByRole('button', { name: 'Pedicure', exact: true }).click()
   await lines.nth(1).getByLabel('Service amount').fill('50')
-  await page.getByRole('button', { name: 'Add service' }).click()
-  await lines.nth(2).getByRole('button', { name: 'Nail Art / Design', exact: true }).click()
   await lines.nth(2).getByLabel('Service amount').fill('15')
   await page.getByLabel('Card tip').fill('15')
 
@@ -84,12 +80,10 @@ test('each service can have its own commission rate', async ({ page }) => {
   await seedSettings(page, { perServiceRates: true })
   await page.goto('./#/add')
   const lines = page.getByTestId('service-line')
+  await selectServices(page, ['Gel-X', 'Nail Art / Design'])
 
-  await lines.nth(0).getByRole('button', { name: 'Gel-X', exact: true }).click()
   await lines.nth(0).getByLabel('Service amount').fill('75')
   await lines.nth(0).getByLabel('Commission %').fill('60')
-  await page.getByRole('button', { name: 'Add service' }).click()
-  await lines.nth(1).getByRole('button', { name: 'Nail Art / Design', exact: true }).click()
   await lines.nth(1).getByLabel('Service amount').fill('20')
   await lines.nth(1).getByLabel('Commission %').fill('70')
 

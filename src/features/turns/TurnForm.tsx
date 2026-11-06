@@ -44,6 +44,7 @@ interface Errors {
   cash?: string
   card?: string
   turnCount?: string
+  services?: string
   lines: Record<string, LineErrors>
 }
 
@@ -85,6 +86,25 @@ function lineFromService(service: TurnService, presets: ServicePreset[]): LineSt
   }
 }
 
+/**
+ * A service row copied into a brand new turn. Its rate is kept, but the name
+ * stays empty so saving uses the preset's current name rather than the old one.
+ */
+function copiedLineFromService(service: TurnService, presets: ServicePreset[]): LineState {
+  const preset = presets.find((item) => item.id === service.servicePresetId)
+  const choice = preset ? preset.id : 'other'
+  return {
+    key: crypto.randomUUID(),
+    choice,
+    customName: preset ? '' : service.serviceNameSnapshot,
+    amount: centsToInput(service.servicePriceCents),
+    rate: rateToInput(service.commissionRateSnapshotBp),
+    rateTouched: true,
+    originalChoice: choice,
+    originalName: '',
+  }
+}
+
 function presetName(preset: ServicePreset, locale: Locale): string {
   return locale === 'vi' ? preset.nameVi : preset.nameEn
 }
@@ -106,12 +126,15 @@ function occurredAtForEdit(date: IsoDate, time: string, turn: Turn): number {
 
 interface Props {
   turnId?: string
+  copyId?: string
   onDone: () => void
+  onClose?: () => void
 }
 
-/** Loads the service presets and, when editing, the saved turn before the form starts. */
-export function TurnForm({ turnId, onDone }: Props) {
+/** Loads the service presets and, when editing or copying, the saved turn first. */
+export function TurnForm({ turnId, copyId, onDone, onClose }: Props) {
   const { locale } = useSettings()
+  const sourceId = turnId ?? copyId
   const presets = useLiveQuery(() =>
     db.servicePresets
       .orderBy('sortOrder')
@@ -119,16 +142,16 @@ export function TurnForm({ turnId, onDone }: Props) {
       .toArray(),
   )
   const existing = useLiveQuery(async () => {
-    if (!turnId) return null
-    const turn = await db.turns.get(turnId)
+    if (!sourceId) return null
+    const turn = await db.turns.get(sourceId)
     if (!turn) return null
-    const services = await db.turnServices.where('turnId').equals(turnId).sortBy('sortOrder')
+    const services = await db.turnServices.where('turnId').equals(sourceId).sortBy('sortOrder')
     return { turn, services }
-  }, [turnId])
+  }, [sourceId])
 
   if (!presets || existing === undefined) return null
 
-  if (turnId && existing === null) {
+  if (sourceId && existing === null) {
     return (
       <>
         <p>{t(locale, 'entryNotFound')}</p>
@@ -139,16 +162,26 @@ export function TurnForm({ turnId, onDone }: Props) {
     )
   }
 
-  return <TurnFormFields presets={presets} existing={existing} onDone={onDone} />
+  return (
+    <TurnFormFields
+      presets={presets}
+      existing={existing}
+      copy={!!copyId}
+      onDone={onDone}
+      onClose={onClose ?? onDone}
+    />
+  )
 }
 
 interface FieldsProps {
   presets: ServicePreset[]
   existing: { turn: Turn; services: TurnService[] } | null
+  copy: boolean
   onDone: () => void
+  onClose: () => void
 }
 
-function TurnFormFields({ presets, existing, onDone }: FieldsProps) {
+function TurnFormFields({ presets, existing, copy, onDone, onClose }: FieldsProps) {
   const {
     locale,
     defaultCommissionRateBp,
@@ -159,12 +192,18 @@ function TurnFormFields({ presets, existing, onDone }: FieldsProps) {
   } = useSettings()
   const id = useId()
   const today = todayIso()
-  const turn = existing?.turn
+  // A copy is loaded from its source but saved as a brand new turn.
+  const source = existing?.turn
+  const turn = copy ? undefined : source
   const initialPreset = presets.find((preset) => preset.id === lastServicePresetId) ?? presets[0]
 
   const [lines, setLines] = useState<LineState[]>(() =>
     existing && existing.services.length > 0
-      ? existing.services.map((service) => lineFromService(service, presets))
+      ? existing.services.map((service) =>
+          copy
+            ? copiedLineFromService(service, presets)
+            : lineFromService(service, presets),
+        )
       : [
           newLine(
             initialPreset?.id ?? 'other',
@@ -173,27 +212,30 @@ function TurnFormFields({ presets, existing, onDone }: FieldsProps) {
         ],
   )
   const [cashText, setCashText] = useState(
-    turn && turn.cashTipCents > 0 ? centsToInput(turn.cashTipCents) : '',
+    source && source.cashTipCents > 0 ? centsToInput(source.cashTipCents) : '',
   )
   const [cardText, setCardText] = useState(
-    turn && turn.cardTipCents > 0 ? centsToInput(turn.cardTipCents) : '',
+    source && source.cardTipCents > 0 ? centsToInput(source.cardTipCents) : '',
   )
   const [date, setDate] = useState<IsoDate>(turn?.localWorkDate ?? today)
-  const [turnCountText, setTurnCountText] = useState(String(turn?.turnCount ?? 1))
+  const [turnCountText, setTurnCountText] = useState(String(source?.turnCount ?? 1))
   const [time, setTime] = useState(turn ? timeOf(turn.occurredAt) : '')
-  const [clientType, setClientType] = useState<ClientType>(turn?.clientType ?? 'unspecified')
+  const [clientType, setClientType] = useState<ClientType>(
+    source?.clientType ?? 'unspecified',
+  )
+
   const [cashTipReceived, setCashTipReceived] = useState(
-    turn ? turn.cashTipReceived : cashTipHandling === 'inHand',
+    source ? source.cashTipReceived : cashTipHandling === 'inHand',
   )
   const [cardTipReceived, setCardTipReceived] = useState(
-    turn ? turn.cardTipReceived : cardTipHandling === 'inHand',
+    source ? source.cardTipReceived : cardTipHandling === 'inHand',
   )
-  const [note, setNote] = useState(turn?.note ?? '')
+  const [note, setNote] = useState(source?.note ?? '')
   const [moreOpen, setMoreOpen] = useState(
-    turn
-      ? turn.turnCount !== 1 ||
-          turn.clientType !== 'unspecified' ||
-          (turn.note ?? '').trim() !== ''
+    source
+      ? source.turnCount !== 1 ||
+          source.clientType !== 'unspecified' ||
+          (source.note ?? '').trim() !== ''
       : false,
   )
   const [savedAddAnother, setSavedAddAnother] = useState(false)
@@ -258,40 +300,62 @@ function TurnFormFields({ presets, existing, onDone }: FieldsProps) {
     )
   }
 
-  function chooseService(key: string, choice: string) {
+  function forgetLines(keys: readonly string[]) {
+    if (keys.length === 0) return
+    setErrors((previous) => {
+      const next = { ...previous.lines }
+      for (const key of keys) delete next[key]
+      return { ...previous, lines: next }
+    })
+  }
+
+  /**
+   * A line added in shared-rate mode inherits the rate the technician already
+   * set, or the one a copied or edited turn brought in. Taking a preset default
+   * instead would make the rates differ and flip the form to a box per line.
+   */
+  function sharedRateForNewLine(): string | null {
+    if (perServiceRates || showPerLine) return null
+    const first = lines[0]
+    return first?.rateTouched ? first.rate : null
+  }
+
+  function lineForChoice(choice: string): LineState {
     const preset = presets.find((item) => item.id === choice)
-    updateLine(key, (line) => ({
-      ...line,
-      choice,
-      amount:
-        preset?.defaultPriceCents != null && line.amount.trim() === ''
-          ? centsToInput(preset.defaultPriceCents)
-          : line.amount,
-      rate: line.rateTouched
-        ? line.rate
-        : rateToInput(preset?.defaultCommissionRateBp ?? defaultCommissionRateBp),
-    }))
-    clearLineError(key, 'serviceName')
+    const line = newLine(choice, preset?.defaultCommissionRateBp ?? defaultCommissionRateBp)
+    const sharedRate = sharedRateForNewLine()
+    const withRate =
+      sharedRate === null ? line : { ...line, rate: sharedRate, rateTouched: true }
+    return preset?.defaultPriceCents != null
+      ? { ...withRate, amount: centsToInput(preset.defaultPriceCents) }
+      : withRate
+  }
+
+  function toggleService(choice: string) {
+    const matching = lines.filter((line) => line.choice === choice)
+    if (matching.length > 0) {
+      setLines((previous) => previous.filter((line) => line.choice !== choice))
+      forgetLines(matching.map((line) => line.key))
+    } else {
+      setLines((previous) => [...previous, lineForChoice(choice)])
+    }
+    setErrors((previous) =>
+      previous.services ? { ...previous, services: undefined } : previous,
+    )
     changed()
   }
 
   function addService() {
-    const choice = initialPreset?.id ?? 'other'
-    const rateBp = initialPreset?.defaultCommissionRateBp ?? defaultCommissionRateBp
-    setLines((previous) => [...previous, newLine(choice, rateBp)])
+    setLines((previous) => [...previous, lineForChoice('other')])
+    setErrors((previous) =>
+      previous.services ? { ...previous, services: undefined } : previous,
+    )
     changed()
   }
 
   function removeService(key: string) {
-    setLines((previous) =>
-      previous.length <= 1 ? previous : previous.filter((line) => line.key !== key),
-    )
-    setErrors((previous) => {
-      if (!previous.lines[key]) return previous
-      const next = { ...previous.lines }
-      delete next[key]
-      return { ...previous, lines: next }
-    })
+    setLines((previous) => previous.filter((line) => line.key !== key))
+    forgetLines([key])
     changed()
   }
 
@@ -305,6 +369,11 @@ function TurnFormFields({ presets, existing, onDone }: FieldsProps) {
 
   async function save(): Promise<boolean> {
     if (saveInFlight.current) return false
+
+    if (lines.length === 0) {
+      setErrors({ lines: {}, services: t(locale, 'errorNoService') })
+      return false
+    }
 
     const nextLineErrors: Record<string, LineErrors> = {}
     const nextLines: TurnLineInput[] = []
@@ -445,7 +514,7 @@ function TurnFormFields({ presets, existing, onDone }: FieldsProps) {
       <header className="flex items-center justify-between">
         <button
           type="button"
-          onClick={onDone}
+          onClick={onClose}
           aria-label={t(locale, 'close')}
           className="flex min-h-11 min-w-11 items-center justify-center"
         >
@@ -476,6 +545,41 @@ function TurnFormFields({ presets, existing, onDone }: FieldsProps) {
         error={errors.date}
       />
 
+      <div>
+        <p className={label}>{t(locale, 'servicesPick')}</p>
+        <div
+          role="group"
+          aria-label={t(locale, 'servicesPick')}
+          className="flex flex-wrap gap-2"
+        >
+          {presets.map((preset) => {
+            const on = lines.some((line) => line.choice === preset.id)
+            return (
+              <button
+                key={preset.id}
+                type="button"
+                aria-pressed={on}
+                className={`${chip} ${on ? chipOn : chipOff}`}
+                onClick={() => toggleService(preset.id)}
+              >
+                {presetName(preset, locale)}
+              </button>
+            )
+          })}
+          <button
+            type="button"
+            aria-pressed={lines.some((line) => line.choice === 'other')}
+            className={`${chip} ${
+              lines.some((line) => line.choice === 'other') ? chipOn : chipOff
+            }`}
+            onClick={() => toggleService('other')}
+          >
+            {t(locale, 'presetOther')}
+          </button>
+        </div>
+        {errors.services && <p className={errorText}>{errors.services}</p>}
+      </div>
+
       {lines.map((line, index) => (
         <ServiceLineFields
           key={line.key}
@@ -483,11 +587,9 @@ function TurnFormFields({ presets, existing, onDone }: FieldsProps) {
           presets={presets}
           locale={locale}
           showPerLine={showPerLine}
-          canRemove={lines.length > 1}
           errors={errors.lines[line.key]}
           amountRef={index === 0 ? amountRef : undefined}
           autoFocus={index === 0}
-          onChoose={(choice) => chooseService(line.key, choice)}
           onCustomName={(value) => {
             updateLine(line.key, (current) => ({ ...current, customName: value }))
             clearLineError(line.key, 'serviceName')
@@ -543,7 +645,7 @@ function TurnFormFields({ presets, existing, onDone }: FieldsProps) {
         />
       </div>
 
-      {!showPerLine && (
+      {!showPerLine && lines.length > 0 && (
         <PercentField
           label={t(locale, 'commissionPercent')}
           value={lines[0].rate}
@@ -708,6 +810,14 @@ function TurnFormFields({ presets, existing, onDone }: FieldsProps) {
           <p role="status" className="text-sm text-positive-text">
             {savedAddAnother ? t(locale, 'savedAddAnother') : ''}
           </p>
+        )}
+        {turn && (
+          <Link
+            href={paths.copy(turn.id)}
+            className={`${secondaryButton} flex min-h-11 items-center justify-center`}
+          >
+            {t(locale, 'copyTurn')}
+          </Link>
         )}
         <button type="submit" className={primaryButton}>
           {t(locale, 'save')}
