@@ -77,7 +77,7 @@ Tasks run **one at a time, in order.** All builders share one checkout.
 | T15 | [Payday list and period detail](T15-payday-screens.md) | T14 | ✅ | `payday` browser tests pass |
 | T16 | [Payments and allocations](T16-payments.md) | T15 | ✅ | `payday` and `earnings` browser tests pass |
 | T17 | [Full Settings screen](T17-settings.md) | T16 | ✅ | `settings` browser tests pass |
-| T18 | [First-launch onboarding](T18-onboarding.md) | T17 | ⬜ | All browser tests pass |
+| T18 | [First-launch onboarding](T18-onboarding.md) | T17 | ✅ | All browser tests pass |
 
 ### Milestone 4: Offline and backup
 
@@ -134,3 +134,4 @@ _(One row per attempted task.)_
 | 2026-11-05 | T15 | ✅ merged as PR #15 | DeepSeek V4.1 Flash (DeepSeek Harness) | Two rounds: payout tests now read the payout row itself, proved with a deliberately wrong payout. Save double tap guarded |
 | 2026-11-05 | T16 | ✅ merged as PR #16 | DeepSeek V4.1 Flash (DeepSeek Harness) | Two rounds: cleared date and missing period are now refused. Save double tap guarded; 73 browser tests pass |
 | 2026-11-05 | T17 | ✅ merged as PR #17 | DeepSeek V4.1 Flash (DeepSeek Harness) | Two rounds: a mistyped year froze Payday, so pay periods now reach back ten years at most. 84 browser tests pass |
+| 2026-11-05 | T18 | ✅ merged as PR #18 | DeepSeek V4.1 Flash (DeepSeek Harness) | Passed review first time. 91 browser tests pass |
