@@ -6,6 +6,7 @@ import { useSettings } from '../../app/settings.ts'
 import { useToday } from '../../app/useToday.ts'
 import { db } from '../../db/schema.ts'
 import {
+  diffDays,
   formatDayLong,
   formatMonthYear,
   formatRange,
@@ -30,6 +31,7 @@ import { backupFileName, download } from '../backup/backupFormat.ts'
 import { exportCsv } from '../backup/exportCsv.ts'
 import { loadRange } from '../turns/turnStore.ts'
 import { BarChart } from './BarChart.tsx'
+import { bucketSizeOf, type BucketSize } from './chartData.ts'
 import { loadEarnings } from './earningsData.ts'
 import { rangeOf, stepDate, type PeriodChoice } from './earningsRange.ts'
 
@@ -40,6 +42,12 @@ const CHOICES: { value: PeriodChoice; key: StringKey }[] = [
   { value: 'yearly', key: 'periodYearly' },
   { value: 'custom', key: 'periodCustom' },
 ]
+
+const CHART_TITLE_KEYS: Record<BucketSize, StringKey> = {
+  day: 'chartDaily',
+  week: 'chartWeekly',
+  month: 'chartMonthly',
+}
 
 function rangeLabel(
   choice: Exclude<PeriodChoice, 'custom'>,
@@ -82,10 +90,13 @@ export function EarningsPage() {
 
   const hasChartData =
     data?.bars.some((bar) => bar.earnedCents > 0 || bar.revenueCents > 0) ?? false
-  const highestEarned =
-    data && data.bars.length > 0
-      ? data.bars.reduce((max, bar) => Math.max(max, bar.earnedCents), Number.NEGATIVE_INFINITY)
-      : 0
+  const chartTitle = t(locale, CHART_TITLE_KEYS[bucketSizeOf(start, end)])
+  const chartSummary = data
+    ? tf(locale, 'chartSummary', {
+        days: diffDays(end, start) + 1,
+        amount: formatUsd(data.highestDayCents),
+      })
+    : ''
 
   // A quick double tap runs the download twice before React can re-render.
   const exportInFlight = useRef(false)
@@ -256,20 +267,14 @@ export function EarningsPage() {
               {hasChartData ? (
                 <>
                   <BarChart
-                    title={t(locale, 'chartDaily')}
-                    summary={tf(locale, 'chartSummary', {
-                      days: data.bars.length,
-                      amount: formatUsd(highestEarned),
-                    })}
+                    title={chartTitle}
+                    summary={chartSummary}
                     bars={data.bars}
                     series={['earned']}
                   />
                   <BarChart
                     title={t(locale, 'chartRevenueVsEarned')}
-                    summary={tf(locale, 'chartSummary', {
-                      days: data.bars.length,
-                      amount: formatUsd(highestEarned),
-                    })}
+                    summary={chartSummary}
                     bars={data.bars}
                     series={['revenue', 'earned']}
                   />

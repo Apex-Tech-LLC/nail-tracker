@@ -73,6 +73,19 @@ test('shows the daily chart with the highest day', async ({ page }) => {
   await expect(page.getByRole('img', { name: /Highest day \$60\.00/ }).first()).toBeVisible()
 })
 
+test('the yearly chart is titled monthly and counts the year in days', async ({ page }) => {
+  await startEarnings(page)
+  await addTurn(page, { amount: '100' })
+  await page.goto('./#/earnings')
+
+  await page.getByRole('button', { name: 'Yearly' }).click()
+
+  await expect(page.getByText('Earned each month')).toBeVisible()
+  await expect(
+    page.getByRole('img', { name: /365 days shown\. Highest day \$60\.00/ }).first(),
+  ).toBeVisible()
+})
+
 test('says when there is not enough data for a chart yet', async ({ page }) => {
   await startEarnings(page)
   await page.goto('./#/earnings')

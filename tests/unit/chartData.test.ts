@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { AdjustmentFigures, TurnFigures } from '../../src/domain/totals.ts'
-import { buildBars, chartMax } from '../../src/features/earnings/chartData.ts'
+import { buildBars, chartMax, highestDayCents, labelStep } from '../../src/features/earnings/chartData.ts'
 
 const turn = (overrides: Partial<TurnFigures> = {}): TurnFigures => ({
   localWorkDate: '2026-11-03',
@@ -26,6 +26,14 @@ const bar = (earnedCents: number, revenueCents: number) => ({
   earnedCents,
   revenueCents,
 })
+
+const labeled = (count: number, label: string) =>
+  Array.from({ length: count }, (_, index) => ({
+    key: `2026-11-${index + 1}`,
+    label,
+    earnedCents: 0,
+    revenueCents: 0,
+  }))
 
 describe('buildBars', () => {
   it('a week gets one bar per day, with the earned and revenue money on its day', () => {
@@ -115,5 +123,29 @@ describe('chartMax', () => {
 
   it('is at least 1 so an empty chart cannot divide by zero', () => {
     expect(chartMax([])).toBe(1)
+  })
+})
+
+describe('labelStep', () => {
+  it('skips three bars at a time when thirteen labels are nine characters wide', () => {
+    expect(labelStep(labeled(13, '123456789'))).toBe(3)
+  })
+
+  it('skips three bars at a time for thirty-one two-character day labels', () => {
+    expect(labelStep(labeled(31, '18'))).toBe(3)
+  })
+})
+
+describe('highestDayCents', () => {
+  it('takes the best single day, not the total of every day in the week', () => {
+    const highest = highestDayCents(
+      [
+        turn({ localWorkDate: '2026-11-02', commissionTotalCents: 6000 }),
+        turn({ localWorkDate: '2026-11-03', commissionTotalCents: 3000 }),
+      ],
+      [],
+    )
+
+    expect(highest).toBe(6000)
   })
 })

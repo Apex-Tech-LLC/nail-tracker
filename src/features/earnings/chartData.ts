@@ -21,7 +21,13 @@ export interface ChartBar {
   revenueCents: number
 }
 
-type BucketSize = 'day' | 'week' | 'month'
+export type BucketSize = 'day' | 'week' | 'month'
+
+/** One bar per day, week or month, chosen by the length of the range. */
+export function bucketSizeOf(start: IsoDate, end: IsoDate): BucketSize {
+  const days = diffDays(end, start) + 1
+  return days <= 31 ? 'day' : days <= 120 ? 'week' : 'month'
+}
 
 function toIso(year: number, month: number, day: number): IsoDate {
   const pad = (n: number) => String(n).padStart(2, '0')
@@ -90,8 +96,7 @@ export function buildBars(
   weekStart: 0 | 1,
   locale: DateLocale,
 ): ChartBar[] {
-  const days = diffDays(end, start) + 1
-  const size: BucketSize = days <= 31 ? 'day' : days <= 120 ? 'week' : 'month'
+  const size = bucketSizeOf(start, end)
   const keys = bucketKeys(start, end, size, weekStart)
 
   const turnsByKey = new Map<string, TurnFigures[]>()
@@ -130,4 +135,42 @@ export function chartMax(bars: readonly ChartBar[]): number {
     max = Math.max(max, bar.earnedCents, bar.revenueCents)
   }
   return max
+}
+
+/** How many bars to skip between labels so the longest one fits the 312px plot. */
+export function labelStep(bars: readonly ChartBar[]): number {
+  if (bars.length === 0) return 1
+  const longest = bars.reduce((max, bar) => Math.max(max, bar.label.length), 0)
+  const fitting = Math.max(1, Math.min(12, Math.floor(312 / (longest * 6))))
+  return Math.ceil(bars.length / fitting)
+}
+
+/** The highest single day's earned money across every day that has data. */
+export function highestDayCents(
+  turns: readonly TurnFigures[],
+  adjustments: readonly (AdjustmentFigures & { localWorkDate: string })[],
+): number {
+  const turnsByDay = new Map<string, TurnFigures[]>()
+  for (const turn of turns) {
+    const group = turnsByDay.get(turn.localWorkDate)
+    if (group) group.push(turn)
+    else turnsByDay.set(turn.localWorkDate, [turn])
+  }
+
+  const adjustmentsByDay = new Map<string, (AdjustmentFigures & { localWorkDate: string })[]>()
+  for (const adjustment of adjustments) {
+    const group = adjustmentsByDay.get(adjustment.localWorkDate)
+    if (group) group.push(adjustment)
+    else adjustmentsByDay.set(adjustment.localWorkDate, [adjustment])
+  }
+
+  const days = new Set([...turnsByDay.keys(), ...adjustmentsByDay.keys()])
+  if (days.size === 0) return 0
+
+  let highest = Number.NEGATIVE_INFINITY
+  for (const day of days) {
+    const earned = sumTotals(turnsByDay.get(day) ?? [], adjustmentsByDay.get(day) ?? []).earnedCents
+    highest = Math.max(highest, earned)
+  }
+  return highest
 }

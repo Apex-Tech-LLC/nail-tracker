@@ -2,7 +2,7 @@ import type { NailDb } from '../../db/schema.ts'
 import type { DateLocale, IsoDate } from '../../domain/dates.ts'
 import { averages, sumTotals, type Totals } from '../../domain/totals.ts'
 import { loadRange } from '../turns/turnStore.ts'
-import { buildBars, type ChartBar } from './chartData.ts'
+import { buildBars, highestDayCents as highestDay, type ChartBar } from './chartData.ts'
 
 export interface EarningsData {
   totals: Totals
@@ -10,6 +10,7 @@ export interface EarningsData {
   paidInRangeCents: number
   outstandingAllTimeCents: number
   bars: ChartBar[]
+  highestDayCents: number
 }
 
 export async function loadEarnings(
@@ -40,5 +41,6 @@ export async function loadEarnings(
       allTotals.expectedPayoutCents -
       allPayments.reduce((sum, payment) => sum + payment.amountCents, 0),
     bars: buildBars(range.turns, range.adjustments, start, end, weekStart, locale),
+    highestDayCents: highestDay(range.turns, range.adjustments),
   }
 }

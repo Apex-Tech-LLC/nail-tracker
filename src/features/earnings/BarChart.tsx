@@ -1,6 +1,6 @@
 import { useSettings } from '../../app/settings.ts'
 import { t } from '../../lib/i18n.ts'
-import { chartMax, type ChartBar } from './chartData.ts'
+import { chartMax, labelStep, type ChartBar } from './chartData.ts'
 
 interface Props {
   title: string
@@ -32,40 +32,46 @@ export function BarChart({ title, summary, bars, series }: Props) {
   // One series gets 70% of the slot; two sit side by side at 35% each.
   const barWidth = slot * (series.length === 2 ? 0.35 : 0.7)
   const left = 4 + slot * 0.15
-  const labelEvery = bars.length > 12 ? Math.ceil(bars.length / 12) : 1
+  const step = labelStep(bars)
 
   return (
     <figure className="flex flex-col gap-2">
       <figcaption className="text-sm font-medium">{title}</figcaption>
       <svg viewBox="0 0 320 140" role="img" aria-label={summary} className="w-full">
-        {bars.map((bar, index) => (
-          <g key={bar.key}>
-            {series.map((name, seriesIndex) => {
-              const height = heightOf(bar[name === 'earned' ? 'earnedCents' : 'revenueCents'], max)
-              return (
-                <rect
-                  key={name}
-                  x={left + index * slot + seriesIndex * barWidth}
-                  y={118 - height}
-                  width={barWidth}
-                  height={height}
-                  fill={COLORS[name]}
-                />
-              )
-            })}
-            {index % labelEvery === 0 && (
-              <text
-                x={left + index * slot + (slot * 0.7) / 2}
-                y={134}
-                fontSize="10"
-                textAnchor="middle"
-                fill="currentColor"
-              >
-                {bar.label}
-              </text>
-            )}
-          </g>
-        ))}
+        {bars.map((bar, index) => {
+          const centre = left + index * slot + (slot * 0.7) / 2
+          const halfWidth = bar.label.length * 3
+          const labelX = Math.min(Math.max(centre, halfWidth), 320 - halfWidth)
+
+          return (
+            <g key={bar.key}>
+              {series.map((name, seriesIndex) => {
+                const height = heightOf(bar[name === 'earned' ? 'earnedCents' : 'revenueCents'], max)
+                return (
+                  <rect
+                    key={name}
+                    x={left + index * slot + seriesIndex * barWidth}
+                    y={118 - height}
+                    width={barWidth}
+                    height={height}
+                    fill={COLORS[name]}
+                  />
+                )
+              })}
+              {index % step === 0 && (
+                <text
+                  x={labelX}
+                  y={134}
+                  fontSize="10"
+                  textAnchor="middle"
+                  fill="currentColor"
+                >
+                  {bar.label}
+                </text>
+              )}
+            </g>
+          )
+        })}
       </svg>
       {series.length === 2 && (
         <div className="flex gap-3 text-xs">
