@@ -107,6 +107,44 @@ describe('ensurePayPeriods', () => {
     ])
   })
 
+  it('never goes back more than ten years for a mistyped anchor year', async () => {
+    const fresh = openFresh()
+
+    await ensurePayPeriods(fresh, { type: 'weekly', anchor: '0202-11-03' }, '2026-11-04', 100)
+
+    const periods = await periodsOldestFirst(fresh)
+    expect(periods.length).toBeLessThanOrEqual(523)
+    expect(
+      periods.some((period) => period.startDate <= '2026-11-04' && '2026-11-04' <= period.endDate),
+    ).toBe(true)
+  })
+
+  it('never goes back more than ten years for a mistyped turn year', async () => {
+    const fresh = openFresh()
+    await addTurn(fresh, turnInput({ localWorkDate: '0202-11-03' }), 100)
+
+    await ensurePayPeriods(fresh, weekly, '2026-11-04', 100)
+
+    const periods = await periodsOldestFirst(fresh)
+    expect(periods.length).toBeLessThanOrEqual(523)
+    expect(
+      periods.some((period) => period.startDate <= '2026-11-04' && '2026-11-04' <= period.endDate),
+    ).toBe(true)
+  })
+
+  it('still covers a turn nine years before today', async () => {
+    const fresh = openFresh()
+    await addTurn(fresh, turnInput({ localWorkDate: '2017-11-04' }), 100)
+
+    await ensurePayPeriods(fresh, weekly, '2026-11-04', 100)
+
+    const periods = await periodsOldestFirst(fresh)
+    expect(
+      periods.some((period) => period.startDate <= '2017-11-04' && '2017-11-04' <= period.endDate),
+    ).toBe(true)
+    expect(periods.some((period) => period.endDate >= '2026-11-04')).toBe(true)
+  })
+
   it('makes no periods for a schedule of none', async () => {
     const fresh = openFresh()
 

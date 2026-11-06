@@ -1,61 +1,75 @@
 import { IconAlertTriangle, IconShieldCheck } from '@tabler/icons-react'
-import type { ReactNode } from 'react'
+import { useId, useState } from 'react'
 import { Link } from 'wouter'
 import { PageHeader } from '../../app/PageHeader.tsx'
 import { paths } from '../../app/navigation.ts'
+import type { PayPeriodType, TipHandling } from '../../app/settings.ts'
 import { updateSettings, useSettings } from '../../app/settings.ts'
+import { isIsoDate, todayIso, weekRange } from '../../domain/dates.ts'
+import { parseRateBp, rateToInput } from '../../domain/money.ts'
 import { t } from '../../lib/i18n.ts'
 import type { Locale } from '../../lib/locale.ts'
 import { usePersistState } from '../../pwa/persistStorage.ts'
-import { secondaryButton } from '../../ui/styles.ts'
+import { PercentField } from '../../ui/PercentField.tsx'
+import { Row } from '../../ui/Row.tsx'
+import { TileGroup } from '../../ui/TileGroup.tsx'
+import { card, field, label, secondaryButton } from '../../ui/styles.ts'
 
-interface TileOption<T extends string> {
-  value: T
-  glyph: string
-  label: string
-  lang?: Locale
-}
-
-function TileGroup<T extends string>({
-  legend,
-  name,
-  value,
-  options,
-  onChange,
-}: {
-  legend: string
-  name: string
-  value: T
-  options: TileOption<T>[]
-  onChange: (value: T) => void
-}): ReactNode {
-  return (
-    <fieldset>
-      <legend className="mb-2 text-xs text-text-secondary">{legend}</legend>
-      <div className="flex gap-2">
-        {options.map((option) => {
-          const on = option.value === value
-          return (
-            <label
-              key={option.value}
-              lang={option.lang}
-              className={`flex flex-1 cursor-pointer flex-col items-center gap-1 rounded-card border p-3 has-focus-visible:outline-2 has-focus-visible:outline-brand-600 ${on ? 'border-brand-600 bg-brand-50' : 'border-border-strong bg-surface'}`}
-            >
-              <input type="radio" name={name} value={option.value} checked={on} onChange={() => onChange(option.value)} className="sr-only" />
-              <span aria-hidden="true" className={`text-xl ${on ? 'text-brand-600' : 'text-text-secondary'}`}>
-                {option.glyph}
-              </span>
-              <span className={`text-sm ${on ? 'text-brand-900' : ''}`}>{option.label}</span>
-            </label>
-          )
-        })}
-      </div>
-    </fieldset>
-  )
-}
+type RateChoice = '6000' | '5000' | 'custom'
+type WeekStartChoice = 'sunday' | 'monday'
 
 export function SettingsPage() {
-  const { locale } = useSettings()
+  const {
+    locale,
+    defaultCommissionRateBp: rate,
+    perServiceRates,
+    weekStartDay,
+    payPeriodType,
+    payPeriodAnchorDate,
+    cashTipHandling,
+    cardTipHandling,
+  } = useSettings()
+  const [customOpen, setCustomOpen] = useState(rate !== 6000 && rate !== 5000)
+  const [customText, setCustomText] = useState(() => rateToInput(rate))
+  const [customInvalid, setCustomInvalid] = useState(false)
+  const anchorId = useId()
+  const perServiceHintId = useId()
+
+  function chooseRate(choice: RateChoice) {
+    setCustomInvalid(false)
+    if (choice === 'custom') {
+      setCustomText(rateToInput(rate))
+      setCustomOpen(true)
+      return
+    }
+    setCustomOpen(false)
+    updateSettings({ defaultCommissionRateBp: Number(choice) })
+  }
+
+  function changeCustomRate(value: string) {
+    setCustomText(value)
+    const bp = parseRateBp(value)
+    if (bp === null) {
+      setCustomInvalid(true)
+      return
+    }
+    setCustomInvalid(false)
+    updateSettings({ defaultCommissionRateBp: bp })
+  }
+
+  // A weekly or biweekly schedule counts from the first day of a period, so
+  // start it on the first day of the week the person is working in.
+  function chooseSchedule(type: PayPeriodType) {
+    const needsAnchor = type === 'weekly' || type === 'biweekly'
+    if (needsAnchor && payPeriodAnchorDate === null) {
+      updateSettings({
+        payPeriodType: type,
+        payPeriodAnchorDate: weekRange(todayIso(), weekStartDay).start,
+      })
+      return
+    }
+    updateSettings({ payPeriodType: type })
+  }
 
   return (
     <>
@@ -71,9 +85,129 @@ export function SettingsPage() {
           { value: 'en', glyph: 'Aa', label: 'English', lang: 'en' },
         ]}
       />
+
+      <TileGroup<RateChoice>
+        legend={t(locale, 'defaultCommission')}
+        name="commission"
+        value={customOpen ? 'custom' : rate === 5000 ? '5000' : '6000'}
+        onChange={chooseRate}
+        options={[
+          { value: '6000', label: '60%' },
+          { value: '5000', label: '50%' },
+          { value: 'custom', label: t(locale, 'customRate') },
+        ]}
+      />
+      {customOpen && (
+        <PercentField
+          label={t(locale, 'customRateLabel')}
+          value={customText}
+          onChange={changeCustomRate}
+          error={customInvalid ? t(locale, 'errorRate') : undefined}
+        />
+      )}
+
+      <div>
+        <label className="flex items-center gap-3 py-2">
+          <input
+            type="checkbox"
+            className="size-5"
+            checked={perServiceRates}
+            onChange={(event) => updateSettings({ perServiceRates: event.target.checked })}
+            aria-describedby={perServiceHintId}
+          />
+          <span>{t(locale, 'perServiceRates')}</span>
+        </label>
+        <p id={perServiceHintId} className="text-sm text-text-secondary">{t(locale, 'perServiceRatesHint')}</p>
+      </div>
+
+      <div className={card}>
+        <Row label={t(locale, 'commissionBasis')} value={t(locale, 'commissionBasisValue')} />
+      </div>
+
+      <TileGroup<WeekStartChoice>
+        legend={t(locale, 'weekStart')}
+        name="week-start"
+        value={weekStartDay === 1 ? 'monday' : 'sunday'}
+        onChange={(value) => updateSettings({ weekStartDay: value === 'monday' ? 1 : 0 })}
+        options={[
+          { value: 'sunday', label: t(locale, 'sunday') },
+          { value: 'monday', label: t(locale, 'monday') },
+        ]}
+      />
+
+      <TileGroup<PayPeriodType>
+        legend={t(locale, 'paydaySchedule')}
+        name="pay-schedule"
+        value={payPeriodType}
+        onChange={chooseSchedule}
+        options={[
+          { value: 'weekly', label: t(locale, 'scheduleWeekly') },
+          { value: 'biweekly', label: t(locale, 'scheduleBiweekly') },
+          { value: 'custom', label: t(locale, 'scheduleCustom') },
+          { value: 'none', label: t(locale, 'scheduleNone') },
+        ]}
+      />
+
+      {(payPeriodType === 'weekly' || payPeriodType === 'biweekly') && (
+        <div>
+          <label htmlFor={anchorId} className={label}>
+            {t(locale, 'anchorDate')}
+          </label>
+          <input
+            id={anchorId}
+            type="date"
+            value={payPeriodAnchorDate ?? ''}
+            onChange={(event) => {
+              if (isIsoDate(event.target.value)) {
+                updateSettings({ payPeriodAnchorDate: event.target.value })
+              }
+            }}
+            aria-describedby={`${anchorId}-hint`}
+            className={field}
+          />
+          <p id={`${anchorId}-hint`} className="mt-1 text-sm text-text-secondary">
+            {t(locale, 'anchorDateHint')}
+          </p>
+        </div>
+      )}
+
+      <TileGroup<TipHandling>
+        legend={t(locale, 'cashTipHandling')}
+        name="cash-tips"
+        value={cashTipHandling}
+        onChange={(value) => updateSettings({ cashTipHandling: value })}
+        options={[
+          { value: 'inHand', label: t(locale, 'tipInHand') },
+          { value: 'fromSalon', label: t(locale, 'tipFromSalon') },
+        ]}
+      />
+
+      <div>
+        <TileGroup<TipHandling>
+          legend={t(locale, 'cardTipHandling')}
+          name="card-tips"
+          value={cardTipHandling}
+          onChange={(value) => updateSettings({ cardTipHandling: value })}
+          options={[
+            { value: 'inHand', label: t(locale, 'tipInHand') },
+            { value: 'fromSalon', label: t(locale, 'tipFromSalon') },
+          ]}
+        />
+        <p className="mt-1 text-sm text-text-secondary">{t(locale, 'tipHandlingHint')}</p>
+      </div>
+
       <Link href={paths.services} className={secondaryButton + ' block text-center'}>
         {t(locale, 'manageServices')}
       </Link>
+
+      <div className={card}>
+        <Row label={t(locale, 'currency')} value={t(locale, 'currencyUsd')} />
+      </div>
+
+      <div className={card}>
+        <Row label={t(locale, 'theme')} value={t(locale, 'themeLight')} />
+      </div>
+
       <StorageStatus />
       {/* Only the build id is forced LTR; the label stays in the page direction. */}
       <p className="mt-auto text-center text-xs text-text-muted">
