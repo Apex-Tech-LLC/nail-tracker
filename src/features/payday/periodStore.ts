@@ -1,5 +1,5 @@
 import type { NailDb, PayPeriod } from '../../db/schema.ts'
-import type { IsoDate } from '../../domain/dates.ts'
+import { addDays, type IsoDate } from '../../domain/dates.ts'
 import {
   customPeriodProblem,
   missingPeriods,
@@ -20,8 +20,8 @@ export interface PeriodSummary {
 
 /**
  * Fills in every scheduled period the technician could have worked, from the
- * schedule anchor (or an earlier turn or adjustment) up to today. bulkPut
- * keeps a double run harmless.
+ * schedule anchor (or an earlier turn or adjustment, but no more than ten
+ * years back) up to today. bulkPut keeps a double run harmless.
  */
 export async function ensurePayPeriods(
   db: NailDb,
@@ -35,12 +35,18 @@ export async function ensurePayPeriods(
     db.payPeriods.toArray(),
   ])
 
+  // A mistyped year (0202 for 2026) would otherwise build centuries of weekly
+  // periods and freeze the Payday tab. Ten years back is the oldest work or pay
+  // that can still be owed.
+  const earliestLimit = addDays(today, -3653)
+
   // The schedule starts at its anchor, so that is the earliest period even
   // before the first turn or adjustment is recorded.
   let earliest = today
   for (const date of [firstTurn?.localWorkDate, firstAdjustment?.localWorkDate, schedule.anchor]) {
     if (date != null && date < earliest) earliest = date
   }
+  if (earliest < earliestLimit) earliest = earliestLimit
 
   const missing = missingPeriods(existing, schedule, earliest, today)
   if (missing.length === 0) return

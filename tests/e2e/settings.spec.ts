@@ -112,6 +112,18 @@ test('the anchor date sets where pay periods start', async ({ page }) => {
   await expect(page.getByText('Nov 3 – Nov 9')).toBeVisible()
 })
 
+test('a mistyped anchor year still opens the payday tab', async ({ page }) => {
+  await seedSettings(page)
+  await page.clock.setFixedTime(NOON)
+  await openSettings(page)
+
+  await settingsGroup(page, 'Payday schedule').getByText('Weekly', { exact: true }).click()
+  await page.getByLabel('First day of a pay period').fill('0202-11-03')
+  await page.goto('./#/payday')
+
+  await expect(page.getByText('Current period')).toBeVisible()
+})
+
 test('cash tips paid on payday start unchecked on a new turn', async ({ page }) => {
   await seedSettings(page)
   await openSettings(page)
