@@ -56,6 +56,25 @@ export function formatUsdShort(cents: number): string {
   return `${sign}$${dollarFormat.format(dollars)}.${String(rest).padStart(2, '0')}`
 }
 
+/**
+ * Types one number-pad key into a money box. Digits append, one dot opens the
+ * cents, and a key that would break the two-decimal shape or the cents limit is
+ * refused, leaving the value as it was.
+ */
+export function padAmount(value: string, key: string): string {
+  if (key === '.') {
+    if (value.includes('.')) return value
+    return value === '' ? '0.' : `${value}.`
+  }
+  if (!/^\d$/.test(key)) return value
+
+  const dot = value.indexOf('.')
+  if (dot !== -1 && value.length - dot - 1 >= 2) return value
+
+  const next = value + key
+  return parseCents(next) === null ? value : next
+}
+
 export function centsToInput(cents: number): string {
   const sign = cents < 0 ? '-' : ''
   const abs = Math.abs(cents)
