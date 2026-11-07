@@ -19,6 +19,8 @@ export async function exportJson(
       db.payPeriods,
       db.payments,
       db.paymentAllocations,
+      db.payRules,
+      db.paycheckRecords,
     ],
     async (): Promise<Backup> => {
       const [
@@ -30,6 +32,8 @@ export async function exportJson(
         payPeriods,
         payments,
         paymentAllocations,
+        payRules,
+        paycheckRecords,
       ] = await Promise.all([
         db.salons.toArray(),
         db.servicePresets.toArray(),
@@ -39,6 +43,8 @@ export async function exportJson(
         db.payPeriods.toArray(),
         db.payments.toArray(),
         db.paymentAllocations.toArray(),
+        db.payRules.toArray(),
+        db.paycheckRecords.toArray(),
       ])
 
       return {
@@ -54,6 +60,8 @@ export async function exportJson(
         payPeriods,
         payments,
         paymentAllocations,
+        payRules,
+        paycheckRecords,
       }
     },
   )

@@ -1,10 +1,32 @@
+import { isIsoDate, type IsoDate } from '../../domain/dates.ts'
+import { defaultPayRules, NO_RULES, type PayRules } from '../../domain/payRules.ts'
 import { BACKUP_VERSION } from './backupFormat.ts'
 import { ImportError } from './importError.ts'
 
 export type Migration = (data: Record<string, unknown>) => Record<string, unknown>
 
-/** Key is the version a step upgrades FROM. Empty today: version 1 is the first. */
-export const MIGRATIONS: Record<number, Migration> = {}
+function firstWorkDate(data: Record<string, unknown>): IsoDate {
+  const turns = Array.isArray(data.turns) ? data.turns : []
+  const dates = turns
+    .map((turn) =>
+      typeof turn === 'object' && turn !== null
+        ? (turn as Record<string, unknown>).localWorkDate
+        : undefined,
+    )
+    .filter(isIsoDate)
+    .sort()
+  return dates[0] ?? NO_RULES.startDate
+}
+
+function upgradeFromVersionOne(data: Record<string, unknown>): Record<string, unknown> {
+  const rules: PayRules[] = [defaultPayRules(firstWorkDate(data), 1)]
+  return { ...data, payRules: rules, paycheckRecords: [] }
+}
+
+/** Key is the version a step upgrades FROM. */
+export const MIGRATIONS: Record<number, Migration> = {
+  1: upgradeFromVersionOne,
+}
 
 /** Upgrades a parsed backup one version at a time. */
 export function migrateBackup(
