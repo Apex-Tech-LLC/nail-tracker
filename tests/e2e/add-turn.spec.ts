@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { addTurn, seedSettings, selectServices, turnRow } from './helpers.ts'
+import { addTurn, seedSettings, selectServices, serviceChip, turnRow } from './helpers.ts'
 
 test('the preview shows commission and earnings before saving', async ({ page }) => {
   await seedSettings(page)
@@ -49,10 +49,7 @@ test('the next visit remembers the last service used', async ({ page }) => {
   await addTurn(page, { service: 'Pedicure', amount: '50' })
   await page.goto('./#/add')
 
-  await expect(page.getByRole('button', { name: 'Pedicure', exact: true })).toHaveAttribute(
-    'aria-pressed',
-    'true',
-  )
+  await expect(serviceChip(page, 'Pedicure')).toHaveAttribute('aria-pressed', 'true')
 })
 
 test('three services add up on one turn', async ({ page }) => {

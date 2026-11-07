@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
-import { addTurn, seedSettings, turnRow } from './helpers.ts'
+import { addTurn, seedSettings, serviceChip, turnRow } from './helpers.ts'
 
 // Noon on 2026-11-04 in the browser's America/Chicago timezone. The offset is
 // explicit so a machine running in UTC cannot move the fixed day.
@@ -30,12 +30,7 @@ test('the copy button on a Today row opens a filled copy form', async ({ page })
   await expect(page).toHaveURL(/#\/copy\//)
   await expect(page.getByRole('heading', { name: 'Add Turn' })).toBeVisible()
   await expect(page.getByLabel('Service amount')).toHaveValue('75.00')
-  await expect(
-    page.getByRole('group', { name: 'Services (pick one or more)' }).getByRole('button', {
-      name: 'Gel-X',
-      exact: true,
-    }),
-  ).toHaveAttribute('aria-pressed', 'true')
+  await expect(serviceChip(page, 'Gel-X')).toHaveAttribute('aria-pressed', 'true')
 
   await page.getByRole('button', { name: 'Save', exact: true }).click()
 
@@ -87,6 +82,12 @@ test('a long-press opens Copy, Edit and Delete, and Escape closes it', async ({ 
   await seedSettings(page)
   await page.clock.setFixedTime(NOON)
   await addTurn(page, { amount: '50' })
+
+  // The saved bar sits over the bottom of Today for a few seconds. Let it go
+  // before pressing raw mouse coordinates on the row behind it.
+  await expect(page.getByRole('status').filter({ hasText: 'Saved' })).toBeHidden({
+    timeout: 10_000,
+  })
 
   const row = turnRow(page, 1)
   const box = await row.boundingBox()

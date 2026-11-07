@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { seedSettings, selectServices } from './helpers.ts'
+import { seedSettings, selectServices, serviceChip } from './helpers.ts'
 
 test('a new service shows on Add Turn and fills its usual price', async ({ page }) => {
   await seedSettings(page)
@@ -46,7 +46,7 @@ test('a removed service disappears from Add Turn', async ({ page }) => {
 
   await expect(page.getByRole('button', { name: 'Edit: Removal' })).toHaveCount(0)
   await page.goto('./#/add')
-  await expect(page.getByRole('button', { name: 'Removal', exact: true })).toHaveCount(0)
+  await expect(serviceChip(page, 'Removal')).toHaveCount(0)
 })
 
 test('moving a service down puts it first on Add Turn', async ({ page }) => {

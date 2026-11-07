@@ -47,6 +47,15 @@ export function servicePicker(page: Page): Locator {
 }
 
 /**
+ * One service chip by its service name. A chip may also show a price, which
+ * would make its accessible name more than the name, so the name is matched
+ * through the chip's own attribute instead.
+ */
+export function serviceChip(page: Page, name: string): Locator {
+  return servicePicker(page).locator(`button[data-service-name="${name}"]`)
+}
+
+/**
  * Leaves exactly the named service chips on. Chips that are on but not wanted
  * are turned off, then any wanted chip that is off is turned on.
  */
@@ -57,12 +66,12 @@ export async function selectServices(page: Page, names: readonly string[]): Prom
   await picker.getByRole('button').first().waitFor()
 
   for (const chip of await picker.locator('button[aria-pressed="true"]').all()) {
-    const label = ((await chip.textContent()) ?? '').trim()
+    const label = (await chip.getAttribute('data-service-name')) ?? ''
     if (!wanted.has(label)) await chip.click()
   }
 
   for (const name of names) {
-    const chip = picker.getByRole('button', { name, exact: true })
+    const chip = serviceChip(page, name)
     if ((await chip.getAttribute('aria-pressed')) !== 'true') await chip.click()
   }
 }
