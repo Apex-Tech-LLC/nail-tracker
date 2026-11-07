@@ -1,10 +1,11 @@
 import { IconDownload, IconFileSpreadsheet, IconUpload, type Icon } from '@tabler/icons-react'
-import { useRef, useState, type ChangeEvent } from 'react'
-import { getSettings, updateSettings, useSettings } from '../../app/settings.ts'
+import { useId, useRef, useState, type ChangeEvent } from 'react'
+import { getSettings, updateSettings, useSettings, type BackupReminderDays } from '../../app/settings.ts'
 import { db } from '../../db/schema.ts'
-import { todayIso } from '../../domain/dates.ts'
-import { t, type StringKey } from '../../lib/i18n.ts'
-import { backupFileName, download } from './backupFormat.ts'
+import { formatDayShort, todayIso } from '../../domain/dates.ts'
+import { t, tf, type StringKey } from '../../lib/i18n.ts'
+import { field, label as labelClass } from '../../ui/styles.ts'
+import { backupFileName, shareOrDownload } from './backupFormat.ts'
 import { exportCsv } from './exportCsv.ts'
 import { exportJson } from './exportJson.ts'
 import { ImportError, type ImportErrorCode } from './importError.ts'
@@ -17,28 +18,32 @@ const ERROR_TEXT: Record<ImportErrorCode, StringKey> = {
   invalidRecord: 'importInvalidRecord',
 }
 
+const REMINDER_DAYS: readonly BackupReminderDays[] = [7, 14, 30, 0]
+
 /** A null code is a failure that is not about the file, such as a database error. */
 type Outcome = { ok: true; result: ImportOutcome } | { ok: false; code: ImportErrorCode | null }
 
 export function BackupSection() {
-  const { locale } = useSettings()
+  const { locale, backupReminderDays, lastBackupDate } = useSettings()
   const fileInput = useRef<HTMLInputElement>(null)
   // A quick double tap runs a button twice before React can re-render. The ref
   // is set synchronously, so the second tap does nothing.
   const busy = useRef(false)
   const pickingFile = useRef(false)
   const pickTimer = useRef<number | undefined>(undefined)
+  const reminderId = useId()
   const [outcome, setOutcome] = useState<Outcome | null>(null)
 
   async function saveBackup() {
     if (busy.current) return
     busy.current = true
     try {
-      download(
-        await exportJson(db, getSettings()),
-        backupFileName('backup', 'json', todayIso()),
-        'application/json',
-      )
+      const file = new File([await exportJson(db, getSettings())], backupFileName('backup', 'json', todayIso()), {
+        type: 'application/json',
+      })
+      const result = await shareOrDownload(file, t(locale, 'exportBackup'))
+      // A cancelled share is not a backup; anything else was saved somewhere.
+      if (result !== 'cancelled') updateSettings({ lastBackupDate: todayIso() })
     } finally {
       busy.current = false
     }
@@ -53,11 +58,12 @@ export function BackupSection() {
         db.turnServices.toArray(),
         db.adjustments.toArray(),
       ])
-      download(
-        exportCsv(turns, services, adjustments, locale),
+      const file = new File(
+        [exportCsv(turns, services, adjustments, locale)],
         backupFileName('turns', 'csv', todayIso()),
-        'text/csv',
+        { type: 'text/csv' },
       )
+      await shareOrDownload(file, t(locale, 'exportCsv'))
     } finally {
       busy.current = false
     }
@@ -120,6 +126,30 @@ export function BackupSection() {
           aria-hidden="true"
           tabIndex={-1}
         />
+        <div className="border-t border-border pt-3">
+          <p className="text-sm text-text-secondary">
+            {lastBackupDate === null
+              ? t(locale, 'noBackupYet')
+              : tf(locale, 'lastBackupOn', { date: formatDayShort(lastBackupDate, locale) })}
+          </p>
+          <label htmlFor={reminderId} className={`${labelClass} mt-3`}>
+            {t(locale, 'remindMeToBackUp')}
+          </label>
+          <select
+            id={reminderId}
+            value={String(backupReminderDays)}
+            onChange={(event) => {
+              const days = REMINDER_DAYS.find((option) => String(option) === event.target.value)
+              if (days !== undefined) updateSettings({ backupReminderDays: days })
+            }}
+            className={field}
+          >
+            <option value="7">{t(locale, 'backupEvery7Days')}</option>
+            <option value="14">{t(locale, 'backupEvery14Days')}</option>
+            <option value="30">{t(locale, 'backupEvery30Days')}</option>
+            <option value="0">{t(locale, 'backupOff')}</option>
+          </select>
+        </div>
         <p role="status" className="text-xs empty:hidden">
           {outcome?.ok === true &&
             `${t(locale, 'importDone')}: ${outcome.result.added} ${t(locale, 'importAdded')}, ${outcome.result.updated} ${t(locale, 'importUpdated')}, ${outcome.result.unchanged} ${t(locale, 'importUnchanged')}`}

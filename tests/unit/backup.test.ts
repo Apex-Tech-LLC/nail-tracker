@@ -27,6 +27,9 @@ const settings: Settings = {
   tipButtonsTarget: 'cash',
   numberPad: true,
   onboardingDone: true,
+  backupReminderDays: 14,
+  lastBackupDate: '2026-11-04',
+  dismissedReminders: { 'backup:2026-10-01': '2026-11-04' },
 }
 
 const opened: NailDb[] = []
