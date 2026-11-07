@@ -12,8 +12,8 @@ opens the pull request, waits for checks, merges, updates this file. Product: `d
 |---|---|---|
 | V01 | New look: colours, Be Vietnam Pro font, shared styles, bottom bar, page titles | ✅ |
 | V02 | Compact turn rows, copy button on every row, swipe and long-press, undo bar | ✅ |
-| V03 | Fast Add turn, part 1: repeat chips, chips sorted by use with prices, tip buttons, last-price hint, saved bar | 🔄 |
-| V04 | Fast Add turn, part 2: built-in number pad and compact top line | ⬜ |
+| V03 | Fast Add turn, part 1: repeat chips, chips sorted by use with prices, tip buttons, last-price hint, saved bar | ✅ |
+| V04 | Fast Add turn, part 2: built-in number pad and compact top line | 🔄 |
 
 ## Release 2.1: Home
 
