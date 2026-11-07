@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { seedSettings, selectServices } from './helpers.ts'
+import { seedSettings, selectServices, turnRow } from './helpers.ts'
 
 // Noon on 2026-11-04 in the browser's America/Chicago timezone. The offset is
 // explicit so a machine running in UTC cannot move the fixed day.
@@ -31,7 +31,7 @@ test('copying a turn saves a second turn today and leaves the original alone', a
   await page.getByRole('button', { name: 'Custom' }).click()
   await page.getByLabel('From').fill('2026-11-02')
   await page.getByLabel('To', { exact: true }).fill('2026-11-02')
-  await page.getByRole('link', { name: /Turn #2/ }).click()
+  await turnRow(page, 2).click()
   await expect(page.getByRole('heading', { name: 'Edit Turn' })).toBeVisible()
 
   await page.getByRole('link', { name: 'Copy as a new turn' }).click()
@@ -56,7 +56,7 @@ test('copying a turn saves a second turn today and leaves the original alone', a
 
   await page.getByRole('button', { name: 'Save', exact: true }).click()
   await expect(page).toHaveURL(/#\/$/)
-  await expect(page.getByText('Turn #2')).toBeVisible()
+  await expect(turnRow(page, 2)).toBeVisible()
   await expect(page.getByText('$75.00 Service revenue', { exact: true })).toBeVisible()
 
   // The November 2 turn is still there, with the same values it started with.
@@ -64,7 +64,7 @@ test('copying a turn saves a second turn today and leaves the original alone', a
   await page.getByRole('button', { name: 'Custom' }).click()
   await page.getByLabel('From').fill('2026-11-02')
   await page.getByLabel('To', { exact: true }).fill('2026-11-02')
-  await page.getByRole('link', { name: /Turn #2/ }).click()
+  await turnRow(page, 2).click()
   await expect(page.getByLabel('Service amount')).toHaveValue('75.00')
   await expect(page.getByLabel('Note')).toHaveValue('Owner requested')
 })
@@ -79,7 +79,7 @@ test('repeat last turn is hidden with no turns and opens the last turn once one 
   await selectServices(page, ['Pedicure'])
   await page.getByLabel('Service amount').fill('50')
   await page.getByRole('button', { name: 'Save', exact: true }).click()
-  await expect(page.getByText('Turn #1')).toBeVisible()
+  await expect(turnRow(page, 1)).toBeVisible()
 
   const repeat = page.getByRole('link', { name: 'Repeat last turn' })
   await expect(repeat).toBeVisible()

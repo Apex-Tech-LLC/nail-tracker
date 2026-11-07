@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
-import { addTurn, rowAmount, seedSettings, weeklyPay } from './helpers.ts'
+import { addTurn, rowAmount, seedSettings, turnRow, weeklyPay } from './helpers.ts'
 
 // Noon on 2026-11-04 in the browser's America/Chicago timezone.
 const NOON = new Date('2026-11-04T12:00:00')
@@ -40,7 +40,7 @@ test('full day', async ({ page }) => {
   await expect(rowAmount(page, 'Cash tips')).toHaveText('$5.00')
   await expect(rowAmount(page, 'Card tips')).toHaveText('$10.00')
   await expect(rowAmount(page, 'Total earned')).toHaveText('$87.00')
-  await expect(page.getByText('Turn #3')).toBeVisible()
+  await expect(turnRow(page, 3)).toBeVisible()
 })
 
 test('combined ticket', async ({ page }) => {
@@ -56,8 +56,8 @@ test('combined ticket', async ({ page }) => {
   await page.clock.setFixedTime(new Date(NOON.getTime() + 60_000))
   await addTurn(page, { amount: '30' })
 
-  await expect(page.getByText('Turn #2')).toBeVisible()
-  await expect(page.getByText('Turn #3')).toBeVisible()
+  await expect(turnRow(page, 2)).toBeVisible()
+  await expect(turnRow(page, 3)).toBeVisible()
   await expect(todayTurns(page)).toHaveText('3')
   await expect(rowAmount(page, 'Customers')).toHaveText('2')
 })
@@ -78,7 +78,7 @@ test('tip with no commission', async ({ page }) => {
 test('zero dollar service', async ({ page }) => {
   await addTurn(page, { amount: '0', cash: '5' })
 
-  await expect(page.getByText('Turn #1')).toBeVisible()
+  await expect(turnRow(page, 1)).toBeVisible()
   await expect(rowAmount(page, 'Total earned')).toHaveText('$5.00')
 })
 
@@ -113,7 +113,7 @@ test('shift past midnight', async ({ page }) => {
   await page.goto('./#/history')
   await page.getByRole('button', { name: 'Yesterday' }).click()
   await expect(page.getByRole('heading', { name: 'Wednesday, November 4' })).toBeVisible()
-  await expect(page.getByText('Turn #1')).toBeVisible()
+  await expect(turnRow(page, 1)).toBeVisible()
 })
 
 test('edit an old turn', async ({ page }) => {
@@ -127,7 +127,7 @@ test('edit an old turn', async ({ page }) => {
   await page.getByRole('button', { name: 'Custom' }).click()
   await page.getByLabel('From').fill('2026-10-20')
   await page.getByLabel('To', { exact: true }).fill('2026-10-20')
-  await page.getByRole('link', { name: /Turn #1/ }).click()
+  await turnRow(page, 1).click()
   await page.getByLabel('Service amount').fill('200')
   await page.getByRole('button', { name: 'Save', exact: true }).click()
   // Wait for the save to close the form before leaving, so its back step
@@ -149,9 +149,8 @@ test('delete a turn in a report', async ({ page }) => {
   await expect(earningsTotal(page)).toHaveText('$90.00')
 
   await page.goto('./#/history')
-  await page.getByRole('link', { name: /Turn #2/ }).click()
+  await turnRow(page, 2).click()
   await page.getByRole('button', { name: 'Delete', exact: true }).click()
-  await page.getByRole('dialog').getByRole('button', { name: 'Delete' }).click()
   await expect(page.getByRole('heading', { name: 'History' })).toBeVisible()
 
   await page.goto('./#/earnings')
@@ -192,7 +191,7 @@ test('daylight saving', async ({ page }) => {
   await page.getByRole('button', { name: 'Yesterday' }).click()
 
   await expect(page.getByRole('heading', { name: 'Sunday, November 1' })).toBeVisible()
-  await expect(page.getByText('Turn #1')).toBeVisible()
+  await expect(turnRow(page, 1)).toBeVisible()
 })
 
 test('no account', async ({ page }) => {

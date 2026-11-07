@@ -247,12 +247,12 @@ export function TurnRow({ turn, services, number }: Props) {
         : null
   const subline = [
     formatTime(turn.occurredAt, locale),
-    `#${number ?? 'â€“'}`,
+    `#${number ?? '\u2013'}`,
     clientWord,
   ]
     .filter(Boolean)
-    .join(' Â· ')
-  const copyLabel = tf(locale, 'copyTurnNumber', { n: number === null ? 'â€“' : number })
+    .join(' \u00b7 ')
+  const copyLabel = tf(locale, 'copyTurnNumber', { n: number === null ? '\u2013' : number })
   const open = offset === OPEN_OFFSET
 
   const sheet = (

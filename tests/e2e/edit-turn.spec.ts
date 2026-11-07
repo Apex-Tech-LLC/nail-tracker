@@ -1,11 +1,11 @@
 import { expect, test } from '@playwright/test'
-import { addTurn, seedSettings } from './helpers.ts'
+import { addTurn, seedSettings, turnRow } from './helpers.ts'
 
 test('editing a turn saves the change and updates Today', async ({ page }) => {
   await seedSettings(page)
   await addTurn(page, { amount: '100', cash: '10' })
 
-  await page.getByRole('link', { name: /Turn #1/ }).click()
+  await turnRow(page, 1).click()
   await expect(page.getByRole('heading', { name: 'Edit Turn' })).toBeVisible()
 
   await page.getByLabel('Service amount').fill('200')
@@ -25,35 +25,38 @@ test('a saved turn keeps the rate it was recorded with', async ({ page }) => {
   })
   await page.reload()
 
-  await page.getByRole('link', { name: /Turn #1/ }).click()
+  await turnRow(page, 1).click()
   await expect(page.getByLabel('Commission %')).toHaveValue('60')
 
   await page.getByRole('button', { name: 'Save', exact: true }).click()
   await expect(page.getByText('$60.00').first()).toBeVisible()
 })
 
-test('cancelling the delete keeps the turn', async ({ page }) => {
+test('undo after a delete brings the turn back', async ({ page }) => {
   await seedSettings(page)
   await addTurn(page, { amount: '100' })
 
-  await page.getByRole('link', { name: /Turn #1/ }).click()
+  await turnRow(page, 1).click()
   await page.getByRole('button', { name: 'Delete', exact: true }).click()
-  await page.getByRole('dialog').getByRole('button', { name: 'Cancel' }).click()
 
-  await expect(page.getByRole('heading', { name: 'Edit Turn' })).toBeVisible()
-  await expect(page.getByRole('dialog')).toBeHidden()
-  await expect(page.getByLabel('Service amount')).toHaveValue('100.00')
+  // Deleting closes the screen at once and offers Undo instead of a dialog.
+  await expect(page.getByRole('status').filter({ hasText: 'Turn deleted' })).toBeVisible()
+  await expect(page.getByText('No turns yet')).toBeVisible()
+
+  await page.getByRole('button', { name: 'Undo', exact: true }).click()
+  await expect(turnRow(page, 1)).toBeVisible()
+  await expect(page.getByText('$100.00 Service revenue', { exact: true })).toBeVisible()
 })
 
-test('confirming the delete removes the turn', async ({ page }) => {
+test('deleting removes the turn at once', async ({ page }) => {
   await seedSettings(page)
   await addTurn(page, { amount: '100' })
 
-  await page.getByRole('link', { name: /Turn #1/ }).click()
+  await turnRow(page, 1).click()
   await page.getByRole('button', { name: 'Delete', exact: true }).click()
-  await page.getByRole('dialog').getByRole('button', { name: 'Delete' }).click()
 
   await expect(page.getByText('No turns yet')).toBeVisible()
+  await expect(page.getByRole('status').filter({ hasText: 'Turn deleted' })).toBeVisible()
 })
 
 test('an unknown turn shows that it no longer exists', async ({ page }) => {

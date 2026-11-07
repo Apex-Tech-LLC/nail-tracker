@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { addTurn, seedSettings, selectServices } from './helpers.ts'
+import { addTurn, seedSettings, selectServices, turnRow } from './helpers.ts'
 
 test('the preview shows commission and earnings before saving', async ({ page }) => {
   await seedSettings(page)
@@ -73,7 +73,7 @@ test('three services add up on one turn', async ({ page }) => {
   await page.getByRole('button', { name: 'Save', exact: true }).click()
   await expect(page.getByText('$78.00').first()).toBeVisible()
   await expect(page.locator('p.text-3xl')).toHaveText('1')
-  await expect(page.getByText('Turn #1')).toBeVisible()
+  await expect(turnRow(page, 1)).toBeVisible()
 })
 
 test('each service can have its own commission rate', async ({ page }) => {
@@ -109,7 +109,7 @@ test('a zero turn count saves the turn without a number', async ({ page }) => {
   await page.getByLabel('Turn count').fill('0')
   await page.getByRole('button', { name: 'Save', exact: true }).click()
 
-  await expect(page.getByText('No turn')).toBeVisible()
+  await expect(page.getByTestId('turn-row')).toContainText('#–')
 })
 
 test('a bad turn count shows an error', async ({ page }) => {
@@ -134,7 +134,7 @@ test('Save & Add Another keeps the form open for the next turn', async ({ page }
 
   await page.getByLabel('Service amount').fill('40')
   await page.getByRole('button', { name: 'Save', exact: true }).click()
-  await expect(page.getByText('Turn #2')).toBeVisible()
+  await expect(turnRow(page, 2)).toBeVisible()
 })
 
 test('a double tap on Save records the turn once', async ({ page }) => {
@@ -143,6 +143,6 @@ test('a double tap on Save records the turn once', async ({ page }) => {
   await page.getByLabel('Service amount').fill('30')
   await page.getByRole('button', { name: 'Save', exact: true }).dblclick()
 
-  await expect(page.getByText('Turn #1')).toBeVisible()
-  await expect(page.getByText('Turn #2')).toHaveCount(0)
+  await expect(turnRow(page, 1)).toBeVisible()
+  await expect(turnRow(page, 2)).toHaveCount(0)
 })

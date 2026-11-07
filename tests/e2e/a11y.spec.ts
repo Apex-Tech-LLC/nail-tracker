@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test, type Page } from '@playwright/test'
-import { addTurn, seedSettings, weeklyPay } from './helpers.ts'
+import { addTurn, seedSettings, turnRow, weeklyPay } from './helpers.ts'
 
 // Noon in Chicago. The offset is explicit so the machine running the tests
 // (UTC on GitHub) cannot move the fixed day.
@@ -16,6 +16,7 @@ interface Copy {
   addService: string
   moreOptions: string
   delete: string
+  turnDeleted: string
   history: string
   earnings: string
   payday: string
@@ -37,6 +38,7 @@ const TEXT: Record<Locale, Copy> = {
     addService: 'Add service',
     moreOptions: 'More options',
     delete: 'Delete',
+    turnDeleted: 'Turn deleted',
     history: 'History',
     earnings: 'Earnings',
     payday: 'Payday',
@@ -61,6 +63,7 @@ const TEXT: Record<Locale, Copy> = {
     addService: 'Thêm dịch vụ',
     moreOptions: 'Thêm tùy chọn',
     delete: 'Xóa',
+    turnDeleted: 'Đã xóa turn',
     history: 'Lịch sử',
     earnings: 'Thu nhập',
     payday: 'Ngày nhận lương',
@@ -189,16 +192,16 @@ for (const locale of LOCALES) {
     test('edit turn', async ({ page }) => {
       await start(page, locale)
       await page.goto('./')
-      await page.getByRole('link', { name: /Turn #1/ }).click()
+      await turnRow(page, 1).click()
       await expectScreen(page, text.editTurn)
     })
 
-    test('delete turn dialog', async ({ page }) => {
+    test('delete turn undo bar', async ({ page }) => {
       await start(page, locale)
       await page.goto('./')
-      await page.getByRole('link', { name: /Turn #1/ }).click()
+      await turnRow(page, 1).click()
       await page.getByRole('button', { name: text.delete, exact: true }).click()
-      await expect(page.getByRole('dialog')).toBeVisible()
+      await expect(page.getByRole('status').filter({ hasText: text.turnDeleted })).toBeVisible()
       await audit(page)
       await noSidewaysScroll(page)
     })
