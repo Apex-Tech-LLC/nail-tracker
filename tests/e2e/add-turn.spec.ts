@@ -69,8 +69,8 @@ test('three services add up on one turn', async ({ page }) => {
   await expect(page.getByText('$78.00')).toBeVisible()
 
   await formSave(page).click()
-  await expect(page.getByText('$78.00').first()).toBeVisible()
-  await expect(page.locator('p.text-3xl')).toHaveText('1')
+  await expect(page.getByTestId('hero-earned')).toHaveText('$78.00')
+  await expect(page.getByText('Turns', { exact: true }).locator('..').locator('b')).toHaveText('1')
   await expect(turnRow(page, 1)).toBeVisible()
 })
 

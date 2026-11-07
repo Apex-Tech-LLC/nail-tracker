@@ -10,7 +10,7 @@ test('all five tabs open, and the language choice survives a reload', async ({ p
     ['Earnings', 'Earnings'],
     ['Payday', 'Payday'],
     ['Settings', 'Settings'],
-    ['Today', 'Nail Tracker'],
+    ['Home', 'Nail Tracker'],
   ]) {
     await nav.getByRole('link', { name: tab }).click()
     await expect(page.getByRole('heading', { level: 1, name: heading })).toBeVisible()

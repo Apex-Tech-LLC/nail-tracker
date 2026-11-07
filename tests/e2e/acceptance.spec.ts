@@ -9,9 +9,19 @@ test.beforeEach(async ({ page }) => {
   await seedSettings(page, weeklyPay)
 })
 
-/** The turn count on Today's blue card. */
+/** The turn count on Home's stats strip. */
 function todayTurns(page: Page): Locator {
-  return page.getByText('Turns', { exact: true }).locator('..').locator('p.text-3xl')
+  return page.getByText('Turns', { exact: true }).locator('..').locator('b')
+}
+
+/** One value in Home's stats strip, found by its label. */
+function statValue(page: Page, label: string): Locator {
+  return page.getByText(label, { exact: true }).locator('..').locator('b')
+}
+
+/** The big earned number on Home. */
+function heroEarned(page: Page): Locator {
+  return page.getByTestId('hero-earned')
 }
 
 /** The big Total earned figure on Earnings. */
@@ -36,11 +46,8 @@ test('full day', async ({ page }) => {
   await addTurn(page, { service: 'Manicure', amount: '30' })
 
   await expect(todayTurns(page)).toHaveText('3')
-  await expect(page.getByText('$120.00 Service revenue', { exact: true })).toBeVisible()
-  await expect(rowAmount(page, 'Commission')).toHaveText('$72.00')
-  await expect(rowAmount(page, 'Cash tips')).toHaveText('$5.00')
-  await expect(rowAmount(page, 'Card tips')).toHaveText('$10.00')
-  await expect(rowAmount(page, 'Total earned')).toHaveText('$87.00')
+  await expect(heroEarned(page)).toHaveText('$87.00')
+  await expect(statValue(page, 'Tips')).toHaveText('$15')
   await expect(turnRow(page, 3)).toBeVisible()
 })
 
@@ -60,27 +67,28 @@ test('combined ticket', async ({ page }) => {
   await expect(turnRow(page, 2)).toBeVisible()
   await expect(turnRow(page, 3)).toBeVisible()
   await expect(todayTurns(page)).toHaveText('3')
-  await expect(rowAmount(page, 'Customers')).toHaveText('2')
+  // Two rows: the combined ticket and the second turn.
+  await expect(page.getByTestId('turn-row')).toHaveCount(2)
 })
 
 test('no tip', async ({ page }) => {
   await addTurn(page, { amount: '25' })
 
-  await expect(rowAmount(page, 'Total earned')).toHaveText('$15.00')
+  await expect(heroEarned(page)).toHaveText('$15.00')
 })
 
 test('tip with no commission', async ({ page }) => {
   await addTurn(page, { amount: '50', cash: '5', rate: '0' })
 
-  await expect(rowAmount(page, 'Commission')).toHaveText('$0.00')
-  await expect(rowAmount(page, 'Total earned')).toHaveText('$5.00')
+  await expect(heroEarned(page)).toHaveText('$5.00')
+  await expect(statValue(page, 'Tips')).toHaveText('$5')
 })
 
 test('zero dollar service', async ({ page }) => {
   await addTurn(page, { amount: '0', cash: '5' })
 
   await expect(turnRow(page, 1)).toBeVisible()
-  await expect(rowAmount(page, 'Total earned')).toHaveText('$5.00')
+  await expect(heroEarned(page)).toHaveText('$5.00')
 })
 
 test('old date', async ({ page }) => {
@@ -94,7 +102,7 @@ test('old date', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Tuesday, October 20' })).toBeVisible()
 
   await page.goto('./')
-  await expect(page.getByText('No turns yet')).toBeVisible()
+  await expect(page.getByText('Your turns today will show here.')).toBeVisible()
 
   await page.goto('./#/payday')
   await expect(page.getByText('Oct 18 – Oct 24')).toBeVisible()
@@ -110,7 +118,7 @@ test('shift past midnight', async ({ page }) => {
   await expect(page.getByRole('link', { name: /Add Turn|Add your first turn/ })).toBeVisible()
 
   await page.goto('./')
-  await expect(page.getByText('No turns yet')).toBeVisible()
+  await expect(page.getByText('Your turns today will show here.')).toBeVisible()
 
   await page.goto('./#/history')
   await page.getByRole('button', { name: 'Yesterday' }).click()
@@ -162,7 +170,7 @@ test('delete a turn in a report', async ({ page }) => {
 test('odd price, odd rate', async ({ page }) => {
   await addTurn(page, { amount: '19.99', rate: '62.5' })
 
-  await expect(rowAmount(page, 'Commission')).toHaveText('$12.49')
+  await expect(heroEarned(page)).toHaveText('$12.49')
 })
 
 test('language changes nothing', async ({ page }) => {

@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { formSave, openCommission, rowAmount, seedSettings, selectServices, serviceChip, turnRow } from './helpers.ts'
+import { formSave, openCommission, seedSettings, selectServices, serviceChip, turnRow } from './helpers.ts'
 
 // Noon on 2026-11-04 in the browser's America/Chicago timezone. The offset is
 // explicit so a machine running in UTC cannot move the fixed day.
@@ -22,9 +22,8 @@ test('three picked services become one turn with the right totals', async ({ pag
   await page.getByLabel('Card tip').fill('15')
   await formSave(page).click()
 
-  await expect(page.getByText('$105.00 Service revenue', { exact: true })).toBeVisible()
-  await expect(rowAmount(page, 'Commission')).toHaveText('$63.00')
-  await expect(rowAmount(page, 'Total earned')).toHaveText('$78.00')
+  await expect(page.getByTestId('hero-earned')).toHaveText('$78.00')
+  await expect(page.getByText('Tips', { exact: true }).locator('..').locator('b')).toHaveText('$15')
 
   await turnRow(page, 1).click()
   await expect(page.getByTestId('service-line')).toHaveCount(3)
@@ -57,7 +56,7 @@ test('saving with every service removed shows the error and records nothing', as
   await expect(page).toHaveURL(/#\/add$/)
 
   await page.goto('./')
-  await expect(page.getByText('No turns yet')).toBeVisible()
+  await expect(page.getByText('Your turns today will show here.')).toBeVisible()
 })
 
 test('editing a three-service turn and untapping one saves the smaller total', async ({ page }) => {
@@ -69,7 +68,7 @@ test('editing a three-service turn and untapping one saves the smaller total', a
   await lines.nth(1).getByLabel('Service amount').fill('50')
   await lines.nth(2).getByLabel('Service amount').fill('15')
   await formSave(page).click()
-  await expect(page.getByText('$105.00 Service revenue', { exact: true })).toBeVisible()
+  await expect(page.getByTestId('hero-earned')).toHaveText('$63.00')
 
   await turnRow(page, 1).click()
   await expect(page.getByTestId('service-line')).toHaveCount(3)
@@ -79,7 +78,7 @@ test('editing a three-service turn and untapping one saves the smaller total', a
 
   await formSave(page).click()
   await expect(turnRow(page, 1)).toBeVisible()
-  await expect(page.getByText('$55.00 Service revenue', { exact: true })).toBeVisible()
+  await expect(page.getByTestId('hero-earned')).toHaveText('$33.00')
 })
 
 test('a second chip keeps the shared rate the technician typed', async ({ page }) => {
@@ -105,9 +104,7 @@ test('a second chip keeps the shared rate the technician typed', async ({ page }
   await expect(page.getByLabel('Commission %')).toHaveValue('55')
 
   await formSave(page).click()
-  await expect(page.getByText('$90.00 Service revenue', { exact: true })).toBeVisible()
-  // 55% of $40.00 is $22.00 and 55% of $50.00 is $27.50.
-  await expect(rowAmount(page, 'Commission')).toHaveText('$49.50')
+  await expect(page.getByTestId('hero-earned')).toHaveText('$49.50')
 })
 
 test('Add service keeps the shared rate the technician typed', async ({ page }) => {
@@ -125,9 +122,7 @@ test('Add service keeps the shared rate the technician typed', async ({ page }) 
   await lines.nth(1).getByLabel('Service name').fill('Extra')
   await lines.nth(1).getByLabel('Service amount').fill('20')
   await formSave(page).click()
-  await expect(page.getByText('$60.00 Service revenue', { exact: true })).toBeVisible()
-  // 55% of $40.00 is $22.00 and 55% of $20.00 is $11.00.
-  await expect(rowAmount(page, 'Commission')).toHaveText('$33.00')
+  await expect(page.getByTestId('hero-earned')).toHaveText('$33.00')
 })
 
 test('with per-service rates on a new line still starts from its preset rate', async ({ page }) => {

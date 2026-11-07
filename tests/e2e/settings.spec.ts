@@ -13,11 +13,11 @@ function settingsGroup(page: Page, name: string): Locator {
 }
 
 /**
- * The Today figure whose label is exactly `label`. Scoping by the label keeps a
- * matching dollar amount elsewhere on the page from passing the check.
+ * The big earned number on Home. Scoping to it keeps a matching dollar amount
+ * elsewhere on the page from passing the check.
  */
-function todayFigure(page: Page, label: string): Locator {
-  return page.getByText(label, { exact: true }).locator('..').locator('span').last()
+function heroEarned(page: Page): Locator {
+  return page.getByTestId('hero-earned')
 }
 
 test('the language choice survives a reload', async ({ page }) => {
@@ -28,7 +28,7 @@ test('the language choice survives a reload', async ({ page }) => {
   await page.reload()
 
   await expect(page.getByRole('heading', { level: 1, name: 'Cài đặt' })).toBeVisible()
-  await expect(page.getByRole('navigation').getByRole('link', { name: 'Hôm nay' })).toBeVisible()
+  await expect(page.getByRole('navigation').getByRole('link', { name: 'Trang chính' })).toBeVisible()
 })
 
 test('50% becomes the default commission', async ({ page }) => {
@@ -74,7 +74,7 @@ test('changing the default leaves saved turns alone', async ({ page }) => {
   await settingsGroup(page, 'Default commission').getByText('50%', { exact: true }).click()
   await page.goto('./')
 
-  await expect(todayFigure(page, 'Commission')).toHaveText('$60.00')
+  await expect(heroEarned(page)).toHaveText('$60.00')
 })
 
 test('the week start changes the earnings range', async ({ page }) => {

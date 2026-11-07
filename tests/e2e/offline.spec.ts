@@ -80,7 +80,7 @@ test('makes no requests outside this app', async ({ page }) => {
     ['Earnings', 'Earnings'],
     ['Payday', 'Payday'],
     ['Settings', 'Settings'],
-    ['Today', 'Nail Tracker'],
+    ['Home', 'Nail Tracker'],
   ] as const) {
     await nav.getByRole('link', { name: tab }).click()
     await expect(page.getByRole('heading', { level: 1, name: heading })).toBeVisible()

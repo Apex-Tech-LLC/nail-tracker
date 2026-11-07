@@ -28,7 +28,7 @@ test('the whole flow lands on Today with its answers saved', async ({ page }) =>
   await page.getByText('Weekly', { exact: true }).click()
   await page.getByRole('button', { name: 'Start tracking' }).click()
 
-  await expect(page.getByRole('link', { name: 'Add your first turn' })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Add Turn', exact: true })).toBeVisible()
 
   await page.goto('./#/add')
   await openCommission(page)
@@ -53,7 +53,7 @@ test('skipping every step keeps the defaults', async ({ page }) => {
     await page.getByRole('button', { name: 'Skip', exact: true }).click()
   }
 
-  await expect(page.getByRole('link', { name: 'Add your first turn' })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Add Turn', exact: true })).toBeVisible()
 
   await page.goto('./#/add')
   await openCommission(page)
@@ -66,12 +66,12 @@ test('onboarding shows only once', async ({ page }) => {
   for (let i = 0; i < 4; i++) {
     await page.getByRole('button', { name: 'Skip', exact: true }).click()
   }
-  await expect(page.getByRole('link', { name: 'Add your first turn' })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Add Turn', exact: true })).toBeVisible()
 
   await page.reload()
 
   await expect(page).not.toHaveURL(/#\/onboarding/)
-  await expect(page.getByRole('link', { name: 'Add your first turn' })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Add Turn', exact: true })).toBeVisible()
 })
 
 test('a custom rate that cannot be read stops Next', async ({ page }) => {
@@ -149,7 +149,7 @@ test('Back from step 4 reaches step 3 and the flow still finishes on Today', asy
   await page.getByRole('button', { name: 'Next', exact: true }).click()
   await page.getByRole('button', { name: 'Start tracking' }).click()
 
-  await expect(page.getByRole('link', { name: 'Add your first turn' })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Add Turn', exact: true })).toBeVisible()
 })
 
 test('the Back button reads Quay lại in Vietnamese', async ({ page }) => {

@@ -40,7 +40,7 @@ test('a negative adjustment shows on History and lowers the day total', async ({
   await expect(page.getByText('1 turn · $35')).toBeVisible()
 })
 
-test('an adjustment shows on Today', async ({ page }) => {
+test('an adjustment changes today’s earned money', async ({ page }) => {
   await seedSettings(page)
   await page.clock.setFixedTime(NOON)
   await addTurn(page, { amount: '100' })
@@ -51,9 +51,9 @@ test('an adjustment shows on Today', async ({ page }) => {
   })
   await page.goto('./')
 
-  await expect(page.getByText('Adjustments')).toBeVisible()
-  await expect(page.getByText('-$25.00')).toBeVisible()
-  await expect(page.getByText('$35.00')).toBeVisible()
+  // $60 commission plus the -$25 correction.
+  await expect(page.getByTestId('hero-earned')).toHaveText('$35.00')
+  await expect(page.getByText('Turns', { exact: true }).locator('..').locator('b')).toHaveText('1')
 })
 
 test('a zero amount shows an error and stays on the form', async ({ page }) => {

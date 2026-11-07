@@ -96,6 +96,14 @@ export function formatDayShort(iso: IsoDate, locale: DateLocale): string {
   return formatIso(iso, locale, { month: 'short', day: 'numeric' })
 }
 
+export function formatWeekdayLong(iso: IsoDate, locale: DateLocale): string {
+  return formatIso(iso, locale, { weekday: 'long' })
+}
+
+export function formatWeekdayShort(iso: IsoDate, locale: DateLocale): string {
+  return formatIso(iso, locale, { weekday: 'short' })
+}
+
 export function formatMonthYear(iso: IsoDate, locale: DateLocale): string {
   return formatIso(iso, locale, { month: 'long', year: 'numeric' })
 }

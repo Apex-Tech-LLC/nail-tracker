@@ -1,12 +1,12 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useId, useState } from 'react'
-import { Link } from 'wouter'
+import { Link, useSearch } from 'wouter'
 import { PageHeader } from '../../app/PageHeader.tsx'
 import { paths } from '../../app/navigation.ts'
 import { useSettings } from '../../app/settings.ts'
 import { useToday } from '../../app/useToday.ts'
 import { db, type TurnService } from '../../db/schema.ts'
-import { formatDayLong, type IsoDate } from '../../domain/dates.ts'
+import { formatDayLong, isIsoDate, type IsoDate } from '../../domain/dates.ts'
 import { formatUsdShort } from '../../domain/money.ts'
 import { numberTurns } from '../../domain/totals.ts'
 import { t, tf, type StringKey } from '../../lib/i18n.ts'
@@ -36,9 +36,12 @@ const CHOICES: { value: RangeChoice; key: StringKey }[] = [
 export function HistoryPage() {
   const { locale, weekStartDay } = useSettings()
   const today = useToday()
-  const [choice, setChoice] = useState<RangeChoice>('thisWeek')
-  const [customStart, setCustomStart] = useState<IsoDate>(today)
-  const [customEnd, setCustomEnd] = useState<IsoDate>(today)
+  // Home's week bottles open History on one day: /history?day=2026-11-04.
+  const queryDay = new URLSearchParams(useSearch()).get('day')
+  const openedDay = queryDay !== null && isIsoDate(queryDay) ? queryDay : null
+  const [choice, setChoice] = useState<RangeChoice>(openedDay ? 'custom' : 'thisWeek')
+  const [customStart, setCustomStart] = useState<IsoDate>(openedDay ?? today)
+  const [customEnd, setCustomEnd] = useState<IsoDate>(openedDay ?? today)
   const [search, setSearch] = useState('')
   const id = useId()
 

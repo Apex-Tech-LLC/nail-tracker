@@ -2,13 +2,13 @@ import { Link, Route, Switch, useLocation } from 'wouter'
 import { AdjustmentForm } from '../features/adjustments/AdjustmentForm.tsx'
 import { EarningsPage } from '../features/earnings/EarningsPage.tsx'
 import { HistoryPage } from '../features/history/HistoryPage.tsx'
+import { HomePage } from '../features/home/HomePage.tsx'
 import { OnboardingPage } from '../features/onboarding/OnboardingPage.tsx'
 import { PaydayPage } from '../features/payday/PaydayPage.tsx'
 import { PaymentForm } from '../features/payday/PaymentForm.tsx'
 import { PeriodPage } from '../features/payday/PeriodPage.tsx'
 import { PresetsPage } from '../features/presets/PresetsPage.tsx'
 import { SettingsPage } from '../features/settings/SettingsPage.tsx'
-import { TodayPage } from '../features/today/TodayPage.tsx'
 import { TurnForm } from '../features/turns/TurnForm.tsx'
 import { t } from '../lib/i18n.ts'
 import { paths, useGoBack } from './navigation.ts'
@@ -21,7 +21,7 @@ export function Routes() {
 
   return (
     <Switch>
-      <Route path={paths.today} component={TodayPage} />
+      <Route path={paths.today} component={HomePage} />
       <Route path={paths.history} component={HistoryPage} />
       <Route path={paths.earnings} component={EarningsPage} />
       <Route path={paths.payday} component={PaydayPage} />
