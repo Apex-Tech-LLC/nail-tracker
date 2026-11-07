@@ -1,10 +1,10 @@
-import { IconPlus } from '@tabler/icons-react'
+import { IconPlus, IconX } from '@tabler/icons-react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'wouter'
 import { LanguageButton } from '../../app/PageHeader.tsx'
 import { paths } from '../../app/navigation.ts'
-import { useSettings } from '../../app/settings.ts'
+import { updateSettings, useSettings } from '../../app/settings.ts'
 import { useToday } from '../../app/useToday.ts'
 import { db } from '../../db/schema.ts'
 import {
@@ -18,6 +18,7 @@ import {
 } from '../../domain/comparisons.ts'
 import {
   addDays,
+  diffDays,
   formatDayLong,
   formatWeekdayLong,
   formatWeekdayShort,
@@ -25,10 +26,12 @@ import {
   type IsoDate,
 } from '../../domain/dates.ts'
 import { formatUsd, formatUsdShort } from '../../domain/money.ts'
+import { dueReminder } from '../../domain/reminders.ts'
 import { numberTurns, sumTotals } from '../../domain/totals.ts'
 import { t, tf, type StringKey } from '../../lib/i18n.ts'
 import { OfflineBadge } from '../../pwa/OfflineBadge.tsx'
 import { list, primaryButton } from '../../ui/styles.ts'
+import { saveBackupFile } from '../backup/saveBackup.ts'
 import { ensurePayPeriods, loadPeriodSummaries } from '../payday/periodStore.ts'
 import { loadRange, servicesByTurn } from '../turns/turnStore.ts'
 import { TurnRow } from '../turns/TurnRow.tsx'
@@ -90,8 +93,17 @@ function earnedByDate(
 }
 
 export function HomePage() {
-  const { locale, weekStartDay, payPeriodType, payPeriodAnchorDate } = useSettings()
+  const {
+    locale,
+    weekStartDay,
+    payPeriodType,
+    payPeriodAnchorDate,
+    backupReminderDays,
+    lastBackupDate,
+    dismissedReminders,
+  } = useSettings()
   const today = useToday()
+  const backupBusy = useRef(false)
   const periodKey = `${PERIOD_KEY}.${today}`
   // The choice is remembered for the day; a new day's key starts on Today.
   const [storedPeriod, setStoredPeriod] = useState(() => ({
@@ -116,18 +128,30 @@ export function HomePage() {
   }, [payPeriodType, payPeriodAnchorDate, today])
 
   const data = useLiveQuery(async () => {
-    const [current, previousData, todayData, weekData] = await Promise.all([
+    const [current, previousData, todayData, weekData, firstTurn] = await Promise.all([
       loadRange(db, span.start, span.end),
       loadRange(db, previous.start, previous.end),
       loadRange(db, today, today),
       loadRange(db, weekLoadStart, week.end),
+      db.turns.orderBy('localWorkDate').first(),
     ])
-    return { current, previousData, todayData, weekData }
+    return { current, previousData, todayData, weekData, firstTurn }
   }, [span.start, span.end, previous.start, previous.end, today, weekLoadStart, week.end])
 
   const summaries = useLiveQuery(() => loadPeriodSummaries(db))
 
   if (data === undefined || summaries === undefined) return null
+
+  const reminder = dueReminder({
+    today,
+    hasTurns: data.firstTurn !== undefined,
+    backupReminderDays,
+    lastBackupDate,
+    firstTurnDate: data.firstTurn?.localWorkDate ?? null,
+    dismissed: dismissedReminders,
+  })
+  const reminderStart = lastBackupDate ?? data.firstTurn?.localWorkDate ?? null
+  const reminderDays = reminderStart === null ? 0 : diffDays(today, reminderStart)
 
   const totals = sumTotals(data.current.turns, data.current.adjustments)
   const previousTotals = sumTotals(data.previousData.turns, data.previousData.adjustments)
@@ -194,6 +218,20 @@ export function HomePage() {
     }
   }
 
+  async function backUpNow() {
+    if (backupBusy.current) return
+    backupBusy.current = true
+    try {
+      await saveBackupFile(t(locale, 'exportBackup'))
+    } finally {
+      backupBusy.current = false
+    }
+  }
+
+  function dismissReminder(key: string) {
+    updateSettings({ dismissedReminders: { ...dismissedReminders, [key]: today } })
+  }
+
   return (
     <>
       <h1 className="sr-only">{t(locale, 'appName')}</h1>
@@ -205,6 +243,33 @@ export function HomePage() {
           <LanguageButton />
         </div>
       </header>
+
+      {reminder !== null && (
+        <section className="flex items-start gap-2 rounded-card border border-border bg-surface p-3">
+          <div className="min-w-0 flex-1">
+            <p className="text-sm">
+              {lastBackupDate === null
+                ? t(locale, 'reminderNoBackup')
+                : tf(locale, 'reminderBackupOverdue', { n: reminderDays })}
+            </p>
+            <button
+              type="button"
+              onClick={backUpNow}
+              className="mt-2 min-h-11 rounded-control bg-brand-600 px-4 text-sm font-semibold text-white"
+            >
+              {t(locale, 'backUpNow')}
+            </button>
+          </div>
+          <button
+            type="button"
+            aria-label={t(locale, 'dismiss')}
+            onClick={() => dismissReminder(reminder.key)}
+            className="-mr-1 -mt-1 flex size-11 flex-none items-center justify-center rounded-control text-text-secondary"
+          >
+            <IconX size={18} aria-hidden="true" />
+          </button>
+        </section>
+      )}
 
       <div className="grid grid-cols-3 gap-1 rounded-control bg-surface-subtle p-[3px]">
         {PERIODS.map((option) => {
