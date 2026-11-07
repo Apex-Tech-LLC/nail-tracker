@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { seedSettings, selectServices, serviceChip, turnRow } from './helpers.ts'
+import { formSave, openDateChoices, seedSettings, selectServices, serviceChip, turnRow } from './helpers.ts'
 
 // Noon on 2026-11-04 in the browser's America/Chicago timezone. The offset is
 // explicit so a machine running in UTC cannot move the fixed day.
@@ -13,6 +13,7 @@ test.beforeEach(async ({ page }) => {
 test('copying a turn saves a second turn today and leaves the original alone', async ({ page }) => {
   // One turn on November 2, with every extra option changed from its default.
   await page.goto('./#/add')
+  await openDateChoices(page)
   await page.getByRole('button', { name: 'Other day' }).click()
   await page.getByLabel('Work date').fill('2026-11-02')
   await selectServices(page, ['Gel-X'])
@@ -24,7 +25,7 @@ test('copying a turn saves a second turn today and leaves the original alone', a
   await page.getByRole('button', { name: 'Walk-in', exact: true }).click()
   await page.getByLabel('Cash tip already in my hand').uncheck()
   await page.getByLabel('Note').fill('Owner requested')
-  await page.getByRole('button', { name: 'Save', exact: true }).click()
+  await formSave(page).click()
   await expect(page.getByRole('link', { name: /Add your first turn/ })).toBeVisible()
 
   await page.goto('./#/history')
@@ -41,6 +42,7 @@ test('copying a turn saves a second turn today and leaves the original alone', a
   await expect(page.getByLabel('Service amount')).toHaveValue('75.00')
   await expect(page.getByRole('textbox', { name: 'Cash tip' })).toHaveValue('10.00')
   await expect(page.getByRole('textbox', { name: 'Card tip' })).toHaveValue('5.00')
+  await openDateChoices(page)
   await expect(page.getByRole('button', { name: 'Today', exact: true })).toHaveAttribute(
     'aria-pressed',
     'true',
@@ -54,7 +56,7 @@ test('copying a turn saves a second turn today and leaves the original alone', a
   await expect(page.getByLabel('Cash tip already in my hand')).not.toBeChecked()
   await expect(page.getByLabel('Note')).toHaveValue('Owner requested')
 
-  await page.getByRole('button', { name: 'Save', exact: true }).click()
+  await formSave(page).click()
   await expect(page).toHaveURL(/#\/$/)
   await expect(turnRow(page, 2)).toBeVisible()
   await expect(page.getByText('$75.00 Service revenue', { exact: true })).toBeVisible()
@@ -78,7 +80,7 @@ test('repeat last turn is hidden with no turns and opens the last turn once one 
   await page.goto('./#/add')
   await selectServices(page, ['Pedicure'])
   await page.getByLabel('Service amount').fill('50')
-  await page.getByRole('button', { name: 'Save', exact: true }).click()
+  await formSave(page).click()
   await expect(turnRow(page, 1)).toBeVisible()
 
   const repeat = page.getByRole('link', { name: 'Repeat last turn' })

@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
-import { addTurn, seedSettings, serviceChip, turnRow } from './helpers.ts'
+import { addTurn, formSave, seedSettings, serviceChip, turnRow } from './helpers.ts'
 
 // Noon on 2026-11-04 in the browser's America/Chicago timezone. The offset is
 // explicit so a machine running in UTC cannot move the fixed day.
@@ -32,7 +32,7 @@ test('the copy button on a Today row opens a filled copy form', async ({ page })
   await expect(page.getByLabel('Service amount')).toHaveValue('75.00')
   await expect(serviceChip(page, 'Gel-X')).toHaveAttribute('aria-pressed', 'true')
 
-  await page.getByRole('button', { name: 'Save', exact: true }).click()
+  await formSave(page).click()
 
   await expect(page).toHaveURL(/#\/$/)
   await expect(turnRow(page, 2)).toBeVisible()

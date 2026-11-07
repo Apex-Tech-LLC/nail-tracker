@@ -749,7 +749,7 @@ function TurnFormFields({ presets, existing, quick, copy, onDone, onClose }: Fie
         onSubmit={submit}
         noValidate
         className={`flex min-h-[calc(100dvh-2rem)] flex-col gap-5 ${
-          padShown ? 'pb-[280px]' : ''
+          numberPad ? 'pb-[280px]' : ''
         }`}
       >
       <header className="flex flex-col gap-2">

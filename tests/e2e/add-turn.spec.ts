@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { addTurn, seedSettings, selectServices, serviceChip, turnRow } from './helpers.ts'
+import { addTurn, formSave, openCommission, seedSettings, selectServices, serviceChip, turnRow } from './helpers.ts'
 
 test('the preview shows commission and earnings before saving', async ({ page }) => {
   await seedSettings(page)
@@ -17,13 +17,14 @@ test('the commission rate starts from settings', async ({ page }) => {
   await seedSettings(page, { defaultCommissionRateBp: 5000 })
   await page.goto('./#/add')
 
+  await openCommission(page)
   await expect(page.getByLabel('Commission %')).toHaveValue('50')
 })
 
 test('saving with no amount shows an error and stays on the form', async ({ page }) => {
   await seedSettings(page)
   await page.goto('./#/add')
-  await page.getByRole('button', { name: 'Save', exact: true }).click()
+  await formSave(page).click()
 
   await expect(page.getByText('Enter an amount like 45 or 45.50.')).toBeVisible()
   await expect(page).toHaveURL(/#\/add$/)
@@ -34,7 +35,7 @@ test('an Other service needs a name', async ({ page }) => {
   await page.goto('./#/add')
   await selectServices(page, ['Other'])
   await page.getByLabel('Service amount').fill('30')
-  await page.getByRole('button', { name: 'Save', exact: true }).click()
+  await formSave(page).click()
 
   await expect(page.getByText('Enter a service name.')).toBeVisible()
 })
@@ -67,7 +68,7 @@ test('three services add up on one turn', async ({ page }) => {
   await expect(page.getByText('$63.00')).toBeVisible()
   await expect(page.getByText('$78.00')).toBeVisible()
 
-  await page.getByRole('button', { name: 'Save', exact: true }).click()
+  await formSave(page).click()
   await expect(page.getByText('$78.00').first()).toBeVisible()
   await expect(page.locator('p.text-3xl')).toHaveText('1')
   await expect(turnRow(page, 1)).toBeVisible()
@@ -104,7 +105,7 @@ test('a zero turn count saves the turn without a number', async ({ page }) => {
   await page.getByLabel('Service amount').fill('20')
   await page.getByRole('button', { name: 'More options' }).click()
   await page.getByLabel('Turn count').fill('0')
-  await page.getByRole('button', { name: 'Save', exact: true }).click()
+  await formSave(page).click()
 
   await expect(page.getByTestId('turn-row')).toContainText('#–')
 })
@@ -114,7 +115,7 @@ test('a bad turn count shows an error', async ({ page }) => {
   await page.goto('./#/add')
   await page.getByRole('button', { name: 'More options' }).click()
   await page.getByLabel('Turn count').fill('abc')
-  await page.getByRole('button', { name: 'Save', exact: true }).click()
+  await formSave(page).click()
 
   await expect(page.getByText('Enter a whole number from 0 to 99.')).toBeVisible()
 })
@@ -130,7 +131,7 @@ test('Save & Add Another keeps the form open for the next turn', async ({ page }
   await expect(page.getByLabel('Service amount')).toHaveValue('')
 
   await page.getByLabel('Service amount').fill('40')
-  await page.getByRole('button', { name: 'Save', exact: true }).click()
+  await formSave(page).click()
   await expect(turnRow(page, 2)).toBeVisible()
 })
 
@@ -138,7 +139,7 @@ test('a double tap on Save records the turn once', async ({ page }) => {
   await seedSettings(page)
   await page.goto('./#/add')
   await page.getByLabel('Service amount').fill('30')
-  await page.getByRole('button', { name: 'Save', exact: true }).dblclick()
+  await formSave(page).dblclick()
 
   await expect(turnRow(page, 1)).toBeVisible()
   await expect(turnRow(page, 2)).toHaveCount(0)

@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { openCommission } from './helpers.ts'
 
 // Onboarding must be exercised on a clean phone: no seedSettings here.
 test.use({ locale: 'en-US' })
@@ -30,6 +31,7 @@ test('the whole flow lands on Today with its answers saved', async ({ page }) =>
   await expect(page.getByRole('link', { name: 'Add your first turn' })).toBeVisible()
 
   await page.goto('./#/add')
+  await openCommission(page)
   await expect(page.getByLabel('Commission %')).toHaveValue('50')
 
   await page.goto('./#/payday')
@@ -54,6 +56,7 @@ test('skipping every step keeps the defaults', async ({ page }) => {
   await expect(page.getByRole('link', { name: 'Add your first turn' })).toBeVisible()
 
   await page.goto('./#/add')
+  await openCommission(page)
   await expect(page.getByLabel('Commission %')).toHaveValue('60')
 })
 

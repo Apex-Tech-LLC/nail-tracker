@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
-import { addTurn, seedSettings } from './helpers.ts'
+import { addTurn, openCommission, seedSettings } from './helpers.ts'
 
 // Noon on 2026-11-04 in the browser's America/Chicago timezone.
 const NOON = new Date('2026-11-04T12:00:00')
@@ -38,6 +38,7 @@ test('50% becomes the default commission', async ({ page }) => {
   await settingsGroup(page, 'Default commission').getByText('50%', { exact: true }).click()
   await page.goto('./#/add')
 
+  await openCommission(page)
   await expect(page.getByLabel('Commission %')).toHaveValue('50')
 })
 
@@ -49,6 +50,7 @@ test('a custom commission rate becomes the default', async ({ page }) => {
   await page.getByLabel('Custom commission %').fill('62.5')
   await page.goto('./#/add')
 
+  await openCommission(page)
   await expect(page.getByLabel('Commission %')).toHaveValue('62.5')
 })
 

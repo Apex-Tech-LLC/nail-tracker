@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
-import { seedSettings, selectServices, serviceChip, servicePicker, turnRow } from './helpers.ts'
+import { formSave, seedSettings, selectServices, serviceChip, servicePicker, turnRow } from './helpers.ts'
 
 // Fixed times with an explicit offset, so a machine running in UTC sees the
 // same work days and the same "most recent" order.
@@ -25,7 +25,7 @@ async function saveTurn(page: Page, at: Date, services: readonly ServiceInput[])
       .getByLabel('Service amount')
       .fill(service.amount)
   }
-  await page.getByRole('button', { name: 'Save', exact: true }).click()
+  await formSave(page).click()
   await expect(page.getByRole('link', { name: /Add Turn|Add your first turn/ })).toBeVisible()
 }
 
@@ -123,7 +123,7 @@ test('tip buttons fill the chosen box and remember the Cash/Card switch', async 
 test('saving shows the saved bar and Copy again opens a filled copy', async ({ page }) => {
   await page.goto('./#/add')
   await page.getByLabel('Service amount').fill('45')
-  await page.getByRole('button', { name: 'Save', exact: true }).click()
+  await formSave(page).click()
 
   await expect(page).toHaveURL(/#\/$/)
   await expect(page.getByRole('status').filter({ hasText: 'Saved · you earn' })).toBeVisible()
@@ -138,7 +138,7 @@ test('saving shows the saved bar and Copy again opens a filled copy', async ({ p
 test('Undo on the saved bar deletes the new turn', async ({ page }) => {
   await page.goto('./#/add')
   await page.getByLabel('Service amount').fill('45')
-  await page.getByRole('button', { name: 'Save', exact: true }).click()
+  await formSave(page).click()
 
   await expect(page.getByRole('status').filter({ hasText: 'Saved · you earn' })).toBeVisible()
   await expect(turnRow(page, 1)).toBeVisible()

@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { addTurn, seedSettings, turnRow } from './helpers.ts'
+import { addTurn, formSave, openCommission, seedSettings, turnRow } from './helpers.ts'
 
 test('editing a turn saves the change and updates Today', async ({ page }) => {
   await seedSettings(page)
@@ -9,7 +9,7 @@ test('editing a turn saves the change and updates Today', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Edit Turn' })).toBeVisible()
 
   await page.getByLabel('Service amount').fill('200')
-  await page.getByRole('button', { name: 'Save', exact: true }).click()
+  await formSave(page).click()
 
   await expect(page.getByText('$130.00').first()).toBeVisible()
 })
@@ -26,9 +26,10 @@ test('a saved turn keeps the rate it was recorded with', async ({ page }) => {
   await page.reload()
 
   await turnRow(page, 1).click()
+  await openCommission(page)
   await expect(page.getByLabel('Commission %')).toHaveValue('60')
 
-  await page.getByRole('button', { name: 'Save', exact: true }).click()
+  await formSave(page).click()
   await expect(page.getByText('$60.00').first()).toBeVisible()
 })
 

@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
-import { addTurn, rowAmount, seedSettings, turnRow, weeklyPay } from './helpers.ts'
+import { addTurn, formSave, openDateChoices, rowAmount, seedSettings, turnRow, weeklyPay } from './helpers.ts'
 
 // Noon on 2026-11-04 in the browser's America/Chicago timezone.
 const NOON = new Date('2026-11-04T12:00:00')
@@ -19,13 +19,14 @@ function earningsTotal(page: Page): Locator {
   return page.getByText('Total earned', { exact: true }).locator('..').locator('p.text-3xl')
 }
 
-/** Saves one turn on a chosen past day through the form's Other day chip. */
+/** Saves one turn on a chosen past day through the form's Other day choice. */
 async function addTurnOn(page: Page, date: string, amount: string): Promise<void> {
   await page.goto('./#/add')
+  await openDateChoices(page)
   await page.getByRole('button', { name: 'Other day' }).click()
   await page.getByLabel('Work date').fill(date)
   await page.getByLabel('Service amount').fill(amount)
-  await page.getByRole('button', { name: 'Save', exact: true }).click()
+  await formSave(page).click()
   await expect(page.getByRole('link', { name: /Add Turn|Add your first turn/ })).toBeVisible()
 }
 
@@ -48,7 +49,7 @@ test('combined ticket', async ({ page }) => {
   await page.getByLabel('Service amount').fill('80')
   await page.getByRole('button', { name: 'More options' }).click()
   await page.getByLabel('Turn count').fill('2')
-  await page.getByRole('button', { name: 'Save', exact: true }).click()
+  await formSave(page).click()
   await expect(page.getByRole('link', { name: /Add Turn|Add your first turn/ })).toBeVisible()
 
   // A minute later, so the two turns cannot share a timestamp and their
@@ -102,9 +103,10 @@ test('old date', async ({ page }) => {
 test('shift past midnight', async ({ page }) => {
   await page.clock.setFixedTime(new Date('2026-11-05T00:30:00-06:00'))
   await page.goto('./#/add')
+  await openDateChoices(page)
   await page.getByRole('button', { name: 'Yesterday' }).click()
   await page.getByLabel('Service amount').fill('100')
-  await page.getByRole('button', { name: 'Save', exact: true }).click()
+  await formSave(page).click()
   await expect(page.getByRole('link', { name: /Add Turn|Add your first turn/ })).toBeVisible()
 
   await page.goto('./')
@@ -129,7 +131,7 @@ test('edit an old turn', async ({ page }) => {
   await page.getByLabel('To', { exact: true }).fill('2026-10-20')
   await turnRow(page, 1).click()
   await page.getByLabel('Service amount').fill('200')
-  await page.getByRole('button', { name: 'Save', exact: true }).click()
+  await formSave(page).click()
   // Wait for the save to close the form before leaving, so its back step
   // cannot land after the next page is opened.
   await expect(page.getByRole('heading', { name: 'History' })).toBeVisible()
