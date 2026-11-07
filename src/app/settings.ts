@@ -6,6 +6,8 @@ export type { PayPeriodType }
 
 export type TipHandling = 'inHand' | 'fromSalon'
 export type TipButtonsTarget = 'cash' | 'card'
+/** How often Home reminds the person to save a backup. 0 turns the reminder off. */
+export type BackupReminderDays = 7 | 14 | 30 | 0
 
 export interface Settings {
   locale: Locale
@@ -20,6 +22,10 @@ export interface Settings {
   tipButtonsTarget: TipButtonsTarget
   numberPad: boolean
   onboardingDone: boolean
+  backupReminderDays: BackupReminderDays
+  lastBackupDate: IsoDate | null
+  /** Reminder key to the day it was dismissed. */
+  dismissedReminders: Record<string, IsoDate>
 }
 
 const STORAGE_KEY = 'nail-tracker.settings'
@@ -35,6 +41,13 @@ const isPeriodType = (value: unknown): value is PayPeriodType =>
 const isRate = (value: unknown): value is number =>
   typeof value === 'number' && Number.isInteger(value) && value >= 0 && value <= 10_000
 const isDateText = (value: unknown): value is IsoDate => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)
+const isReminderDays = (value: unknown): value is BackupReminderDays =>
+  value === 7 || value === 14 || value === 30 || value === 0
+
+function isDismissedMap(value: unknown): value is Record<string, IsoDate> {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) return false
+  return Object.values(value as Record<string, unknown>).every(isDateText)
+}
 
 /** Saved choices win over defaults. Anything malformed in storage is ignored rather than trusted. */
 export function resolveSettings(saved: string | null, languages: readonly string[]): Settings {
@@ -58,6 +71,9 @@ export function resolveSettings(saved: string | null, languages: readonly string
     tipButtonsTarget: parsed.tipButtonsTarget === 'card' ? 'card' : 'cash',
     numberPad: parsed.numberPad !== false,
     onboardingDone: parsed.onboardingDone === true,
+    backupReminderDays: isReminderDays(parsed.backupReminderDays) ? parsed.backupReminderDays : 14,
+    lastBackupDate: isDateText(parsed.lastBackupDate) ? parsed.lastBackupDate : null,
+    dismissedReminders: isDismissedMap(parsed.dismissedReminders) ? parsed.dismissedReminders : {},
   }
 }
 

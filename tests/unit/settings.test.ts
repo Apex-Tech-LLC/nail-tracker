@@ -27,6 +27,9 @@ describe('resolveSettings', () => {
     tipButtonsTarget: 'cash',
     numberPad: true,
     onboardingDone: false,
+    backupReminderDays: 14,
+    lastBackupDate: null,
+    dismissedReminders: {},
   }
 
   it('uses English defaults when nothing is saved', () => {
@@ -50,5 +53,31 @@ describe('resolveSettings', () => {
     '{"locale":"fa","defaultCommissionRateBp":20000,"payPeriodType":"daily"}',
   ])('ignores bad saved value %j', (saved) => {
     expect(resolveSettings(saved, ['vi-VN'])).toMatchObject({ locale: 'vi', defaultCommissionRateBp: 6000, payPeriodType: 'none' })
+  })
+
+  it('keeps a saved backup reminder choice, last backup date and dismissals', () => {
+    const saved = JSON.stringify({
+      backupReminderDays: 30,
+      lastBackupDate: '2026-11-04',
+      dismissedReminders: { 'backup:2026-10-01': '2026-11-04' },
+    })
+    expect(resolveSettings(saved, [])).toMatchObject({
+      backupReminderDays: 30,
+      lastBackupDate: '2026-11-04',
+      dismissedReminders: { 'backup:2026-10-01': '2026-11-04' },
+    })
+  })
+
+  it('falls back when the backup reminder settings are malformed', () => {
+    const saved = JSON.stringify({
+      backupReminderDays: 9,
+      lastBackupDate: 'soon',
+      dismissedReminders: { 'backup:2026-10-01': 42 },
+    })
+    expect(resolveSettings(saved, [])).toMatchObject({
+      backupReminderDays: 14,
+      lastBackupDate: null,
+      dismissedReminders: {},
+    })
   })
 })
