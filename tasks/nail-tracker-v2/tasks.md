@@ -20,8 +20,8 @@ opens the pull request, waits for checks, merges, updates this file. Product: `d
 | Task | What | Status |
 |---|---|---|
 | V05 | Comparison maths: same point last week/month, week days (domain + unit tests) | ✅ |
-| V06 | Home screen: period switch, hero number, comparison, polish-bottle week view, stats, today's turns | 🔄 |
-| V07 | Home reminders; backup through the phone's share sheet, backup reminder, last backup date | ⬜ |
+| V06 | Home screen: period switch, hero number, comparison, polish-bottle week view, stats, today's turns | ✅ |
+| V07 | Home reminders; backup through the phone's share sheet, backup reminder, last backup date | 🔄 |
 
 ## Release 2.2: Paycheck
 
