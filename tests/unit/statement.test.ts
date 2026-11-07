@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { defaultPayRules, type PayRules } from '../../src/domain/payRules.ts'
 import { buildStatement, type StatementService } from '../../src/domain/statement.ts'
-import type { AdjustmentFigures, TurnFigures } from '../../src/domain/totals.ts'
+import { sumTotals, type AdjustmentFigures, type TurnFigures } from '../../src/domain/totals.ts'
 
 const DAYS = [
   '2026-11-01',
@@ -271,5 +271,50 @@ describe('buildStatement, the section 5.5 example', () => {
     const firstDay = statement.byDay[0]
     expect(firstDay.servicesTotalCents).toBeGreaterThan(0)
     expect(firstDay.cardTipsCents).toBeGreaterThan(0)
+  })
+})
+
+describe('buildStatement and sumTotals, with no fees and no split', () => {
+  it('agree on what the salon owes and what was earned, held cash tips included', () => {
+    const turns: TurnFigures[] = [
+      turnFigures({
+        localWorkDate: '2026-11-02',
+        serviceRevenueTotalCents: 10_000,
+        commissionTotalCents: 6_000,
+        cashTipCents: 1_500,
+      }),
+      turnFigures({ localWorkDate: '2026-11-03', cashTipCents: 2_000, cashTipReceived: true }),
+      turnFigures({ localWorkDate: '2026-11-04', cardTipCents: 3_000 }),
+      turnFigures({ localWorkDate: '2026-11-05', cardTipCents: 2_500, cardTipReceived: true }),
+      turnFigures({ localWorkDate: '2026-11-06', turnCount: 0 }),
+    ]
+    const services: StatementService[] = [
+      {
+        localWorkDate: '2026-11-02',
+        priceCents: 10_000,
+        commissionRateBp: 6000,
+        commissionCents: 6_000,
+      },
+    ]
+    const adjustments: AdjustmentFigures[] = [
+      { amountCents: 1_200, category: 'bonus' },
+      { amountCents: -300, category: 'bookkeepingDeduction' },
+    ]
+
+    const statement = buildStatement({
+      services,
+      turns,
+      adjustments,
+      rules: [defaultPayRules()],
+      periodEnd: '2026-11-07',
+    })
+    const totals = sumTotals(turns, adjustments)
+
+    expect(statement.cashTipsHeldCents).toBe(1_500)
+    expect(statement.salonPaysCents).toBe(totals.expectedPayoutCents)
+    expect(statement.earnedTotalCents).toBe(totals.earnedCents)
+    expect(statement.shareCents).toBe(totals.commissionCents)
+    expect(statement.checkCents).toBeNull()
+    expect(statement.cashCents).toBeNull()
   })
 })

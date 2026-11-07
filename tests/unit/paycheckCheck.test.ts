@@ -22,6 +22,7 @@ function statement(overrides: Partial<Statement> = {}): Statement {
     checkCents: 91_700,
     cashCents: 91_700,
     cashTipsInHandCents: 30_000,
+    cashTipsHeldCents: 0,
     earnedTotalCents: 213_400,
     byDay: [],
     ...overrides,

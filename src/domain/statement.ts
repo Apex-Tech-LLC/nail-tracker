@@ -29,6 +29,7 @@ export interface Statement {
   checkCents: number | null
   cashCents: number | null
   cashTipsInHandCents: number
+  cashTipsHeldCents: number
   earnedTotalCents: number
   byDay: {
     date: IsoDate
@@ -114,6 +115,7 @@ export function buildStatement(input: {
   let heldCardTipFeeCents = 0
   let cardTipFeeCents = 0
   let cashTipsInHandCents = 0
+  let cashTipsHeldCents = 0
   let turnCount = 0
   const workedDays = new Set<IsoDate>()
 
@@ -121,6 +123,7 @@ export function buildStatement(input: {
     turnCount += turn.turnCount
     if (turn.turnCount >= 1) workedDays.add(turn.localWorkDate)
     if (turn.cashTipReceived) cashTipsInHandCents += turn.cashTipCents
+    else cashTipsHeldCents += turn.cashTipCents
 
     cardTipsCents += turn.cardTipCents
     const turnRules = rulesOn(rules, turn.localWorkDate)
@@ -145,7 +148,12 @@ export function buildStatement(input: {
 
   const guaranteeTopUpCents = 0
   const salonPaysCents =
-    shareCents + guaranteeTopUpCents + cardTipsHeldCents - cardTipFeeCents + adjustmentsCents
+    shareCents +
+    guaranteeTopUpCents +
+    cardTipsHeldCents +
+    cashTipsHeldCents -
+    cardTipFeeCents +
+    adjustmentsCents
 
   let checkCents: number | null = null
   let cashCents: number | null = null
@@ -183,6 +191,7 @@ export function buildStatement(input: {
     checkCents,
     cashCents,
     cashTipsInHandCents,
+    cashTipsHeldCents,
     earnedTotalCents,
     byDay: [...days.entries()]
       .sort(([a], [b]) => a.localeCompare(b))
