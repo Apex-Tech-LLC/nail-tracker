@@ -2,27 +2,30 @@ import { Link } from 'wouter'
 import { paths } from '../../app/navigation.ts'
 import { useSettings } from '../../app/settings.ts'
 import type { Adjustment } from '../../db/schema.ts'
-import { formatUsd } from '../../domain/money.ts'
+import { formatUsdShort } from '../../domain/money.ts'
 import { t } from '../../lib/i18n.ts'
-import { card } from '../../ui/styles.ts'
 import { ADJUSTMENT_LABEL } from './adjustmentLabels.ts'
 
-/** One signed correction in a list. T12 adds the screen it opens. */
+/** One signed correction in a list, the same height as a turn row but without a copy button. */
 export function AdjustmentRow({ adjustment }: { adjustment: Adjustment }) {
   const { locale } = useSettings()
 
   return (
     <Link
       href={paths.adjustment(adjustment.id)}
-      className={`${card} flex items-start justify-between gap-3`}
+      className="flex min-h-[60px] items-center gap-3 py-[11px] pl-3.5 pr-1.5"
     >
-      <div className="min-w-0">
-        <p className="font-medium">{t(locale, ADJUSTMENT_LABEL[adjustment.category])}</p>
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-[15px] font-semibold">
+          {t(locale, ADJUSTMENT_LABEL[adjustment.category])}
+        </p>
         {adjustment.note && (
-          <p className="truncate text-sm text-text-secondary">{adjustment.note}</p>
+          <p className="mt-px truncate text-[13px] text-text-secondary">{adjustment.note}</p>
         )}
       </div>
-      <p className="shrink-0 font-medium tabular-nums">{formatUsd(adjustment.amountCents)}</p>
+      <p className="shrink-0 text-[16px] font-bold tabular-nums">
+        {formatUsdShort(adjustment.amountCents)}
+      </p>
     </Link>
   )
 }

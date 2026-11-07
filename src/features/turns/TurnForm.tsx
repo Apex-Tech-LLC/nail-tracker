@@ -19,7 +19,7 @@ import type { Locale } from '../../lib/locale.ts'
 import { requestPersistence } from '../../pwa/persistStorage.ts'
 import { MoneyField } from '../../ui/MoneyField.tsx'
 import { PercentField } from '../../ui/PercentField.tsx'
-import { useToast } from '../../ui/Toast.tsx'
+import { useToast } from '../../ui/useToast.ts'
 import { WorkDateField } from '../../ui/WorkDateField.tsx'
 import {
   card,

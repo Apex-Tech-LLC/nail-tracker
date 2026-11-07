@@ -1,30 +1,7 @@
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-  type ReactNode,
-} from 'react'
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { useLocation } from 'wouter'
 import { paths } from '../app/navigation.ts'
-
-export interface ToastAction {
-  label: string
-  onClick: () => void
-}
-
-export interface ToastOptions {
-  message: string
-  actions?: ToastAction[]
-}
-
-interface ToastApi {
-  show: (options: ToastOptions) => void
-}
-
-const ToastContext = createContext<ToastApi | null>(null)
+import { ToastContext, type ToastOptions } from './useToast.ts'
 
 const TAB_PATHS: string[] = [
   paths.today,
@@ -35,12 +12,6 @@ const TAB_PATHS: string[] = [
 ]
 
 const VISIBLE_MS = 6000
-
-export function useToast(): ToastApi {
-  const toast = useContext(ToastContext)
-  if (!toast) throw new Error('useToast must be used inside ToastProvider')
-  return toast
-}
 
 /** One bar at a time, above the bottom bar on a tab screen and near the bottom elsewhere. */
 export function ToastProvider({ children }: { children: ReactNode }) {

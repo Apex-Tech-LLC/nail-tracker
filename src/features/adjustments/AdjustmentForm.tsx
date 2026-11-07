@@ -10,7 +10,7 @@ import { centsToInput, parseSignedCents } from '../../domain/money.ts'
 import type { AdjustmentCategory } from '../../domain/totals.ts'
 import { t } from '../../lib/i18n.ts'
 import { MoneyField } from '../../ui/MoneyField.tsx'
-import { useToast } from '../../ui/Toast.tsx'
+import { useToast } from '../../ui/useToast.ts'
 import {
   chip,
   chipOff,
