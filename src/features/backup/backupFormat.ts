@@ -71,8 +71,9 @@ export async function shareOrDownload(
       return 'shared'
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') return 'cancelled'
-      if (error instanceof DOMException && error.name === 'AbortError') return 'cancelled'
-      throw error
+      // On iPhone Safari the tap's user activation can expire while the backup
+      // is built, so the sheet refuses to open. The file still has to be safe,
+      // so any other error falls through to the download.
     }
   }
   download(await file.text(), file.name, file.type)

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link } from 'wouter'
 import { LanguageButton } from '../../app/PageHeader.tsx'
 import { paths } from '../../app/navigation.ts'
-import { getSettings, updateSettings, useSettings } from '../../app/settings.ts'
+import { updateSettings, useSettings } from '../../app/settings.ts'
 import { useToday } from '../../app/useToday.ts'
 import { db } from '../../db/schema.ts'
 import {
@@ -31,8 +31,7 @@ import { numberTurns, sumTotals } from '../../domain/totals.ts'
 import { t, tf, type StringKey } from '../../lib/i18n.ts'
 import { OfflineBadge } from '../../pwa/OfflineBadge.tsx'
 import { list, primaryButton } from '../../ui/styles.ts'
-import { backupFileName, shareOrDownload } from '../backup/backupFormat.ts'
-import { exportJson } from '../backup/exportJson.ts'
+import { saveBackupFile } from '../backup/saveBackup.ts'
 import { ensurePayPeriods, loadPeriodSummaries } from '../payday/periodStore.ts'
 import { loadRange, servicesByTurn } from '../turns/turnStore.ts'
 import { TurnRow } from '../turns/TurnRow.tsx'
@@ -223,12 +222,7 @@ export function HomePage() {
     if (backupBusy.current) return
     backupBusy.current = true
     try {
-      const file = new File([await exportJson(db, getSettings())], backupFileName('backup', 'json', today), {
-        type: 'application/json',
-      })
-      const result = await shareOrDownload(file, t(locale, 'exportBackup'))
-      // A cancelled share is not a backup; anything else was saved somewhere.
-      if (result !== 'cancelled') updateSettings({ lastBackupDate: today })
+      await saveBackupFile(t(locale, 'exportBackup'))
     } finally {
       backupBusy.current = false
     }

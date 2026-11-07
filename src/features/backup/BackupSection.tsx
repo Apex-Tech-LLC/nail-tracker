@@ -1,15 +1,15 @@
 import { IconDownload, IconFileSpreadsheet, IconUpload, type Icon } from '@tabler/icons-react'
 import { useId, useRef, useState, type ChangeEvent } from 'react'
-import { getSettings, updateSettings, useSettings, type BackupReminderDays } from '../../app/settings.ts'
+import { updateSettings, useSettings, type BackupReminderDays } from '../../app/settings.ts'
 import { db } from '../../db/schema.ts'
 import { formatDayShort, todayIso } from '../../domain/dates.ts'
 import { t, tf, type StringKey } from '../../lib/i18n.ts'
 import { field, label as labelClass } from '../../ui/styles.ts'
 import { backupFileName, shareOrDownload } from './backupFormat.ts'
 import { exportCsv } from './exportCsv.ts'
-import { exportJson } from './exportJson.ts'
 import { ImportError, type ImportErrorCode } from './importError.ts'
 import { importJson, type ImportOutcome } from './importJson.ts'
+import { saveBackupFile } from './saveBackup.ts'
 
 const ERROR_TEXT: Record<ImportErrorCode, StringKey> = {
   notJson: 'importNotJson',
@@ -38,12 +38,7 @@ export function BackupSection() {
     if (busy.current) return
     busy.current = true
     try {
-      const file = new File([await exportJson(db, getSettings())], backupFileName('backup', 'json', todayIso()), {
-        type: 'application/json',
-      })
-      const result = await shareOrDownload(file, t(locale, 'exportBackup'))
-      // A cancelled share is not a backup; anything else was saved somewhere.
-      if (result !== 'cancelled') updateSettings({ lastBackupDate: todayIso() })
+      await saveBackupFile(t(locale, 'exportBackup'))
     } finally {
       busy.current = false
     }
