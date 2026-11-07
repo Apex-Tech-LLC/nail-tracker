@@ -55,6 +55,34 @@ export function serviceChip(page: Page, name: string): Locator {
   return servicePicker(page).locator(`button[data-service-name="${name}"]`)
 }
 
+/** The commission pill at the top of the Add turn form. */
+export function commissionPill(page: Page): Locator {
+  return page.getByRole('button', { name: /^Commission:/ })
+}
+
+/** Opens the commission pill so the shared rate box can be read or filled. */
+export async function openCommission(page: Page): Promise<void> {
+  await commissionPill(page).click()
+}
+
+/** The date pill at the top of the Add turn form. */
+export function datePill(page: Page): Locator {
+  return page.getByRole('button', { name: /^Date:/ })
+}
+
+/** Opens the date pill so Today, Yesterday and Other day can be picked. */
+export async function openDateChoices(page: Page): Promise<void> {
+  await datePill(page).click()
+}
+
+/**
+ * The form's own Save button. The number pad has a Save key too, so the form
+ * is scoped to keep the two apart.
+ */
+export function formSave(page: Page): Locator {
+  return page.locator('form').getByRole('button', { name: 'Save', exact: true })
+}
+
 /**
  * Leaves exactly the named service chips on. Chips that are on but not wanted
  * are turned off, then any wanted chip that is off is turned on.
@@ -94,7 +122,10 @@ export async function addTurn(
   await page.getByLabel('Service amount').fill(amount)
   if (cash) await page.getByLabel('Cash tip').fill(cash)
   if (card) await page.getByLabel('Card tip').fill(card)
-  if (rate) await page.getByLabel('Commission %').fill(rate)
-  await page.getByRole('button', { name: 'Save', exact: true }).click()
+  if (rate) {
+    await openCommission(page)
+    await page.getByLabel('Commission %').fill(rate)
+  }
+  await formSave(page).click()
   await expect(page.getByRole('link', { name: /Add Turn|Add your first turn/ })).toBeVisible()
 }

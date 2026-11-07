@@ -26,6 +26,7 @@ export function SettingsPage() {
     locale,
     defaultCommissionRateBp: rate,
     perServiceRates,
+    numberPad,
     weekStartDay,
     payPeriodType,
     payPeriodAnchorDate,
@@ -35,6 +36,7 @@ export function SettingsPage() {
   const [customInvalid, setCustomInvalid] = useState(false)
   const anchorId = useId()
   const perServiceHintId = useId()
+  const numberPadHintId = useId()
 
   function chooseRate(choice: RateChoice) {
     setCustomInvalid(false)
@@ -119,6 +121,20 @@ export function SettingsPage() {
           <span>{t(locale, 'perServiceRates')}</span>
         </label>
         <p id={perServiceHintId} className="text-sm text-text-secondary">{t(locale, 'perServiceRatesHint')}</p>
+      </div>
+
+      <div>
+        <label className="flex items-center gap-3 py-2">
+          <input
+            type="checkbox"
+            className="size-5"
+            checked={numberPad}
+            onChange={(event) => updateSettings({ numberPad: event.target.checked })}
+            aria-describedby={numberPadHintId}
+          />
+          <span>{t(locale, 'numberPadOn')}</span>
+        </label>
+        <p id={numberPadHintId} className="text-sm text-text-secondary">{t(locale, 'numberPadHint')}</p>
       </div>
 
       <div className={card}>

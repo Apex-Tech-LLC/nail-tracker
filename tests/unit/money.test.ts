@@ -5,6 +5,7 @@ import {
   formatRate,
   formatUsd,
   formatUsdShort,
+  padAmount,
   parseCents,
   parseRateBp,
   parseSignedCents,
@@ -98,6 +99,30 @@ describe('centsToInput', () => {
 
   it('round-trips through parseCents', () => {
     for (const cents of [0, 1, 99, 100, 1999, 123456]) expect(parseCents(centsToInput(cents))).toBe(cents)
+  })
+})
+
+describe('padAmount', () => {
+  it.each([
+    ['', '3', '3'],
+    ['3', '5', '35'],
+    ['35', '.', '35.'],
+    ['35.', '5', '35.5'],
+    ['35.5', '0', '35.50'],
+    ['', '.', '0.'],
+    ['0', '5', '05'],
+  ])('types %j then %j as %j', (value, key, expected) => {
+    expect(padAmount(value, key)).toBe(expected)
+  })
+
+  it.each([
+    ['3.5', '.'],
+    ['35.50', '0'],
+    ['3.50', '5'],
+    ['999999.99', '9'],
+    ['9999999', '9'],
+  ])('refuses a key that breaks %j', (value, key) => {
+    expect(padAmount(value, key)).toBe(value)
   })
 })
 

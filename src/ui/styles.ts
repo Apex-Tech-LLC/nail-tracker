@@ -16,4 +16,6 @@ export const secondaryButton =
 export const dangerButton =
   'w-full min-h-12 rounded-button border-[1.5px] border-danger-text px-4 py-3 text-base font-bold text-danger-text focus-visible:outline-2 focus-visible:outline-brand-600'
 export const errorText = 'mt-1 text-sm text-danger-text'
+export const pill =
+  'inline-flex min-h-11 items-center gap-1 rounded-full border border-border bg-surface px-3 text-sm font-semibold text-text-secondary focus-visible:outline-2 focus-visible:outline-brand-600'
 export const pageTitle = 'text-[30px] font-extrabold leading-tight tracking-[-0.03em]'

@@ -1,6 +1,7 @@
 import { IconPlus, IconTrash, IconX } from '@tabler/icons-react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { useId, useRef, useState, type FormEvent } from 'react'
+import { useId, useRef, useState, type FocusEvent, type FormEvent } from 'react'
+import { createPortal } from 'react-dom'
 import { Link } from 'wouter'
 import { paths, useAppLocation } from '../../app/navigation.ts'
 import { updateSettings, useSettings } from '../../app/settings.ts'
@@ -17,6 +18,7 @@ import {
   centsToInput,
   formatUsd,
   formatUsdShort,
+  padAmount,
   parseCents,
   parseRateBp,
   rateToInput,
@@ -33,6 +35,7 @@ import { t } from '../../lib/i18n.ts'
 import type { Locale } from '../../lib/locale.ts'
 import { requestPersistence } from '../../pwa/persistStorage.ts'
 import { MoneyField } from '../../ui/MoneyField.tsx'
+import { NumberPad } from '../../ui/NumberPad.tsx'
 import { PercentField } from '../../ui/PercentField.tsx'
 import { useToast } from '../../ui/useToast.ts'
 import { WorkDateField } from '../../ui/WorkDateField.tsx'
@@ -44,6 +47,7 @@ import {
   errorText,
   field,
   label,
+  pill,
   primaryButton,
   secondaryButton,
 } from '../../ui/styles.ts'
@@ -250,6 +254,7 @@ function TurnFormFields({ presets, existing, quick, copy, onDone, onClose }: Fie
     cardTipHandling,
     lastServicePresetId,
     tipButtonsTarget,
+    numberPad,
   } = useSettings()
   const [, navigate] = useAppLocation()
   const id = useId()
@@ -303,6 +308,11 @@ function TurnFormFields({ presets, existing, quick, copy, onDone, onClose }: Fie
   const [savedAddAnother, setSavedAddAnother] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [errors, setErrors] = useState<Errors>({ lines: {} })
+  const [padTarget, setPadTarget] = useState<string | null>(null)
+  // A box that just gained pad focus (or was just filled by a chip or tip
+  // button) has its whole value replaced by the next digit or dot.
+  const [padReplace, setPadReplace] = useState(false)
+  const [rateOpen, setRateOpen] = useState(false)
   const toast = useToast()
 
   // A quick double tap fires submit twice before React can re-render. The ref
@@ -324,6 +334,9 @@ function TurnFormFields({ presets, existing, quick, copy, onDone, onClose }: Fie
   )
   const showPerLine =
     perServiceRates || new Set(lines.map((line) => line.rate)).size > 1
+  // Screen order: every service price, then the cash tip, then the card tip.
+  const padTargets = [...lines.map((line) => `line:${line.key}`), 'cash', 'card']
+  const padShown = numberPad && padTarget !== null && padTargets.includes(padTarget)
 
   const useCounts = quick ? serviceUse(quick.entries) : new Map<string, number>()
   const lastPrices = quick ? lastPrice(quick.entries) : new Map<string, number>()
@@ -376,6 +389,82 @@ function TurnFormFields({ presets, existing, quick, copy, onDone, onClose }: Fie
     })
   }
 
+  function padTextFor(target: string): string {
+    if (target === 'cash') return cashText
+    if (target === 'card') return cardText
+    const key = target.slice('line:'.length)
+    return lines.find((line) => line.key === key)?.amount ?? ''
+  }
+
+  function changePadText(target: string, value: string) {
+    if (target === 'cash') {
+      setCashText(value)
+      clearError('cash')
+    } else if (target === 'card') {
+      setCardText(value)
+      clearError('card')
+    } else {
+      const key = target.slice('line:'.length)
+      updateLine(key, (line) => ({ ...line, amount: value }))
+      clearLineError(key, 'amount')
+    }
+    changed()
+  }
+
+  /** One key from the app's pad: a digit or dot append, `back` removes the last character. */
+  function typeOnPad(key: string) {
+    if (!padTarget) return
+    const current = padTextFor(padTarget)
+    const next =
+      key === 'back'
+        ? current.slice(0, -1)
+        : padReplace
+          ? padAmount('', key)
+          : padAmount(current, key)
+    setPadReplace(false)
+    if (next !== current) changePadText(padTarget, next)
+  }
+
+  function focusPad(target: string, element: HTMLInputElement) {
+    if (!numberPad) return
+    setPadTarget(target)
+    setPadReplace(true)
+    // The pad is fixed over the bottom: scroll the box clear of it once it is up.
+    requestAnimationFrame(() => element.scrollIntoView({ block: 'nearest' }))
+  }
+
+  /** The pad stays while focus is on it or on another money box; anywhere else it hides. */
+  function blurPad(event: FocusEvent<HTMLInputElement>) {
+    const next = event.relatedTarget
+    if (next instanceof Element) {
+      if (next.closest('[data-number-pad]')) return
+      if (next.matches('[data-pad-target]')) return
+    }
+    setPadTarget(null)
+    setPadReplace(false)
+  }
+
+  /** Last money box in screen order: hide the pad instead of wrapping round. */
+  function focusNextPadTarget() {
+    if (!padTarget) return
+    const index = padTargets.indexOf(padTarget)
+    const next = index === -1 ? undefined : padTargets[index + 1]
+    if (!next) {
+      const active = document.activeElement
+      if (active instanceof HTMLElement) active.blur()
+      setPadTarget(null)
+      setPadReplace(false)
+      return
+    }
+    setPadTarget(next)
+    setPadReplace(true)
+    requestAnimationFrame(() => {
+      const element = document.querySelector<HTMLInputElement>(`[data-pad-target="${next}"]`)
+      element?.focus()
+      element?.scrollIntoView({ block: 'nearest' })
+    })
+  }
+
   function updateLine(key: string, change: (line: LineState) => LineState) {
     setLines((previous) =>
       previous.map((line) => (line.key === key ? change(line) : line)),
@@ -424,6 +513,8 @@ function TurnFormFields({ presets, existing, quick, copy, onDone, onClose }: Fie
     setErrors((previous) =>
       previous.services ? { ...previous, services: undefined } : previous,
     )
+    // A chip that filled a price leaves the next pad key in replace mode.
+    setPadReplace(true)
     changed()
   }
 
@@ -432,6 +523,7 @@ function TurnFormFields({ presets, existing, quick, copy, onDone, onClose }: Fie
     setErrors((previous) =>
       previous.services ? { ...previous, services: undefined } : previous,
     )
+    setPadReplace(true)
     changed()
   }
 
@@ -460,6 +552,7 @@ function TurnFormFields({ presets, existing, quick, copy, onDone, onClose }: Fie
     })
     setLines(next)
     setErrors({ lines: {} })
+    setPadReplace(true)
     changed()
   }
 
@@ -472,6 +565,7 @@ function TurnFormFields({ presets, existing, quick, copy, onDone, onClose }: Fie
       setCardText(value)
       clearError('card')
     }
+    setPadReplace(true)
     changed()
   }
 
@@ -541,6 +635,8 @@ function TurnFormFields({ presets, existing, quick, copy, onDone, onClose }: Fie
     ) {
       // A hidden error would be invisible: open More options for the count.
       if (turnCount === null) setMoreOpen(true)
+      // The shared rate lives under a pill: open it so its error can be read.
+      if (Object.values(nextLineErrors).some((line) => line.rate)) setRateOpen(true)
       setErrors(nextErrors)
       return null
     }
@@ -602,12 +698,16 @@ function TurnFormFields({ presets, existing, quick, copy, onDone, onClose }: Fie
     })
   }
 
-  async function submit(event: FormEvent) {
-    event.preventDefault()
+  async function saveAndClose() {
     const result = await save()
     if (!result) return
     showSaved(result)
     onDone()
+  }
+
+  function submit(event: FormEvent) {
+    event.preventDefault()
+    void saveAndClose()
   }
 
   function resetForNextTurn() {
@@ -662,35 +762,73 @@ function TurnFormFields({ presets, existing, quick, copy, onDone, onClose }: Fie
   }
 
   return (
-    <form
-      onSubmit={submit}
-      noValidate
-      className="flex min-h-[calc(100dvh-2rem)] flex-col gap-5"
-    >
-      <header className="flex items-center justify-between">
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label={t(locale, 'close')}
-          className="flex min-h-11 min-w-11 items-center justify-center"
-        >
-          <IconX size={22} aria-hidden="true" />
-        </button>
-        <h1 className="font-medium">{t(locale, turn ? 'editTurn' : 'newTurn')}</h1>
-        {turn ? (
+    <>
+      <form
+        onSubmit={submit}
+        noValidate
+        className={`flex min-h-[calc(100dvh-2rem)] flex-col gap-5 ${
+          numberPad ? 'pb-[280px]' : ''
+        }`}
+      >
+      <header className="flex flex-col gap-2">
+        <div className="flex items-center justify-between">
           <button
             type="button"
-            aria-label={t(locale, 'delete')}
-            disabled={deleting}
-            onClick={() => {
-              void deleteNow()
-            }}
-            className="flex min-h-11 min-w-11 items-center justify-center text-danger-text"
+            onClick={onClose}
+            aria-label={t(locale, 'close')}
+            className="flex min-h-11 min-w-11 items-center justify-center"
           >
-            <IconTrash size={22} aria-hidden="true" />
+            <IconX size={22} aria-hidden="true" />
           </button>
-        ) : (
-          <span className="w-11" />
+          <h1 className="font-medium">{t(locale, turn ? 'editTurn' : 'newTurn')}</h1>
+          {turn ? (
+            <button
+              type="button"
+              aria-label={t(locale, 'delete')}
+              disabled={deleting}
+              onClick={() => {
+                void deleteNow()
+              }}
+              className="flex min-h-11 min-w-11 items-center justify-center text-danger-text"
+            >
+              <IconTrash size={22} aria-hidden="true" />
+            </button>
+          ) : (
+            <span className="w-11" />
+          )}
+        </div>
+
+        <div className="flex flex-wrap items-start justify-end gap-2">
+          <WorkDateField
+            compact
+            value={date}
+            onChange={(value) => {
+              setDate(value)
+              clearError('date')
+              changed()
+            }}
+            error={errors.date}
+          />
+          {!showPerLine && lines.length > 0 && (
+            <button
+              type="button"
+              aria-expanded={rateOpen}
+              aria-label={`${t(locale, 'commission')}: ${lines[0].rate}%`}
+              className={pill}
+              onClick={() => setRateOpen((wasOpen) => !wasOpen)}
+            >
+              {lines[0].rate}%
+              <span aria-hidden="true">▾</span>
+            </button>
+          )}
+        </div>
+        {!showPerLine && lines.length > 0 && rateOpen && (
+          <PercentField
+            label={t(locale, 'commissionPercent')}
+            value={lines[0].rate}
+            onChange={changeSharedRate}
+            error={errors.lines[lines[0].key]?.rate}
+          />
         )}
       </header>
 
@@ -719,16 +857,6 @@ function TurnFormFields({ presets, existing, quick, copy, onDone, onClose }: Fie
           ))}
         </div>
       )}
-
-      <WorkDateField
-        value={date}
-        onChange={(value) => {
-          setDate(value)
-          clearError('date')
-          changed()
-        }}
-        error={errors.date}
-      />
 
       <div>
         <p className={label}>{t(locale, 'servicesPick')}</p>
@@ -783,6 +911,10 @@ function TurnFormFields({ presets, existing, quick, copy, onDone, onClose }: Fie
           errors={errors.lines[line.key]}
           amountRef={index === 0 ? amountRef : undefined}
           autoFocus={index === 0}
+          usePad={numberPad}
+          activePad={padShown && padTarget === `line:${line.key}`}
+          onAmountFocus={(element) => focusPad(`line:${line.key}`, element)}
+          onAmountBlur={blurPad}
           onCustomName={(value) => {
             updateLine(line.key, (current) => ({ ...current, customName: value }))
             clearLineError(line.key, 'serviceName')
@@ -825,6 +957,11 @@ function TurnFormFields({ presets, existing, quick, copy, onDone, onClose }: Fie
             changed()
           }}
           error={errors.cash}
+          usePad={numberPad}
+          active={padShown && padTarget === 'cash'}
+          padTarget="cash"
+          onFieldFocus={(element) => focusPad('cash', element)}
+          onFieldBlur={blurPad}
         />
         <MoneyField
           label={t(locale, 'cardTip')}
@@ -835,6 +972,11 @@ function TurnFormFields({ presets, existing, quick, copy, onDone, onClose }: Fie
             changed()
           }}
           error={errors.card}
+          usePad={numberPad}
+          active={padShown && padTarget === 'card'}
+          padTarget="card"
+          onFieldFocus={(element) => focusPad('card', element)}
+          onFieldBlur={blurPad}
         />
       </div>
 
@@ -875,15 +1017,6 @@ function TurnFormFields({ presets, existing, quick, copy, onDone, onClose }: Fie
           )
         })}
       </div>
-
-      {!showPerLine && lines.length > 0 && (
-        <PercentField
-          label={t(locale, 'commissionPercent')}
-          value={lines[0].rate}
-          onChange={changeSharedRate}
-          error={errors.lines[lines[0].key]?.rate}
-        />
-      )}
 
       <div className={card} aria-live="polite">
         {lines.length > 1 && (
@@ -1060,6 +1193,20 @@ function TurnFormFields({ presets, existing, quick, copy, onDone, onClose }: Fie
         )}
       </div>
 
-    </form>
+      </form>
+      {padShown &&
+        createPortal(
+          <NumberPad
+            locale={locale}
+            onDigit={typeOnPad}
+            onBackspace={() => typeOnPad('back')}
+            onNext={focusNextPadTarget}
+            onSave={() => {
+              void saveAndClose()
+            }}
+          />,
+          document.body,
+        )}
+    </>
   )
 }

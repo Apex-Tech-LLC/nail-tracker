@@ -1,4 +1,4 @@
-import { useId, type RefObject } from 'react'
+import { useId, type FocusEvent, type RefObject } from 'react'
 import { errorText, field, label } from './styles.ts'
 
 interface Props {
@@ -9,6 +9,11 @@ interface Props {
   autoFocus?: boolean
   inputRef?: RefObject<HTMLInputElement | null>
   inputMode?: 'decimal' | 'text'
+  usePad?: boolean
+  active?: boolean
+  padTarget?: string
+  onFieldFocus?: (element: HTMLInputElement) => void
+  onFieldBlur?: (event: FocusEvent<HTMLInputElement>) => void
 }
 
 export function MoneyField({
@@ -19,6 +24,11 @@ export function MoneyField({
   autoFocus,
   inputRef,
   inputMode = 'decimal',
+  usePad = false,
+  active = false,
+  padTarget,
+  onFieldFocus,
+  onFieldBlur,
 }: Props) {
   const id = useId()
   return (
@@ -37,14 +47,19 @@ export function MoneyField({
           ref={inputRef}
           id={id}
           type="text"
-          inputMode={inputMode}
+          inputMode={usePad ? 'none' : inputMode}
           autoComplete="off"
           autoFocus={autoFocus}
+          data-pad-target={usePad ? padTarget : undefined}
           value={value}
           onChange={(event) => onChange(event.target.value)}
+          onFocus={(event) => onFieldFocus?.(event.currentTarget)}
+          onBlur={onFieldBlur}
           aria-invalid={!!error}
           aria-describedby={error ? `${id}-error` : undefined}
-          className={`${field} pl-7`}
+          className={`${field} pl-7 ${
+            usePad && active ? 'border-b-2 border-b-brand-600' : ''
+          }`}
         />
       </div>
       {error && (

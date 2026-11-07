@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
-import { addTurn, seedSettings, turnRow } from './helpers.ts'
+import { addTurn, formSave, seedSettings, turnRow } from './helpers.ts'
 
 // Noon on 2026-11-04 in the browser's America/Chicago timezone.
 const NOON = new Date('2026-11-04T12:00:00-06:00')
@@ -97,7 +97,7 @@ test('saving a turn opened from History goes back to History', async ({ page }) 
   await page.goto('./#/history')
 
   await turnRow(page, 1).click()
-  await page.getByRole('button', { name: 'Save', exact: true }).click()
+  await formSave(page).click()
 
   await expect(page.getByRole('heading', { name: 'History' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Wednesday, November 4' })).toBeVisible()

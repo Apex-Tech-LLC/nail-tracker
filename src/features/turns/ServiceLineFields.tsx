@@ -1,5 +1,5 @@
 import { IconTrash } from '@tabler/icons-react'
-import type { RefObject } from 'react'
+import type { FocusEvent, RefObject } from 'react'
 import type { ServicePreset } from '../../db/schema.ts'
 import { t } from '../../lib/i18n.ts'
 import type { Locale } from '../../lib/locale.ts'
@@ -33,6 +33,10 @@ interface Props {
   errors?: LineErrors
   amountRef?: RefObject<HTMLInputElement | null>
   autoFocus?: boolean
+  usePad?: boolean
+  activePad?: boolean
+  onAmountFocus?: (element: HTMLInputElement) => void
+  onAmountBlur?: (event: FocusEvent<HTMLInputElement>) => void
   onCustomName: (value: string) => void
   onAmount: (value: string) => void
   onRate: (value: string) => void
@@ -48,6 +52,10 @@ export function ServiceLineFields({
   errors,
   amountRef,
   autoFocus,
+  usePad,
+  activePad,
+  onAmountFocus,
+  onAmountBlur,
   onCustomName,
   onAmount,
   onRate,
@@ -102,6 +110,11 @@ export function ServiceLineFields({
         error={errors?.amount}
         inputRef={amountRef}
         autoFocus={autoFocus}
+        usePad={usePad}
+        active={activePad}
+        padTarget={`line:${line.key}`}
+        onFieldFocus={onAmountFocus}
+        onFieldBlur={onAmountBlur}
       />
 
       {showPerLine && (
