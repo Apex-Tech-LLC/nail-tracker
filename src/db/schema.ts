@@ -1,5 +1,6 @@
 import Dexie, { type EntityTable } from 'dexie'
 import type { IsoDate } from '../domain/dates.ts'
+import { defaultPayRules, type PayRules } from '../domain/payRules.ts'
 import type { AdjustmentCategory } from '../domain/totals.ts'
 import { DEFAULT_PRESETS, DEFAULT_SALON } from './seed.ts'
 
@@ -100,6 +101,18 @@ export interface PayPeriod {
   updatedAt: number
 }
 
+export interface PaycheckRecord {
+  id: string
+  payPeriodId: string
+  stubServicesCents: number | null
+  stubTipsCents: number | null
+  stubDeductionsCents: number | null
+  note?: string
+  checkedDate: IsoDate | null
+  createdAt: number
+  updatedAt: number
+}
+
 export type NailDb = Dexie & {
   salons: EntityTable<Salon, 'id'>
   servicePresets: EntityTable<ServicePreset, 'id'>
@@ -109,6 +122,8 @@ export type NailDb = Dexie & {
   payments: EntityTable<Payment, 'id'>
   paymentAllocations: EntityTable<PaymentAllocation, 'id'>
   payPeriods: EntityTable<PayPeriod, 'id'>
+  payRules: EntityTable<PayRules, 'id'>
+  paycheckRecords: EntityTable<PaycheckRecord, 'id'>
 }
 
 /**
@@ -129,10 +144,21 @@ export function createDb(name = 'nail-tracker'): NailDb {
     payPeriods: 'id, startDate, endDate',
   })
 
+  db.version(2)
+    .stores({
+      payRules: 'id, startDate',
+      paycheckRecords: 'id, payPeriodId',
+    })
+    .upgrade(async (tx) => {
+      const firstTurn = await tx.table('turns').orderBy('localWorkDate').first()
+      await tx.table('payRules').add(defaultPayRules(firstTurn?.localWorkDate))
+    })
+
   // Runs once, when the database is first created.
   db.on('populate', (tx) => {
     tx.table('salons').add(DEFAULT_SALON)
     tx.table('servicePresets').bulkAdd(DEFAULT_PRESETS)
+    tx.table('payRules').add(defaultPayRules())
   })
 
   return db
