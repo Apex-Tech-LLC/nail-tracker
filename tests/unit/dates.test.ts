@@ -7,6 +7,7 @@ import {
   formatDayShort,
   formatMonthYear,
   formatRange,
+  formatTime,
   isIsoDate,
   localDateTimeToMs,
   monthRange,
@@ -126,5 +127,12 @@ describe('local time helpers', () => {
 
   it('pads the hour and minute', () => {
     expect(timeOf(new Date(2026, 10, 4, 7, 5).getTime())).toBe('07:05')
+  })
+
+  it('writes the time of day in each language', () => {
+    // Local time, so the machine's time zone cannot change the hour.
+    const ms = new Date(2026, 10, 6, 15, 40).getTime()
+    expect(formatTime(ms, 'en')).toContain(':40')
+    expect(formatTime(ms, 'vi')).toContain('15:40')
   })
 })
