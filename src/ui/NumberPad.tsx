@@ -32,6 +32,7 @@ export function NumberPad({ locale, onDigit, onBackspace, onNext, onSave }: Prop
   return (
     <div
       data-testid="number-pad"
+      data-number-pad=""
       role="region"
       aria-label={t(locale, 'numberPad')}
       className="fixed inset-x-0 bottom-0 z-30 mx-auto grid max-w-md grid-cols-[1fr_1fr_1fr_96px] auto-rows-[52px] gap-[7px] bg-[#e7e1ea] p-2 pb-[calc(26px+env(safe-area-inset-bottom))]"
