@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
-import { addTurn, seedSettings } from './helpers.ts'
+import { addTurn, openEarningsToday, rowAmount, seedSettings } from './helpers.ts'
 
 // Noon on 2026-11-04, the day every test records to.
 const NOON = new Date('2026-11-04T12:00:00')
@@ -54,6 +54,9 @@ test('an adjustment changes today’s earned money', async ({ page }) => {
   // $60 commission plus the -$25 correction.
   await expect(page.getByTestId('hero-earned')).toHaveText('$35.00')
   await expect(page.getByText('Turns', { exact: true }).locator('..').locator('b')).toHaveText('1')
+
+  await openEarningsToday(page)
+  await expect(rowAmount(page, 'Adjustments')).toHaveText('-$25.00')
 })
 
 test('a zero amount shows an error and stays on the form', async ({ page }) => {

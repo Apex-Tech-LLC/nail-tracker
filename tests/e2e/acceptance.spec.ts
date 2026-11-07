@@ -1,5 +1,14 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
-import { addTurn, formSave, openDateChoices, rowAmount, seedSettings, turnRow, weeklyPay } from './helpers.ts'
+import {
+  addTurn,
+  formSave,
+  openDateChoices,
+  openEarningsToday,
+  rowAmount,
+  seedSettings,
+  turnRow,
+  weeklyPay,
+} from './helpers.ts'
 
 // Noon on 2026-11-04 in the browser's America/Chicago timezone.
 const NOON = new Date('2026-11-04T12:00:00')
@@ -49,6 +58,12 @@ test('full day', async ({ page }) => {
   await expect(heroEarned(page)).toHaveText('$87.00')
   await expect(statValue(page, 'Tips')).toHaveText('$15')
   await expect(turnRow(page, 3)).toBeVisible()
+
+  await openEarningsToday(page)
+  await expect(rowAmount(page, 'Service revenue')).toHaveText('$120.00')
+  await expect(rowAmount(page, 'Commission')).toHaveText('$72.00')
+  await expect(rowAmount(page, 'Cash tips')).toHaveText('$5.00')
+  await expect(rowAmount(page, 'Card tips')).toHaveText('$10.00')
 })
 
 test('combined ticket', async ({ page }) => {
@@ -69,6 +84,9 @@ test('combined ticket', async ({ page }) => {
   await expect(todayTurns(page)).toHaveText('3')
   // Two rows: the combined ticket and the second turn.
   await expect(page.getByTestId('turn-row')).toHaveCount(2)
+
+  await openEarningsToday(page)
+  await expect(rowAmount(page, 'Customers')).toHaveText('2')
 })
 
 test('no tip', async ({ page }) => {
@@ -82,6 +100,9 @@ test('tip with no commission', async ({ page }) => {
 
   await expect(heroEarned(page)).toHaveText('$5.00')
   await expect(statValue(page, 'Tips')).toHaveText('$5')
+
+  await openEarningsToday(page)
+  await expect(rowAmount(page, 'Commission')).toHaveText('$0.00')
 })
 
 test('zero dollar service', async ({ page }) => {
@@ -171,6 +192,9 @@ test('odd price, odd rate', async ({ page }) => {
   await addTurn(page, { amount: '19.99', rate: '62.5' })
 
   await expect(heroEarned(page)).toHaveText('$12.49')
+
+  await openEarningsToday(page)
+  await expect(rowAmount(page, 'Commission')).toHaveText('$12.49')
 })
 
 test('language changes nothing', async ({ page }) => {

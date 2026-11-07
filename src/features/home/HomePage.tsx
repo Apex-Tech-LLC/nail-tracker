@@ -167,11 +167,10 @@ export function HomePage() {
   const currentPayPeriod = summaries.find(
     (summary) => summary.period.startDate <= today && today <= summary.period.endDate,
   )
-  // The same figure the Payday tab shows for the current period.
+  // "Salon owes" is money still to come: a paid period owes nothing, even
+  // though the Payday list shows its full payout as what was paid.
   const salonOwesCents = currentPayPeriod
-    ? currentPayPeriod.state === 'empty' || currentPayPeriod.state === 'paid'
-      ? currentPayPeriod.totals.expectedPayoutCents
-      : Math.abs(currentPayPeriod.outstandingCents)
+    ? Math.max(0, currentPayPeriod.outstandingCents)
     : totals.expectedPayoutCents
 
   const todayTotals = sumTotals(data.todayData.turns, data.todayData.adjustments)

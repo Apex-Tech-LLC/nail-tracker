@@ -36,6 +36,15 @@ export function rowAmount(page: Page, label: string, section?: string): Locator 
   return root.getByText(label, { exact: true }).locator('..').locator('span').last()
 }
 
+/**
+ * Opens Earnings on today alone, so a turn saved on another day in the same
+ * week cannot move the figure. Read a figure with `rowAmount(page, label)`.
+ */
+export async function openEarningsToday(page: Page): Promise<void> {
+  await page.goto('./#/earnings')
+  await page.getByRole('button', { name: 'Daily', exact: true }).click()
+}
+
 /** The edit link of the row whose second line shows that turn number. */
 export function turnRow(page: Page, number: number | string): Locator {
   return page.getByTestId('turn-row').filter({ hasText: new RegExp(`#${number}(?!\\d)`) })

@@ -1,5 +1,14 @@
 import { expect, test } from '@playwright/test'
-import { formSave, openCommission, seedSettings, selectServices, serviceChip, turnRow } from './helpers.ts'
+import {
+  formSave,
+  openCommission,
+  openEarningsToday,
+  rowAmount,
+  seedSettings,
+  selectServices,
+  serviceChip,
+  turnRow,
+} from './helpers.ts'
 
 // Noon on 2026-11-04 in the browser's America/Chicago timezone. The offset is
 // explicit so a machine running in UTC cannot move the fixed day.
@@ -25,6 +34,11 @@ test('three picked services become one turn with the right totals', async ({ pag
   await expect(page.getByTestId('hero-earned')).toHaveText('$78.00')
   await expect(page.getByText('Tips', { exact: true }).locator('..').locator('b')).toHaveText('$15')
 
+  await openEarningsToday(page)
+  await expect(rowAmount(page, 'Service revenue')).toHaveText('$105.00')
+  await expect(rowAmount(page, 'Commission')).toHaveText('$63.00')
+
+  await page.goto('./')
   await turnRow(page, 1).click()
   await expect(page.getByTestId('service-line')).toHaveCount(3)
 })
@@ -70,6 +84,11 @@ test('editing a three-service turn and untapping one saves the smaller total', a
   await formSave(page).click()
   await expect(page.getByTestId('hero-earned')).toHaveText('$63.00')
 
+  await openEarningsToday(page)
+  await expect(rowAmount(page, 'Service revenue')).toHaveText('$105.00')
+  await expect(rowAmount(page, 'Commission')).toHaveText('$63.00')
+
+  await page.goto('./')
   await turnRow(page, 1).click()
   await expect(page.getByTestId('service-line')).toHaveCount(3)
 
@@ -79,6 +98,10 @@ test('editing a three-service turn and untapping one saves the smaller total', a
   await formSave(page).click()
   await expect(turnRow(page, 1)).toBeVisible()
   await expect(page.getByTestId('hero-earned')).toHaveText('$33.00')
+
+  await openEarningsToday(page)
+  await expect(rowAmount(page, 'Service revenue')).toHaveText('$55.00')
+  await expect(rowAmount(page, 'Commission')).toHaveText('$33.00')
 })
 
 test('a second chip keeps the shared rate the technician typed', async ({ page }) => {
@@ -105,6 +128,10 @@ test('a second chip keeps the shared rate the technician typed', async ({ page }
 
   await formSave(page).click()
   await expect(page.getByTestId('hero-earned')).toHaveText('$49.50')
+
+  await openEarningsToday(page)
+  await expect(rowAmount(page, 'Service revenue')).toHaveText('$90.00')
+  await expect(rowAmount(page, 'Commission')).toHaveText('$49.50')
 })
 
 test('Add service keeps the shared rate the technician typed', async ({ page }) => {
@@ -123,6 +150,10 @@ test('Add service keeps the shared rate the technician typed', async ({ page }) 
   await lines.nth(1).getByLabel('Service amount').fill('20')
   await formSave(page).click()
   await expect(page.getByTestId('hero-earned')).toHaveText('$33.00')
+
+  await openEarningsToday(page)
+  await expect(rowAmount(page, 'Service revenue')).toHaveText('$60.00')
+  await expect(rowAmount(page, 'Commission')).toHaveText('$33.00')
 })
 
 test('with per-service rates on a new line still starts from its preset rate', async ({ page }) => {

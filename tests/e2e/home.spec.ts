@@ -4,6 +4,8 @@ import {
   formSave,
   openCommission,
   openDateChoices,
+  openEarningsToday,
+  rowAmount,
   seedSettings,
   turnRow,
 } from './helpers.ts'
@@ -53,6 +55,12 @@ test('a turn shows its earned money and its row', async ({ page }) => {
   await expect(stat(page, 'Turns')).toHaveText('1')
   await expect(stat(page, 'Tips')).toHaveText('$25')
   await expect(turnRow(page, 1)).toBeVisible()
+
+  await openEarningsToday(page)
+  await expect(rowAmount(page, 'Service revenue')).toHaveText('$100.00')
+  await expect(rowAmount(page, 'Commission')).toHaveText('$60.00')
+  await expect(rowAmount(page, 'Cash tips')).toHaveText('$10.00')
+  await expect(rowAmount(page, 'Card tips')).toHaveText('$15.00')
 })
 
 test('two turns add up', async ({ page }) => {
@@ -100,6 +108,30 @@ test('with no turns last week there is nothing to compare yet', async ({ page })
   await addTurn(page, { amount: '45' })
 
   await expect(page.getByText('Nothing to compare yet')).toBeVisible()
+})
+
+test('Salon owes falls to $0 once the current period is paid in full', async ({ page }) => {
+  await fixClock(page)
+  // A weekly schedule from November 1, so a pay period covers today.
+  await page.addInitScript(() => {
+    const saved = JSON.parse(localStorage.getItem('nail-tracker.settings') ?? '{}')
+    localStorage.setItem(
+      'nail-tracker.settings',
+      JSON.stringify({ ...saved, payPeriodType: 'weekly', payPeriodAnchorDate: '2026-11-01' }),
+    )
+  })
+  await addTurn(page, { amount: '100' })
+  await expect(stat(page, 'Salon owes')).toHaveText('$60')
+
+  await page.goto('./#/payday')
+  await page.getByRole('link', { name: /Nov 1 – Nov 7/ }).click()
+  await page.getByRole('link', { name: 'Record payment', exact: true }).click()
+  await page.getByLabel('Amount received').first().fill('60')
+  await page.getByRole('button', { name: 'Save', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Payments', exact: true })).toBeVisible()
+
+  await page.goto('./')
+  await expect(stat(page, 'Salon owes')).toHaveText('$0')
 })
 
 test('the week shows seven bottles and Wednesday opens History on that day', async ({ page }) => {

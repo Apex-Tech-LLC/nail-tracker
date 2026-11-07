@@ -1,5 +1,14 @@
 import { expect, test } from '@playwright/test'
-import { formSave, openDateChoices, seedSettings, selectServices, serviceChip, turnRow } from './helpers.ts'
+import {
+  formSave,
+  openDateChoices,
+  openEarningsToday,
+  rowAmount,
+  seedSettings,
+  selectServices,
+  serviceChip,
+  turnRow,
+} from './helpers.ts'
 
 // Noon on 2026-11-04 in the browser's America/Chicago timezone. The offset is
 // explicit so a machine running in UTC cannot move the fixed day.
@@ -60,6 +69,9 @@ test('copying a turn saves a second turn today and leaves the original alone', a
   await expect(page).toHaveURL(/#\/$/)
   await expect(turnRow(page, 2)).toBeVisible()
   await expect(page.getByTestId('hero-earned')).toHaveText('$60.00')
+
+  await openEarningsToday(page)
+  await expect(rowAmount(page, 'Service revenue')).toHaveText('$75.00')
 
   // The November 2 turn is still there, with the same values it started with.
   await page.goto('./#/history')
