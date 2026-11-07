@@ -36,7 +36,8 @@ Cash tips you already have                             $300.00
 You earned in total                                  $2,134.00
 ```
 
-When services used different rates, the share line reads `Your share` with no percent. A guarantee line comes in 2.4:
+When the salon holds cash tips (`cashTipsHeldCents` above zero), a `Cash tips the salon holds` line sits under
+the card-tip lines. When services used different rates, the share line reads `Your share` with no percent. A guarantee line comes in 2.4:
 leave a spot for it in the order, show nothing now. Money right-aligned with tabular figures; the `Salon should pay`
 line bold and larger.
 
