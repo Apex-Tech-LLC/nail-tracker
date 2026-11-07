@@ -309,6 +309,9 @@ function TurnFormFields({ presets, existing, quick, copy, onDone, onClose }: Fie
   const [deleting, setDeleting] = useState(false)
   const [errors, setErrors] = useState<Errors>({ lines: {} })
   const [padTarget, setPadTarget] = useState<string | null>(null)
+  // A box that just gained pad focus (or was just filled by a chip or tip
+  // button) has its whole value replaced by the next digit or dot.
+  const [padReplace, setPadReplace] = useState(false)
   const [rateOpen, setRateOpen] = useState(false)
   const toast = useToast()
 
@@ -412,13 +415,20 @@ function TurnFormFields({ presets, existing, quick, copy, onDone, onClose }: Fie
   function typeOnPad(key: string) {
     if (!padTarget) return
     const current = padTextFor(padTarget)
-    const next = key === 'back' ? current.slice(0, -1) : padAmount(current, key)
+    const next =
+      key === 'back'
+        ? current.slice(0, -1)
+        : padReplace
+          ? padAmount('', key)
+          : padAmount(current, key)
+    setPadReplace(false)
     if (next !== current) changePadText(padTarget, next)
   }
 
   function focusPad(target: string, element: HTMLInputElement) {
     if (!numberPad) return
     setPadTarget(target)
+    setPadReplace(true)
     // The pad is fixed over the bottom: scroll the box clear of it once it is up.
     requestAnimationFrame(() => element.scrollIntoView({ block: 'nearest' }))
   }
@@ -431,6 +441,7 @@ function TurnFormFields({ presets, existing, quick, copy, onDone, onClose }: Fie
       if (next.matches('[data-pad-target]')) return
     }
     setPadTarget(null)
+    setPadReplace(false)
   }
 
   /** Last money box in screen order: hide the pad instead of wrapping round. */
@@ -442,9 +453,11 @@ function TurnFormFields({ presets, existing, quick, copy, onDone, onClose }: Fie
       const active = document.activeElement
       if (active instanceof HTMLElement) active.blur()
       setPadTarget(null)
+      setPadReplace(false)
       return
     }
     setPadTarget(next)
+    setPadReplace(true)
     requestAnimationFrame(() => {
       const element = document.querySelector<HTMLInputElement>(`[data-pad-target="${next}"]`)
       element?.focus()
@@ -500,6 +513,8 @@ function TurnFormFields({ presets, existing, quick, copy, onDone, onClose }: Fie
     setErrors((previous) =>
       previous.services ? { ...previous, services: undefined } : previous,
     )
+    // A chip that filled a price leaves the next pad key in replace mode.
+    setPadReplace(true)
     changed()
   }
 
@@ -508,6 +523,7 @@ function TurnFormFields({ presets, existing, quick, copy, onDone, onClose }: Fie
     setErrors((previous) =>
       previous.services ? { ...previous, services: undefined } : previous,
     )
+    setPadReplace(true)
     changed()
   }
 
@@ -536,6 +552,7 @@ function TurnFormFields({ presets, existing, quick, copy, onDone, onClose }: Fie
     })
     setLines(next)
     setErrors({ lines: {} })
+    setPadReplace(true)
     changed()
   }
 
@@ -548,6 +565,7 @@ function TurnFormFields({ presets, existing, quick, copy, onDone, onClose }: Fie
       setCardText(value)
       clearError('card')
     }
+    setPadReplace(true)
     changed()
   }
 
