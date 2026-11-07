@@ -1,6 +1,7 @@
 import type { Settings } from '../../app/settings.ts'
 import type {
   Adjustment,
+  PaycheckRecord,
   PayPeriod,
   Payment,
   PaymentAllocation,
@@ -10,9 +11,10 @@ import type {
   TurnService,
 } from '../../db/schema.ts'
 import type { IsoDate } from '../../domain/dates.ts'
+import type { PayRules } from '../../domain/payRules.ts'
 
 /** Version of the backup file format. Bump it when a record changes, and add a step to MIGRATIONS. */
-export const BACKUP_VERSION = 1
+export const BACKUP_VERSION = 2
 
 export interface Backup {
   app: 'nail-tracker'
@@ -27,6 +29,8 @@ export interface Backup {
   payPeriods: PayPeriod[]
   payments: Payment[]
   paymentAllocations: PaymentAllocation[]
+  payRules: PayRules[]
+  paycheckRecords: PaycheckRecord[]
 }
 
 export function backupFileName(

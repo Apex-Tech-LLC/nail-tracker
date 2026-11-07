@@ -3,6 +3,7 @@ import type {
   Adjustment,
   ClientType,
   NailDb,
+  PaycheckRecord,
   PayPeriod,
   Payment,
   PaymentAllocation,
@@ -13,6 +14,7 @@ import type {
   TurnService,
 } from '../../db/schema.ts'
 import { isIsoDate } from '../../domain/dates.ts'
+import type { FeeWhen, PayRules, SupplyFee } from '../../domain/payRules.ts'
 import type { AdjustmentCategory } from '../../domain/totals.ts'
 import { ImportError } from './importError.ts'
 import { migrateBackup } from './migrateBackup.ts'
@@ -42,11 +44,17 @@ const isNumber = (value: unknown): value is number =>
   typeof value === 'number' && Number.isFinite(value)
 const isTextOrNull = (value: unknown): value is string | null =>
   value === null || isText(value)
+const isIsoDateOrNull = (value: unknown): value is string | null =>
+  value === null || isIsoDate(value)
 const isOwnCentsOrNull = (value: unknown): value is number | null =>
   value === null || isOwnCents(value)
 const isRateOrNull = (value: unknown): value is number | null => value === null || isRate(value)
 const isOptionalText = (value: unknown): value is string | undefined =>
   value === undefined || typeof value === 'string'
+const isFeeWhen = (value: unknown): value is FeeWhen =>
+  value === 'beforeSplit' || value === 'afterSplit'
+const isCardTipsPaidIn = (value: unknown): value is 'check' | 'cash' | 'split' =>
+  value === 'check' || value === 'cash' || value === 'split'
 
 const isClientType = (value: unknown): value is ClientType =>
   value === 'unspecified' || value === 'walkIn' || value === 'request'
@@ -247,6 +255,75 @@ function toPayPeriod(value: unknown): PayPeriod | null {
   return { id, startDate, endDate, status, createdAt, updatedAt }
 }
 
+function toSupplyFee(value: unknown): SupplyFee | null {
+  if (!isObject(value)) return null
+  const { kind } = value
+  if (kind === 'none') return { kind: 'none' }
+  if (kind === 'perService') {
+    const { cents, when } = value
+    if (!isOwnCents(cents) || !isFeeWhen(when)) return null
+    return { kind: 'perService', cents, when }
+  }
+  if (kind === 'percent') {
+    const { bp, when } = value
+    if (!isRate(bp) || !isFeeWhen(when)) return null
+    return { kind: 'percent', bp, when }
+  }
+  return null
+}
+
+function toPayRules(value: unknown): PayRules | null {
+  if (!isObject(value)) return null
+  const { id, startDate, supplyFee, cardTipFeeBp, checkBp, cardTipsPaidIn, createdAt, updatedAt } =
+    value
+  if (!isText(id) || !isIsoDate(startDate)) return null
+  const fee = toSupplyFee(supplyFee)
+  if (fee === null || !isRate(cardTipFeeBp) || !isRateOrNull(checkBp)) return null
+  if (!isCardTipsPaidIn(cardTipsPaidIn)) return null
+  if (!isTime(createdAt) || !isTime(updatedAt)) return null
+  return {
+    id,
+    startDate,
+    supplyFee: fee,
+    cardTipFeeBp,
+    checkBp,
+    cardTipsPaidIn,
+    createdAt,
+    updatedAt,
+  }
+}
+
+function toPaycheckRecord(value: unknown): PaycheckRecord | null {
+  if (!isObject(value)) return null
+  const {
+    id,
+    payPeriodId,
+    stubServicesCents,
+    stubTipsCents,
+    stubDeductionsCents,
+    note,
+    checkedDate,
+    createdAt,
+    updatedAt,
+  } = value
+  if (!isText(id) || !isText(payPeriodId)) return null
+  if (!isOwnCentsOrNull(stubServicesCents) || !isOwnCentsOrNull(stubTipsCents)) return null
+  if (!isOwnCentsOrNull(stubDeductionsCents) || !isOptionalText(note)) return null
+  if (!isIsoDateOrNull(checkedDate)) return null
+  if (!isTime(createdAt) || !isTime(updatedAt)) return null
+  return {
+    id,
+    payPeriodId,
+    stubServicesCents,
+    stubTipsCents,
+    stubDeductionsCents,
+    ...(note ? { note } : {}),
+    checkedDate,
+    createdAt,
+    updatedAt,
+  }
+}
+
 function readArray(data: Record<string, unknown>, key: string): unknown[] {
   const value = data[key]
   if (!Array.isArray(value)) throw new ImportError('notBackup', key)
@@ -326,6 +403,8 @@ export async function importJson(db: NailDb, text: string): Promise<ImportOutcom
     toPaymentAllocation,
     'payment allocation',
   )
+  const payRules = toRecords(readArray(data, 'payRules'), toPayRules, 'pay rules')
+  const paycheckRecords = toRecords(readArray(data, 'paycheckRecords'), toPaycheckRecord, 'paycheck record')
 
   for (const [records, name] of [
     [salons, 'salon'],
@@ -336,6 +415,8 @@ export async function importJson(db: NailDb, text: string): Promise<ImportOutcom
     [payPeriods, 'pay period'],
     [payments, 'payment'],
     [paymentAllocations, 'payment allocation'],
+    [payRules, 'pay rules'],
+    [paycheckRecords, 'paycheck record'],
   ] as const) {
     assertUniqueIds(records, name)
   }
@@ -353,6 +434,9 @@ export async function importJson(db: NailDb, text: string): Promise<ImportOutcom
   ) {
     throw new ImportError('invalidRecord', 'payment allocation link')
   }
+  if (paycheckRecords.some((record) => !payPeriodIds.has(record.payPeriodId))) {
+    throw new ImportError('invalidRecord', 'paycheck record link')
+  }
 
   return db.transaction(
     'rw',
@@ -365,6 +449,8 @@ export async function importJson(db: NailDb, text: string): Promise<ImportOutcom
       db.payPeriods,
       db.payments,
       db.paymentAllocations,
+      db.payRules,
+      db.paycheckRecords,
     ],
     async (): Promise<ImportOutcome> => {
       const [turnCount, adjustmentCount, paymentCount, periodCount] = await Promise.all([
@@ -426,6 +512,20 @@ export async function importJson(db: NailDb, text: string): Promise<ImportOutcom
         )
         if (fileAllocations.length > 0) await db.paymentAllocations.bulkAdd(fileAllocations)
       }
+
+      const ruleWrites = pickWrites(
+        payRules,
+        await db.payRules.bulkGet(payRules.map((rule) => rule.id)),
+        result,
+      )
+      if (ruleWrites.length > 0) await db.payRules.bulkPut(ruleWrites)
+
+      const paycheckWrites = pickWrites(
+        paycheckRecords,
+        await db.paycheckRecords.bulkGet(paycheckRecords.map((record) => record.id)),
+        result,
+      )
+      if (paycheckWrites.length > 0) await db.paycheckRecords.bulkPut(paycheckWrites)
 
       return {
         ...result,

@@ -102,6 +102,8 @@ async function rowCounts(fresh: NailDb) {
     payPeriods,
     payments,
     paymentAllocations,
+    payRules,
+    paycheckRecords,
   ] = await Promise.all([
     fresh.salons.count(),
     fresh.servicePresets.count(),
@@ -111,8 +113,21 @@ async function rowCounts(fresh: NailDb) {
     fresh.payPeriods.count(),
     fresh.payments.count(),
     fresh.paymentAllocations.count(),
+    fresh.payRules.count(),
+    fresh.paycheckRecords.count(),
   ])
-  return { salons, servicePresets, turns, turnServices, adjustments, payPeriods, payments, paymentAllocations }
+  return {
+    salons,
+    servicePresets,
+    turns,
+    turnServices,
+    adjustments,
+    payPeriods,
+    payments,
+    paymentAllocations,
+    payRules,
+    paycheckRecords,
+  }
 }
 
 function errorCode(run: () => unknown): string | undefined {
@@ -138,7 +153,7 @@ describe('exportJson and importJson', () => {
     const text = await exportJson(source, settings, new Date('2026-11-08T12:00:00Z'))
     expect(JSON.parse(text)).toMatchObject({
       app: 'nail-tracker',
-      version: 1,
+      version: 2,
       exportedAt: '2026-11-08T12:00:00.000Z',
     })
 
@@ -170,6 +185,12 @@ describe('exportJson and importJson', () => {
     )
     expect((await copy.paymentAllocations.toArray()).sort(byId)).toEqual(
       (await source.paymentAllocations.toArray()).sort(byId),
+    )
+    expect((await copy.payRules.toArray()).sort(byId)).toEqual(
+      (await source.payRules.toArray()).sort(byId),
+    )
+    expect((await copy.paycheckRecords.toArray()).sort(byId)).toEqual(
+      (await source.paycheckRecords.toArray()).sort(byId),
     )
   })
 
@@ -229,6 +250,69 @@ describe('exportJson and importJson', () => {
     )
     expect(saved.every((service) => service.id.startsWith('file-'))).toBe(true)
   })
+
+  it('restores a version 1 backup and gives it the default rules', async () => {
+    const source = openFresh()
+    await seedFull(source)
+    const old = JSON.parse(await exportJson(source, settings)) as Record<string, unknown>
+    old.version = 1
+    delete old.payRules
+    delete old.paycheckRecords
+
+    const copy = openFresh()
+    await importJson(copy, JSON.stringify(old))
+
+    const rules = await copy.payRules.toArray()
+    expect(rules).toHaveLength(1)
+    expect(rules[0]).toMatchObject({ id: 'default', startDate: '2026-11-04' })
+    expect(await copy.paycheckRecords.count()).toBe(0)
+  })
+
+  it('round-trips pay rules and paycheck records', async () => {
+    const source = openFresh()
+    await seedFull(source)
+    await source.payRules.put({
+      id: 'november',
+      startDate: '2026-11-04',
+      supplyFee: { kind: 'perService', cents: 200, when: 'beforeSplit' },
+      cardTipFeeBp: 300,
+      checkBp: 5000,
+      cardTipsPaidIn: 'split',
+      createdAt: 500,
+      updatedAt: 500,
+    })
+    await source.paycheckRecords.put({
+      id: 'check-1',
+      payPeriodId: PERIOD_ID,
+      stubServicesCents: 238_800,
+      stubTipsCents: 38_000,
+      stubDeductionsCents: 10_200,
+      note: 'owner sheet',
+      checkedDate: '2026-11-08',
+      createdAt: 600,
+      updatedAt: 600,
+    })
+    const text = await exportJson(source, settings)
+
+    const copy = openFresh()
+    const result = await importJson(copy, text)
+
+    expect(result.added).toBe(6)
+    expect(await copy.payRules.get('november')).toMatchObject({
+      startDate: '2026-11-04',
+      supplyFee: { kind: 'perService', cents: 200, when: 'beforeSplit' },
+      cardTipFeeBp: 300,
+      checkBp: 5000,
+    })
+    expect(await copy.paycheckRecords.get('check-1')).toMatchObject({
+      payPeriodId: PERIOD_ID,
+      stubServicesCents: 238_800,
+      stubTipsCents: 38_000,
+      stubDeductionsCents: 10_200,
+      note: 'owner sheet',
+      checkedDate: '2026-11-08',
+    })
+  })
 })
 
 describe('importJson refuses a bad file', () => {
@@ -266,7 +350,7 @@ describe('importJson refuses a bad file', () => {
     const fresh = openFresh()
     await seedFull(fresh)
     const data = JSON.parse(await exportJson(fresh, settings)) as Backup
-    data.version = 2
+    data.version = 3
 
     await expect(importJson(fresh, JSON.stringify(data))).rejects.toMatchObject({
       code: 'unsupportedVersion',
@@ -325,12 +409,24 @@ describe('deleteAllData', () => {
     const fresh = openFresh()
     await addTurn(fresh, turnInput(), 1000)
     await removePreset(fresh, 'manicure')
+    await fresh.paycheckRecords.put({
+      id: 'check-1',
+      payPeriodId: PERIOD_ID,
+      stubServicesCents: null,
+      stubTipsCents: null,
+      stubDeductionsCents: null,
+      checkedDate: null,
+      createdAt: 1,
+      updatedAt: 1,
+    })
 
     await deleteAllData(fresh)
 
     expect(await fresh.turns.count()).toBe(0)
     expect(await fresh.turnServices.count()).toBe(0)
     expect(await fresh.salons.count()).toBe(1)
+    expect(await fresh.paycheckRecords.count()).toBe(0)
+    expect(await fresh.payRules.count()).toBe(1)
     const presets = await fresh.servicePresets.toArray()
     expect(presets).toHaveLength(10)
     expect(presets.every((preset) => preset.isActive)).toBe(true)
@@ -358,7 +454,7 @@ describe('migrateBackup', () => {
   })
 
   it('refuses a version newer than the app knows', () => {
-    expect(errorCode(() => migrateBackup({ version: 2 }))).toBe('unsupportedVersion')
+    expect(errorCode(() => migrateBackup({ version: 3 }))).toBe('unsupportedVersion')
   })
 
   it('never changes the object it is given', () => {
