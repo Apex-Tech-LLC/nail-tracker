@@ -47,6 +47,7 @@ import {
   errorText,
   field,
   label,
+  pill,
   primaryButton,
   secondaryButton,
 } from '../../ui/styles.ts'
@@ -308,6 +309,7 @@ function TurnFormFields({ presets, existing, quick, copy, onDone, onClose }: Fie
   const [deleting, setDeleting] = useState(false)
   const [errors, setErrors] = useState<Errors>({ lines: {} })
   const [padTarget, setPadTarget] = useState<string | null>(null)
+  const [rateOpen, setRateOpen] = useState(false)
   const toast = useToast()
 
   // A quick double tap fires submit twice before React can re-render. The ref
@@ -615,6 +617,8 @@ function TurnFormFields({ presets, existing, quick, copy, onDone, onClose }: Fie
     ) {
       // A hidden error would be invisible: open More options for the count.
       if (turnCount === null) setMoreOpen(true)
+      // The shared rate lives under a pill: open it so its error can be read.
+      if (Object.values(nextLineErrors).some((line) => line.rate)) setRateOpen(true)
       setErrors(nextErrors)
       return null
     }
@@ -748,30 +752,65 @@ function TurnFormFields({ presets, existing, quick, copy, onDone, onClose }: Fie
           padShown ? 'pb-[280px]' : ''
         }`}
       >
-      <header className="flex items-center justify-between">
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label={t(locale, 'close')}
-          className="flex min-h-11 min-w-11 items-center justify-center"
-        >
-          <IconX size={22} aria-hidden="true" />
-        </button>
-        <h1 className="font-medium">{t(locale, turn ? 'editTurn' : 'newTurn')}</h1>
-        {turn ? (
+      <header className="flex flex-col gap-2">
+        <div className="flex items-center justify-between">
           <button
             type="button"
-            aria-label={t(locale, 'delete')}
-            disabled={deleting}
-            onClick={() => {
-              void deleteNow()
-            }}
-            className="flex min-h-11 min-w-11 items-center justify-center text-danger-text"
+            onClick={onClose}
+            aria-label={t(locale, 'close')}
+            className="flex min-h-11 min-w-11 items-center justify-center"
           >
-            <IconTrash size={22} aria-hidden="true" />
+            <IconX size={22} aria-hidden="true" />
           </button>
-        ) : (
-          <span className="w-11" />
+          <h1 className="font-medium">{t(locale, turn ? 'editTurn' : 'newTurn')}</h1>
+          {turn ? (
+            <button
+              type="button"
+              aria-label={t(locale, 'delete')}
+              disabled={deleting}
+              onClick={() => {
+                void deleteNow()
+              }}
+              className="flex min-h-11 min-w-11 items-center justify-center text-danger-text"
+            >
+              <IconTrash size={22} aria-hidden="true" />
+            </button>
+          ) : (
+            <span className="w-11" />
+          )}
+        </div>
+
+        <div className="flex flex-wrap items-start justify-end gap-2">
+          <WorkDateField
+            compact
+            value={date}
+            onChange={(value) => {
+              setDate(value)
+              clearError('date')
+              changed()
+            }}
+            error={errors.date}
+          />
+          {!showPerLine && lines.length > 0 && (
+            <button
+              type="button"
+              aria-expanded={rateOpen}
+              aria-label={`${t(locale, 'commission')}: ${lines[0].rate}%`}
+              className={pill}
+              onClick={() => setRateOpen((wasOpen) => !wasOpen)}
+            >
+              {lines[0].rate}%
+              <span aria-hidden="true">▾</span>
+            </button>
+          )}
+        </div>
+        {!showPerLine && lines.length > 0 && rateOpen && (
+          <PercentField
+            label={t(locale, 'commissionPercent')}
+            value={lines[0].rate}
+            onChange={changeSharedRate}
+            error={errors.lines[lines[0].key]?.rate}
+          />
         )}
       </header>
 
@@ -800,16 +839,6 @@ function TurnFormFields({ presets, existing, quick, copy, onDone, onClose }: Fie
           ))}
         </div>
       )}
-
-      <WorkDateField
-        value={date}
-        onChange={(value) => {
-          setDate(value)
-          clearError('date')
-          changed()
-        }}
-        error={errors.date}
-      />
 
       <div>
         <p className={label}>{t(locale, 'servicesPick')}</p>
@@ -970,15 +999,6 @@ function TurnFormFields({ presets, existing, quick, copy, onDone, onClose }: Fie
           )
         })}
       </div>
-
-      {!showPerLine && lines.length > 0 && (
-        <PercentField
-          label={t(locale, 'commissionPercent')}
-          value={lines[0].rate}
-          onChange={changeSharedRate}
-          error={errors.lines[lines[0].key]?.rate}
-        />
-      )}
 
       <div className={card} aria-live="polite">
         {lines.length > 1 && (
