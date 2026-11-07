@@ -8,6 +8,7 @@ import { useHashLocation } from 'wouter/use-hash-location'
 export const paths = {
   today: '/',
   history: '/history',
+  historyDay: (day: string) => `/history?day=${day}`,
   earnings: '/earnings',
   payday: '/payday',
   settings: '/settings',

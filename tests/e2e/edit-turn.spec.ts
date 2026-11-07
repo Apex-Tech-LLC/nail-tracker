@@ -1,5 +1,13 @@
 import { expect, test } from '@playwright/test'
-import { addTurn, formSave, openCommission, seedSettings, turnRow } from './helpers.ts'
+import {
+  addTurn,
+  formSave,
+  openCommission,
+  openEarningsToday,
+  rowAmount,
+  seedSettings,
+  turnRow,
+} from './helpers.ts'
 
 test('editing a turn saves the change and updates Today', async ({ page }) => {
   await seedSettings(page)
@@ -42,11 +50,14 @@ test('undo after a delete brings the turn back', async ({ page }) => {
 
   // Deleting closes the screen at once and offers Undo instead of a dialog.
   await expect(page.getByRole('status').filter({ hasText: 'Turn deleted' })).toBeVisible()
-  await expect(page.getByText('No turns yet')).toBeVisible()
+  await expect(page.getByText('Your turns today will show here.')).toBeVisible()
 
   await page.getByRole('button', { name: 'Undo', exact: true }).click()
   await expect(turnRow(page, 1)).toBeVisible()
-  await expect(page.getByText('$100.00 Service revenue', { exact: true })).toBeVisible()
+  await expect(page.getByTestId('hero-earned')).toHaveText('$60.00')
+
+  await openEarningsToday(page)
+  await expect(rowAmount(page, 'Service revenue')).toHaveText('$100.00')
 })
 
 test('deleting removes the turn at once', async ({ page }) => {
@@ -56,7 +67,7 @@ test('deleting removes the turn at once', async ({ page }) => {
   await turnRow(page, 1).click()
   await page.getByRole('button', { name: 'Delete', exact: true }).click()
 
-  await expect(page.getByText('No turns yet')).toBeVisible()
+  await expect(page.getByText('Your turns today will show here.')).toBeVisible()
   await expect(page.getByRole('status').filter({ hasText: 'Turn deleted' })).toBeVisible()
 })
 

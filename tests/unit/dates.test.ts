@@ -6,6 +6,8 @@ import {
   formatDayLong,
   formatDayShort,
   formatMonthYear,
+  formatWeekdayLong,
+  formatWeekdayShort,
   formatRange,
   formatTime,
   isIsoDate,
@@ -110,6 +112,13 @@ describe('formatting', () => {
   it('writes a month and year in each language', () => {
     expect(formatMonthYear('2026-11-04', 'en')).toBe('November 2026')
     expect(formatMonthYear('2026-11-04', 'vi')).toBe('tháng 11 năm 2026')
+  })
+
+  it('writes a weekday in each language, long and short', () => {
+    expect(formatWeekdayLong('2026-11-04', 'en')).toBe('Wednesday')
+    expect(formatWeekdayLong('2026-11-04', 'vi')).toBe('Thứ Tư')
+    expect(formatWeekdayShort('2026-11-04', 'en')).toBe('Wed')
+    expect(formatWeekdayShort('2026-11-04', 'vi')).toBe('Thứ 4')
   })
 
   it('writes a range, and one day alone when both ends match', () => {

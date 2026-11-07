@@ -145,6 +145,6 @@ test('Undo on the saved bar deletes the new turn', async ({ page }) => {
 
   await page.getByRole('button', { name: 'Undo', exact: true }).click()
 
-  await expect(page.getByText('No turns yet')).toBeVisible()
+  await expect(page.getByText('Your turns today will show here.')).toBeVisible()
   await expect(turnRow(page, 1)).toHaveCount(0)
 })

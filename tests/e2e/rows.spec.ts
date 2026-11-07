@@ -1,5 +1,13 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
-import { addTurn, formSave, seedSettings, serviceChip, turnRow } from './helpers.ts'
+import {
+  addTurn,
+  formSave,
+  openEarningsToday,
+  rowAmount,
+  seedSettings,
+  serviceChip,
+  turnRow,
+} from './helpers.ts'
 
 // Noon on 2026-11-04 in the browser's America/Chicago timezone. The offset is
 // explicit so a machine running in UTC cannot move the fixed day.
@@ -36,7 +44,10 @@ test('the copy button on a Today row opens a filled copy form', async ({ page })
 
   await expect(page).toHaveURL(/#\/$/)
   await expect(turnRow(page, 2)).toBeVisible()
-  await expect(page.getByText('$150.00 Service revenue', { exact: true })).toBeVisible()
+  await expect(page.getByTestId('hero-earned')).toHaveText('$100.00')
+
+  await openEarningsToday(page)
+  await expect(rowAmount(page, 'Service revenue')).toHaveText('$150.00')
 })
 
 test('swiping a History row left deletes with undo', async ({ page }) => {
@@ -116,12 +127,15 @@ test('delete on the Edit turn screen shows Turn deleted and Undo restores it', a
   await turnRow(page, 1).click()
   await page.getByRole('button', { name: 'Delete', exact: true }).click()
 
-  await expect(page.getByText('No turns yet')).toBeVisible()
+  await expect(page.getByText('Your turns today will show here.')).toBeVisible()
   await expect(page.getByRole('status').filter({ hasText: 'Turn deleted' })).toBeVisible()
 
   await page.getByRole('button', { name: 'Undo', exact: true }).click()
   await expect(turnRow(page, 1)).toBeVisible()
-  await expect(page.getByText('$75.00 Service revenue', { exact: true })).toBeVisible()
+  await expect(page.getByTestId('hero-earned')).toHaveText('$45.00')
+
+  await openEarningsToday(page)
+  await expect(rowAmount(page, 'Service revenue')).toHaveText('$75.00')
 })
 
 test('a turn row is no taller than 72 pixels', async ({ page }) => {

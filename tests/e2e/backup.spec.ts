@@ -10,9 +10,9 @@ const VI_DELETE_WORD = '\u0058\u00D3\u0041'
 const VI_OTHER_SPELLING = '\u0058\u004F\u00C1'
 const VI_SEPARATE_ACCENT = '\u0058\u004F\u0301\u0041'
 
-/** The Today figure whose label is exactly `label`, never a matching amount elsewhere. */
-function todayFigure(page: Page, label: string): Locator {
-  return page.getByText(label, { exact: true }).locator('..').locator('span').last()
+/** The big earned number on Home. */
+function heroEarned(page: Page): Locator {
+  return page.getByTestId('hero-earned')
 }
 
 const status = (page: Page) => page.locator('p[role=status]')
@@ -64,14 +64,14 @@ test('a backup round trip brings the turn back', async ({ page }, testInfo) => {
   await saveBackup(page, file)
 
   await deleteAll(page)
-  await expect(page.getByText('No turns yet')).toBeVisible()
+  await expect(page.getByText('Your turns today will show here.')).toBeVisible()
 
   await page.goto('./#/settings')
   await fileInput(page).setInputFiles(file)
   await expect(status(page)).toContainText('Restore finished')
 
   await page.goto('./')
-  await expect(todayFigure(page, 'Total earned')).toHaveText('$70.00')
+  await expect(heroEarned(page)).toHaveText('$70.00')
 })
 
 test('a damaged backup file changes nothing', async ({ page }) => {
@@ -177,7 +177,7 @@ test('delete all data starts onboarding with no turns', async ({ page }) => {
 
   await deleteAll(page)
 
-  await expect(page.getByText('No turns yet')).toBeVisible()
+  await expect(page.getByText('Your turns today will show here.')).toBeVisible()
 })
 
 test('the earnings CSV downloads the range', async ({ page }, testInfo) => {
@@ -215,7 +215,7 @@ test('a double tap on delete all data deletes once', async ({ page }) => {
   for (let step = 0; step < 4; step += 1) {
     await page.getByRole('button', { name: 'Skip', exact: true }).click()
   }
-  await expect(page.getByText('No turns yet')).toBeVisible()
+  await expect(page.getByText('Your turns today will show here.')).toBeVisible()
 })
 
 test('a double tap on restore opens one file picker and restores once', async ({ page }, testInfo) => {
