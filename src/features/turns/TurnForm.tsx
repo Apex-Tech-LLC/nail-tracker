@@ -673,7 +673,7 @@ function TurnFormFields({ presets, existing, copy, onDone, onClose }: FieldsProp
         </div>
         <div className="mt-2 flex items-baseline justify-between gap-3">
           <span className="text-text-secondary">{t(locale, 'previewEarned')}</span>
-          <span className="text-2xl font-semibold tabular-nums text-positive-text">
+          <span className="text-2xl font-extrabold tracking-[-0.03em] tabular-nums text-positive-text">
             {formatUsd(preview.earnedTotalCents)}
           </span>
         </div>

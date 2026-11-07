@@ -56,7 +56,7 @@ test('works from start to finish with no connection', async ({ page, context }) 
     await document.fonts.ready
     return [...document.fonts].filter((f) => f.status === 'loaded').map((f) => f.family)
   })
-  expect(fonts.join()).toContain('Inter')
+  expect(fonts.join()).toContain('Be Vietnam Pro')
 })
 
 test('data is still there after the app is closed and opened again', async ({ page, context }) => {
