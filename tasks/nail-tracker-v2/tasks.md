@@ -20,7 +20,7 @@ opens the pull request, waits for checks, merges, updates this file. Product: `d
 | Task | What | Status |
 |---|---|---|
 | V05 | Comparison maths: same point last week/month, week days (domain + unit tests) | ✅ |
-| V06 | Home screen: period switch, hero number, comparison, polish-bottle week view, stats, today's turns | ⬜ |
+| V06 | Home screen: period switch, hero number, comparison, polish-bottle week view, stats, today's turns | 🔄 |
 
 ## Release 2.2: Paycheck, 2.3: Reports, 2.4: Share, taxes, hours
 
