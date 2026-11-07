@@ -101,6 +101,46 @@ Five tabs at the bottom, in this order:
 A large **+ Add turn** button stays on Home. Every screen must work one-handed on a 375-pixel-wide phone, with tap
 targets at least 44 pixels, in both languages, and offline.
 
+### 4.1 Look and feel
+
+Bay's verdict on version 1: it works but "looks like trash", and copying a turn is hidden. Version 2 gets a real
+design. The picture to match is `docs/design/v2-mockup.html` (open it in a browser). The research behind it is
+`docs/design/ux-research.md` (Cashew, Copilot, Monarch, Toshl, Server44, Strava, Apple, Nielsen Norman Group).
+
+**Colours** (CSS variables in `src/index.css`; keep the variable names, change the values):
+
+| Role | Light | Use |
+|---|---|---|
+| Ink | `#1d1822` | Text, dark buttons |
+| Ink 2 / Ink 3 | `#5d5566` / `#8a8292` | Secondary and quiet text (check 4.5:1 contrast) |
+| Base | `#f7f4f8` | Page background (cool, not beige) |
+| Card | `#ffffff`, border `#ebe5ee` | Lists and cards |
+| Lacquer | `#a3164d`, deep `#7d0f3a`, soft `#fbe7ef` | Main action, selected chips, the week bottles. Nothing else |
+| Money | `#0d7a57` on `#e3f4ec` | Only for money you earned or got |
+| Short | `#b4441b` on `#fdeee6` | Only for money missing or owed |
+
+Dark mode comes later (release 2.5) and uses deep plum-navy, never pure black.
+
+**Type:** Be Vietnam Pro (designed for Vietnamese, so accent marks sit cleanly), weights 400 to 800, Latin and
+Vietnamese subsets only. All numbers use tabular figures. Big money numbers are 800 weight with tight letter spacing;
+cents may be shown smaller and grey on hero numbers. In lists, whole dollars drop the cents (`$35`, but `$35.50`).
+
+**Shapes:** lists are one white card with thin dividers between rows (not one card per row). Corners: 18px cards,
+12px chips, 16px big buttons. No drop shadows except the floating Add turn button and sheets.
+
+**Interaction rules (apply on every screen):**
+
+1. **Copy is never more than one tap away.** Every turn row has a visible copy icon (44px). Swiping a row left shows
+   Copy and Delete as a shortcut. Long-press opens a small menu: Copy, Edit, Delete.
+2. **Undo instead of "Are you sure?".** Deleting a turn or adjustment happens at once and shows a bar for 6 seconds:
+   `Turn deleted · Undo`. Saving a turn shows `Saved · you earn $27 · Undo · Copy again`. Only "Delete all data" keeps
+   a confirmation.
+3. **Compact rows.** One turn row is about 60px: a colour mark for the first service, service names, time and client
+   type, earned on the right with the tip under it in green. About 10 rows fit on one screen.
+4. **Day headers** show the day, number of turns and earned: `Friday, Nov 6 · 9 turns · $333`.
+5. **Colour carries meaning, never decoration.** Green = earned, rust = short or owed, lacquer = act here.
+6. **Chips scroll sideways** instead of wrapping onto a second line when they are filters.
+
 ---
 
 ## 5. Screens
@@ -147,8 +187,16 @@ the most important part.
 
 ### 5.2 Add turn
 
-Version 1 plus the work in progress (several services at once, copy, repeat), and three speed-ups:
+Version 1 plus several services at once, copy and repeat (shipped), and these speed-ups:
 
+0. **Fast entry layout** (see the mockup): one screen, no pop-ups on top of it.
+   - **Repeat chips** at the very top: the 3 to 5 most-used service-and-price combinations from the last 30 days, plus
+     `Same as last`. One tap fills the services and prices; the technician only adds the tip and saves.
+   - **Service chips sorted by use** (most used first), each showing the price it will fill in (`Gel mani $35`).
+   - **Built-in number pad** with 56px keys and Save as one of its keys, instead of the phone keyboard, which jumps
+     the screen around in home-screen web apps on iPhone. The pad types into the line that is underlined (each
+     service price, cash tip, card tip); `Next` moves to the next one.
+   - Date/time and commission % shrink to one small line at the top (`Today, 4:12 pm ▾`, `60% ▾`).
 1. **Tip quick buttons** under each tip box: `$5`, `$10`, `$15`, `$20`, and `%` (15%, 18%, 20% of the services total).
    Tapping one fills the box; typing still works.
 2. **Usual price:** each service fills in its usual price (already possible in the service list). New: when a service
@@ -546,11 +594,11 @@ time.
 
 | Release | Contents | Why first |
 |---|---|---|
-| **2.0 Paycheck** | How I'm paid (supply fee, card-tip fee, check/cash split, rules by date); Paycheck statement; record check and cash; the check and its reasons; data upgrade | The gap no other app fills, and the top complaint |
-| **2.1 Home** | Home dashboard with period switch, comparisons, owed split, card tips held; reminders; tip quick buttons; last-price hint | What Bay saw missing first: something to look at after logging |
-| **2.2 Reports** | Reports with comparisons, trend, by service, by weekday, clients, tips, records; calendar in History; filters; goals | Looking back and comparing |
-| **2.3 Share and taxes** | Share statement, report and year summary; year and tax page; set-aside | Showing the owner; tax season |
-| **2.4 Hours and special pay** | Hours, pay per hour, minimum wage note; guarantee; tiers; day off | Fewer technicians need these |
+| **2.0 Look and speed** | New look (section 4.1); compact rows with copy on every row; swipe and long-press; undo bar; fast Add turn (repeat chips, usual prices, number pad, tip buttons, last-price hint) | Bay's top complaint: it looks bad and copying is hidden |
+| **2.1 Home** | Home dashboard with period switch, comparisons, polish-bottle week view, owed split, card tips held; reminders | Something to look at after logging |
+| **2.2 Paycheck** | How I'm paid (supply fee, card-tip fee, check/cash split, rules by date); Paycheck statement; record check and cash; the check and its reasons; data upgrade | The gap no other app fills |
+| **2.3 Reports** | Reports with comparisons, trend, by service, by weekday, clients, tips, records; calendar in History; filters; goals | Looking back and comparing |
+| **2.4 Share, taxes, hours** | Share statement and year summary; tax set-aside; hours and pay per hour; guarantee; tiers; day off | Fewer technicians need these |
 | **2.5 Later** | Expenses; several salons; shared clients; app lock; stub photos | Useful, not urgent |
 
 Each release ends with the full browser test suite passing, the live site updated, and a check by a Vietnamese speaker
@@ -589,17 +637,17 @@ of any new wording.
 
 ---
 
-## 14. Questions for Bay
+## 14. Decisions taken (November 6, 2026)
 
-1. **Order:** this spec starts with Paycheck (2.0) and then Home (2.1). Should Home come first, since that is what you
-   noticed missing?
-2. **Pay rules:** do you know salons that use the guarantee or tiers? If not, they can move to the later release.
-3. **Web address:** decide on our own domain before 2.0 ships, since data stays with the address (see the earlier
-   delivery note).
-4. **A salon worker to read the Vietnamese:** who can check the words in section 6 and the version 1 ones still
-   waiting?
-5. **Reddit:** the research could not read the nail technician forums on Reddit. One pass through the research
-   browser would add first-hand complaints, especially about turns and what real pay stubs look like.
+Bay asked for "a real full app" without answering the open questions, so these defaults were taken. Any can change.
+
+1. **Order:** look and speed first, then Home, then Paycheck (section 11), because Bay's complaints were the look,
+   copying, and having nothing to see after logging.
+2. **Guarantee and tiers** move to release 2.4.
+3. **Web address:** stays at unity7.github.io/nail-tracker until Bay picks a domain. Moving later means each user
+   moves their data with a backup file.
+4. **Vietnamese:** new wording gets a ChatGPT review pass, as in version 1, until a salon worker can read it.
+5. **Reddit:** a pass through the research browser was run for this revision.
 
 ---
 

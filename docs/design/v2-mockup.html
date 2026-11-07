@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nail Tracker 2.0 design</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1d1822;
+    --ink-2: #5d5566;
+    --ink-3: #8a8292;
+    --base: #f7f4f8;
+    --card: #ffffff;
+    --line: #ebe5ee;
+    --lacquer: #a3164d;
+    --lacquer-deep: #7d0f3a;
+    --lacquer-soft: #fbe7ef;
+    --nude: #ecd9d1;
+    --money: #0d7a57;
+    --money-soft: #e3f4ec;
+    --short: #b4441b;
+    --short-soft: #fdeee6;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Be Vietnam Pro', system-ui, sans-serif; background: #e9e4ec; color: var(--ink); padding: 32px 24px 48px; }
+  .intro { max-width: 1680px; margin: 0 auto 28px; }
+  .intro h1 { font-size: 26px; font-weight: 700; letter-spacing: -0.02em; }
+  .intro p { color: var(--ink-2); margin-top: 6px; max-width: 70ch; line-height: 1.5; }
+  .row { display: flex; gap: 28px; flex-wrap: wrap; max-width: 1680px; margin: 0 auto; }
+  figure { width: 390px; }
+  figcaption { font-size: 14px; color: var(--ink-2); margin-top: 12px; line-height: 1.45; max-width: 380px; }
+  figcaption b { color: var(--ink); }
+  .phone { width: 390px; height: 844px; background: var(--base); border-radius: 44px; overflow: hidden; position: relative; box-shadow: 0 0 0 10px #1d1822, 0 30px 60px -20px rgba(29,24,34,.45); font-variant-numeric: tabular-nums; }
+  .scroll { height: 100%; overflow: hidden; padding: 54px 18px 120px; }
+  .top { display: flex; justify-content: space-between; align-items: center; }
+  .hello { font-size: 15px; color: var(--ink-2); }
+  .lang { font-size: 13px; font-weight: 600; border: 1px solid var(--line); background: var(--card); border-radius: 99px; padding: 6px 12px; }
+
+  /* Home hero */
+  .hero { margin-top: 18px; }
+  .hero .label { font-size: 15px; color: var(--ink-2); }
+  .hero .big { font-size: 52px; font-weight: 800; letter-spacing: -0.035em; line-height: 1.05; margin-top: 2px; }
+  .hero .big small { font-size: 28px; font-weight: 700; color: var(--ink-3); }
+  .delta { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; font-size: 14px; font-weight: 600; color: var(--money); background: var(--money-soft); border-radius: 99px; padding: 5px 11px; }
+  .seg { display: flex; background: #ece6ef; border-radius: 12px; padding: 3px; margin-top: 16px; }
+  .seg span { flex: 1; text-align: center; font-size: 14px; font-weight: 600; padding: 8px 0; border-radius: 9px; color: var(--ink-2); }
+  .seg .on { background: var(--card); color: var(--ink); box-shadow: 0 1px 2px rgba(29,24,34,.12); }
+
+  /* Lacquer bottles: the one memorable element */
+  .week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-top: 20px; align-items: end; height: 150px; }
+  .day { display: flex; flex-direction: column; align-items: center; gap: 6px; height: 100%; justify-content: flex-end; }
+  .bottle { width: 30px; position: relative; display: flex; flex-direction: column; align-items: center; height: 118px; justify-content: flex-end; }
+  .bottle .cap { width: 14px; height: 14px; border-radius: 4px 4px 2px 2px; background: var(--ink); }
+  .bottle .glass { width: 30px; height: 100px; border-radius: 10px 10px 12px 12px; background: #fff; border: 1.5px solid #ddd3e1; position: relative; overflow: hidden; }
+  .bottle .fill { position: absolute; left: 0; right: 0; bottom: 0; background: linear-gradient(180deg, #c42a64, var(--lacquer) 40%, var(--lacquer-deep)); }
+  .bottle .fill::after { content: ''; position: absolute; left: 5px; top: 6px; width: 4px; bottom: 6px; border-radius: 2px; background: rgba(255,255,255,.35); }
+  .bottle.last .fill { background: var(--nude); }
+  .bottle.last .fill::after { display: none; }
+  .bottle.today .glass { border-color: var(--lacquer); border-width: 2px; }
+  .day .amt { font-size: 11px; font-weight: 600; color: var(--ink-2); }
+  .day .d { font-size: 12px; color: var(--ink-3); font-weight: 600; }
+  .day.today .d { color: var(--lacquer); }
+  .legend { display: flex; gap: 14px; font-size: 12px; color: var(--ink-3); margin-top: 16px; }
+  .legend i { display: inline-block; width: 9px; height: 9px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); background: var(--card); border-radius: 18px; margin-top: 18px; border: 1px solid var(--line); }
+  .stats div { padding: 12px 12px; }
+  .stats div + div { border-left: 1px solid var(--line); }
+  .stats b { display: block; font-size: 18px; font-weight: 700; }
+  .stats span { font-size: 12px; color: var(--ink-3); }
+
+  h2 { font-size: 17px; font-weight: 700; margin: 22px 0 8px; display: flex; justify-content: space-between; align-items: baseline; }
+  h2 a { font-size: 14px; font-weight: 600; color: var(--lacquer); text-decoration: none; }
+
+  /* Compact turn rows */
+  .list { background: var(--card); border-radius: 18px; border: 1px solid var(--line); overflow: hidden; }
+  .turn { display: flex; align-items: center; gap: 12px; padding: 11px 6px 11px 14px; min-height: 60px; position: relative; background: var(--card); }
+  .turn + .turn { border-top: 1px solid var(--line); }
+  .sw { width: 10px; height: 34px; border-radius: 5px; flex: none; }
+  .t-main { flex: 1; min-width: 0; }
+  .t-name { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .t-sub { font-size: 13px; color: var(--ink-3); margin-top: 1px; }
+  .t-amt { text-align: right; }
+  .t-amt b { font-size: 16px; font-weight: 700; display: block; }
+  .t-amt span { font-size: 12px; color: var(--money); font-weight: 600; }
+  .copy { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; color: var(--ink-2); flex: none; }
+  .copy svg { width: 20px; height: 20px; }
+
+  .fab { position: absolute; left: 18px; right: 18px; bottom: 96px; height: 58px; border-radius: 18px; background: var(--lacquer); color: #fff; font-size: 17px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 10px 24px -8px rgba(163,22,77,.6); }
+  .nav { position: absolute; left: 0; right: 0; bottom: 0; height: 84px; background: rgba(255,255,255,.92); border-top: 1px solid var(--line); display: grid; grid-template-columns: repeat(5, 1fr); padding: 8px 4px 22px; backdrop-filter: blur(12px); }
+  .nav span { display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 11px; font-weight: 600; color: var(--ink-3); }
+  .nav span svg { width: 24px; height: 24px; }
+  .nav .on { color: var(--lacquer); }
+
+  /* Add turn sheet */
+  .dim { position: absolute; inset: 0; background: rgba(29,24,34,.45); }
+  .sheet { position: absolute; left: 0; right: 0; bottom: 0; top: 52px; background: var(--base); border-radius: 26px 26px 0 0; padding: 10px 18px 0; }
+  .grab { width: 38px; height: 5px; border-radius: 3px; background: #d6ceda; margin: 0 auto 10px; }
+  .sheet-top { display: flex; justify-content: space-between; align-items: center; }
+  .sheet-top h3 { font-size: 20px; font-weight: 700; }
+  .when { font-size: 14px; font-weight: 600; color: var(--ink-2); background: var(--card); border: 1px solid var(--line); border-radius: 99px; padding: 6px 12px; }
+  .again { margin-top: 14px; display: flex; gap: 8px; overflow: hidden; }
+  .again span { flex: none; font-size: 13px; font-weight: 600; background: var(--lacquer-soft); color: var(--lacquer-deep); border-radius: 12px; padding: 8px 11px; }
+  .lbl { font-size: 13px; font-weight: 600; color: var(--ink-2); margin: 14px 0 7px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 7px; }
+  .chip { font-size: 14px; font-weight: 600; background: var(--card); border: 1.5px solid var(--line); border-radius: 12px; padding: 8px 11px; display: flex; gap: 6px; align-items: center; }
+  .chip em { font-style: normal; font-weight: 500; color: var(--ink-3); font-size: 13px; }
+  .chip.on { border-color: var(--lacquer); background: var(--lacquer-soft); color: var(--lacquer-deep); }
+  .chip.on em { color: var(--lacquer); }
+  .lines { background: var(--card); border: 1px solid var(--line); border-radius: 16px; margin-top: 12px; }
+  .ln { display: flex; justify-content: space-between; align-items: center; padding: 11px 14px; font-size: 15px; font-weight: 600; }
+  .ln + .ln { border-top: 1px solid var(--line); }
+  .ln .v { font-size: 17px; font-weight: 700; }
+  .ln.active .v { color: var(--lacquer); border-bottom: 2px solid var(--lacquer); }
+  .ln .muted { color: var(--ink-3); font-weight: 500; }
+  .tipq { display: flex; gap: 6px; }
+  .tipq span { flex: 1; text-align: center; font-size: 14px; font-weight: 600; border: 1.5px solid var(--line); background: var(--card); border-radius: 11px; padding: 8px 0; }
+  .tipq .on { border-color: var(--money); background: var(--money-soft); color: var(--money); }
+  .earn { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; padding: 0 2px; }
+  .earn span { font-size: 14px; color: var(--ink-2); }
+  .earn b { font-size: 24px; font-weight: 800; color: var(--money); letter-spacing: -0.02em; }
+  .pad { position: absolute; left: 0; right: 0; bottom: 0; background: #e7e1ea; padding: 8px 8px 26px; display: grid; grid-template-columns: repeat(3, 1fr) 96px; gap: 7px; }
+  .pad span { background: #fff; border-radius: 11px; height: 46px; display: grid; place-items: center; font-size: 22px; font-weight: 600; }
+  .pad .save { grid-column: 4; grid-row: 3 / span 2; height: auto; background: var(--lacquer); color: #fff; font-size: 17px; font-weight: 700; }
+  .pad .next { grid-column: 4; grid-row: 1 / span 2; height: auto; background: var(--ink); color: #fff; font-size: 15px; font-weight: 700; }
+
+  /* History */
+  .hist-top h1 { font-size: 30px; font-weight: 800; letter-spacing: -0.03em; }
+  .search { margin-top: 12px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 11px 14px; font-size: 15px; color: var(--ink-3); }
+  .filters { display: flex; gap: 7px; margin-top: 10px; }
+  .filters span { white-space: nowrap; font-size: 13px; font-weight: 600; border: 1px solid var(--line); background: var(--card); border-radius: 99px; padding: 6px 11px; }
+  .filters .on { background: var(--ink); color: #fff; border-color: var(--ink); }
+  .dayhead { display: flex; justify-content: space-between; margin: 18px 4px 7px; font-size: 14px; font-weight: 700; }
+  .dayhead span { color: var(--ink-2); font-weight: 600; }
+  .swipe { position: relative; }
+  .actions { position: absolute; right: 0; top: 0; bottom: 0; display: flex; }
+  .actions span { width: 78px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; color: #fff; font-size: 12px; font-weight: 700; }
+  .actions svg { width: 20px; height: 20px; }
+  .a-copy { background: var(--ink); }
+  .a-del { background: #c0392b; }
+  .swipe .turn.moved { transform: translateX(-156px); box-shadow: 6px 0 14px -6px rgba(0,0,0,.2); }
+  .toast { position: absolute; left: 18px; right: 18px; bottom: 100px; background: var(--ink); color: #fff; border-radius: 14px; padding: 13px 16px; font-size: 14px; display: flex; justify-content: space-between; align-items: center; }
+  .toast b { color: #ffb3cd; }
+
+  /* Paycheck */
+  .pc-head { display: flex; justify-content: space-between; align-items: center; }
+  .pc-head h1 { font-size: 30px; font-weight: 800; letter-spacing: -0.03em; }
+  .period { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 10px 14px; font-weight: 600; }
+  .period i { font-style: normal; color: var(--ink-3); font-size: 20px; }
+  .verdict { margin-top: 14px; background: var(--short-soft); border-radius: 20px; padding: 16px 16px 14px; }
+  .verdict .v1 { font-size: 15px; font-weight: 600; color: var(--short); }
+  .verdict .v2 { font-size: 40px; font-weight: 800; letter-spacing: -0.03em; color: var(--short); line-height: 1.1; }
+  .verdict p { font-size: 14px; color: #6e3a24; margin-top: 4px; line-height: 1.45; }
+  .stmt { background: var(--card); border: 1px solid var(--line); border-radius: 18px; margin-top: 12px; padding: 4px 16px; }
+  .st { display: flex; justify-content: space-between; padding: 10px 0; font-size: 15px; }
+  .st + .st { border-top: 1px dashed var(--line); }
+  .st span { color: var(--ink-2); }
+  .st.minus b { color: var(--ink-2); font-weight: 500; }
+  .st.total { border-top: 1.5px solid var(--ink) !important; font-weight: 700; }
+  .st.total span { color: var(--ink); }
+  .got { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+  .got div { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 12px 14px; }
+  .got span { font-size: 13px; color: var(--ink-3); font-weight: 600; }
+  .got b { display: block; font-size: 20px; font-weight: 700; margin-top: 2px; }
+  .btn2 { margin-top: 12px; border: 1.5px solid var(--ink); border-radius: 16px; text-align: center; padding: 13px; font-weight: 700; font-size: 15px; }
+</style>
+</head>
+<body>
+<div class="intro">
+  <h1>Nail Tracker 2.0: proposed look and feel</h1>
+  <p>Four key screens at real phone size. The font, Be Vietnam Pro, was designed for Vietnamese, so accent marks sit cleanly in both languages. Lacquer red is used only for actions and the week view; green always means money in your pocket.</p>
+</div>
+<div class="row">
+
+<!-- HOME -->
+<figure>
+<div class="phone"><div class="scroll">
+  <div class="top"><span class="hello">Friday, November 6</span><span class="lang">VI</span></div>
+  <div class="hero">
+    <div class="label">You earned this week</div>
+    <div class="big">$1,284<small>.50</small></div>
+    <div class="delta">▲ $162 more than this time last week</div>
+  </div>
+  <div class="week">
+    <div class="day"><span class="amt">$212</span><div class="bottle"><div class="cap"></div><div class="glass"><div class="fill" style="height:52%"></div></div></div><span class="d">Sun</span></div>
+    <div class="day"><span class="amt">$0</span><div class="bottle"><div class="cap"></div><div class="glass"><div class="fill" style="height:0%"></div></div></div><span class="d">Mon</span></div>
+    <div class="day"><span class="amt">$248</span><div class="bottle"><div class="cap"></div><div class="glass"><div class="fill" style="height:61%"></div></div></div><span class="d">Tue</span></div>
+    <div class="day"><span class="amt">$301</span><div class="bottle"><div class="cap"></div><div class="glass"><div class="fill" style="height:74%"></div></div></div><span class="d">Wed</span></div>
+    <div class="day"><span class="amt">$190</span><div class="bottle"><div class="cap"></div><div class="glass"><div class="fill" style="height:47%"></div></div></div><span class="d">Thu</span></div>
+    <div class="day today"><span class="amt">$333</span><div class="bottle today"><div class="cap"></div><div class="glass"><div class="fill" style="height:82%"></div></div></div><span class="d">Fri</span></div>
+    <div class="day"><span class="amt">$276</span><div class="bottle last"><div class="cap"></div><div class="glass"><div class="fill" style="height:68%"></div></div></div><span class="d">Sat</span></div>
+  </div>
+  <div class="legend"><span><i style="background:var(--lacquer)"></i>This week</span><span><i style="background:var(--nude)"></i>Last Saturday, for comparison</span></div>
+  <div class="stats">
+    <div><b>38</b><span>Turns</span></div>
+    <div><b>$214</b><span>Tips</span></div>
+    <div><b>$918</b><span>Salon owes</span></div>
+  </div>
+  <h2>Today <a>9 turns · $333</a></h2>
+  <div class="list">
+    <div class="turn"><div class="sw" style="background:#a3164d"></div><div class="t-main"><div class="t-name">Gel manicure + Nail art</div><div class="t-sub">3:40 pm · Regular</div></div><div class="t-amt"><b>$30.00</b><span>+$10 tip</span></div><div class="copy" title="Copy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="8" y="8" width="12" height="12" rx="3"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg></div></div>
+    <div class="turn"><div class="sw" style="background:#d98fb0"></div><div class="t-main"><div class="t-name">Pedicure</div><div class="t-sub">2:55 pm</div></div><div class="t-amt"><b>$27.00</b><span>+$8 tip</span></div><div class="copy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="8" y="8" width="12" height="12" rx="3"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg></div></div>
+  </div>
+</div>
+<div class="fab">＋ Add turn</div>
+<div class="nav">
+  <span class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 11l8-7 8 7v9H4z"/></svg>Home</span>
+  <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 6h14M5 12h14M5 18h9"/></svg>History</span>
+  <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 20V10M12 20V4M19 20v-7"/></svg>Reports</span>
+  <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/></svg>Paycheck</span>
+  <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>Settings</span>
+</div>
+</div>
+<figcaption><b>Home.</b> The week's earnings up front, compared with the same point last week. Each day is a polish bottle filled to that day's pay. Every turn has a Copy button right on the row.</figcaption>
+</figure>
+
+<!-- ADD TURN -->
+<figure>
+<div class="phone">
+  <div class="dim"></div>
+  <div class="sheet">
+    <div class="grab"></div>
+    <div class="sheet-top"><h3>Add turn</h3><span class="when">Today, 4:12 pm ▾</span></div>
+    <div class="again"><span>↻ Same as last: Gel mani $35</span><span>↻ Pedicure $45</span><span>↻ Fill $50</span></div>
+    <div class="lbl">Services, tap all you did</div>
+    <div class="chips">
+      <span class="chip on">Gel mani <em>$35</em></span>
+      <span class="chip">Pedicure <em>$45</em></span>
+      <span class="chip on">Nail art <em>$10</em></span>
+      <span class="chip">Full set <em>$60</em></span>
+      <span class="chip">Fill <em>$50</em></span>
+      <span class="chip">Dip <em>$45</em></span>
+      <span class="chip">Removal <em>$10</em></span>
+      <span class="chip">＋ Other</span>
+    </div>
+    <div class="lines">
+      <div class="ln"><span>Gel mani</span><span class="v">$35.00</span></div>
+      <div class="ln active"><span>Nail art</span><span class="v">$15</span></div>
+      <div class="ln"><span class="muted">Tip</span><span class="tipq" style="width:230px"><span>$0</span><span>$5</span><span class="on">$10</span><span>Card</span></span></div>
+    </div>
+    <div class="earn"><span>You earn $30.00 + $10 tip</span><b>$40.00</b></div>
+  </div>
+  <div class="pad">
+    <span>1</span><span>2</span><span>3</span><span class="next">Next</span>
+    <span>4</span><span>5</span><span>6</span>
+    <span>7</span><span>8</span><span>9</span><span class="save">Save</span>
+    <span>.</span><span>0</span><span>⌫</span>
+  </div>
+</div>
+<figcaption><b>Add turn.</b> Opens as a sheet with its own number pad, so no keyboard jumps. Each service chip shows your usual price; "Same as last" fills a whole turn in one tap. One-tap tip amounts.</figcaption>
+</figure>
+
+<!-- HISTORY -->
+<figure>
+<div class="phone"><div class="scroll">
+  <div class="hist-top"><h1>History</h1></div>
+  <div class="search">Search services or notes</div>
+  <div class="filters"><span class="on">This week</span><span>Last week</span><span>This month</span><span>Pick dates</span></div>
+  <div class="dayhead">Friday, Nov 6 <span>9 turns · $333</span></div>
+  <div class="list">
+    <div class="swipe">
+      <div class="actions"><span class="a-copy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="8" y="8" width="12" height="12" rx="3"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>Copy</span><span class="a-del"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>Delete</span></div>
+      <div class="turn moved"><div class="sw" style="background:#a3164d"></div><div class="t-main"><div class="t-name">Gel manicure + Nail art</div><div class="t-sub">3:40 pm</div></div><div class="t-amt"><b>$30.00</b><span>+$10 tip</span></div></div>
+    </div>
+    <div class="turn"><div class="sw" style="background:#d98fb0"></div><div class="t-main"><div class="t-name">Pedicure</div><div class="t-sub">2:55 pm</div></div><div class="t-amt"><b>$27.00</b><span>+$8 tip</span></div></div>
+    <div class="turn"><div class="sw" style="background:#6b2c91"></div><div class="t-main"><div class="t-name">Acrylic full set</div><div class="t-sub">1:10 pm · Request</div></div><div class="t-amt"><b>$36.00</b><span>+$12 tip</span></div></div>
+  </div>
+  <div class="dayhead">Thursday, Nov 5 <span>6 turns · $190</span></div>
+  <div class="list">
+    <div class="turn"><div class="sw" style="background:#d98fb0"></div><div class="t-main"><div class="t-name">Pedicure</div><div class="t-sub">6:20 pm</div></div><div class="t-amt"><b>$27.00</b><span>+$5 tip</span></div></div>
+    <div class="turn"><div class="sw" style="background:#2c7a91"></div><div class="t-main"><div class="t-name">Dip powder</div><div class="t-sub">5:05 pm</div></div><div class="t-amt"><b>$27.00</b><span>+$7 tip</span></div></div>
+  </div>
+</div>
+<div class="toast"><span>Turn deleted</span><b>Undo</b></div>
+<div class="nav">
+  <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 11l8-7 8 7v9H4z"/></svg>Home</span>
+  <span class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 6h14M5 12h14M5 18h9"/></svg>History</span>
+  <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 20V10M12 20V4M19 20v-7"/></svg>Reports</span>
+  <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/></svg>Paycheck</span>
+  <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>Settings</span>
+</div>
+</div>
+<figcaption><b>History.</b> Rows are half the height they are now. Swipe a row left to Copy or Delete; deleting shows Undo instead of a pop-up. Each day shows its turns and total.</figcaption>
+</figure>
+
+<!-- PAYCHECK -->
+<figure>
+<div class="phone"><div class="scroll">
+  <div class="pc-head"><h1>Paycheck</h1><span class="lang">Share</span></div>
+  <div class="period"><i>‹</i>Oct 26 – Nov 1 · Paid Nov 3<i>›</i></div>
+  <div class="verdict">
+    <div class="v1">Your paycheck looks short by</div>
+    <div class="v2">$42.00</div>
+    <p>You got $2,021.36 of $2,063.36. Tap a line to see which days don’t match.</p>
+  </div>
+  <div class="stmt">
+    <div class="st"><span>Services, 41 turns</span><b>$3,120.00</b></div>
+    <div class="st minus"><span>Supply fee, $2 × 41</span><b>− $82.00</b></div>
+    <div class="st"><span>Your 60%</span><b>$1,822.80</b></div>
+    <div class="st"><span>Card tips</span><b>$248.00</b></div>
+    <div class="st minus"><span>Card fee on tips, 3%</span><b>− $7.44</b></div>
+    <div class="st total"><span>Salon should pay</span><b>$2,063.36</b></div>
+  </div>
+  <div class="got">
+    <div><span>Check</span><b>$1,000.00</b></div>
+    <div><span>Cash</span><b>$1,021.36</b></div>
+  </div>
+  <div class="btn2">Record what you got</div>
+</div>
+<div class="nav">
+  <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 11l8-7 8 7v9H4z"/></svg>Home</span>
+  <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 6h14M5 12h14M5 18h9"/></svg>History</span>
+  <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 20V10M12 20V4M19 20v-7"/></svg>Reports</span>
+  <span class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/></svg>Paycheck</span>
+  <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>Settings</span>
+</div>
+</div>
+<figcaption><b>Paycheck.</b> Works out what the salon should pay, line by line, then compares it with the check and cash you got. A short paycheck shows how much, and which days are off.</figcaption>
+</figure>
+
+</div>
+</body>
+</html>
