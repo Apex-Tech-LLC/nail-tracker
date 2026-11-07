@@ -647,7 +647,10 @@ Bay asked for "a real full app" without answering the open questions, so these d
 3. **Web address:** stays at unity7.github.io/nail-tracker until Bay picks a domain. Moving later means each user
    moves their data with a backup file.
 4. **Vietnamese:** new wording gets a ChatGPT review pass, as in version 1, until a salon worker can read it.
-5. **Reddit:** a pass through the research browser was run for this revision.
+5. **Reddit:** a partial pass ran (`docs/design/reddit-research.md`): Reddit blocked the research browser after 7
+   pages, so only post titles were read. Signals: techs doubt their split is fair, splits differ by service, tip rules
+   change after hiring, and salons take about 3% of card tips (banned in some states, California among them). Another
+   pass, reading comments, is for a later day.
 
 ---
 
