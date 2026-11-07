@@ -18,6 +18,7 @@ export interface Settings {
   cardTipHandling: TipHandling
   lastServicePresetId: string | null
   tipButtonsTarget: TipButtonsTarget
+  numberPad: boolean
   onboardingDone: boolean
 }
 
@@ -55,6 +56,7 @@ export function resolveSettings(saved: string | null, languages: readonly string
     cardTipHandling: isTipHandling(parsed.cardTipHandling) ? parsed.cardTipHandling : 'fromSalon',
     lastServicePresetId: typeof parsed.lastServicePresetId === 'string' ? parsed.lastServicePresetId : null,
     tipButtonsTarget: parsed.tipButtonsTarget === 'card' ? 'card' : 'cash',
+    numberPad: parsed.numberPad !== false,
     onboardingDone: parsed.onboardingDone === true,
   }
 }

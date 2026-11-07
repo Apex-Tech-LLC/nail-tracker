@@ -25,6 +25,7 @@ describe('resolveSettings', () => {
     cardTipHandling: 'fromSalon',
     lastServicePresetId: null,
     tipButtonsTarget: 'cash',
+    numberPad: true,
     onboardingDone: false,
   }
 
@@ -35,6 +36,11 @@ describe('resolveSettings', () => {
   it('prefers the saved choice over the browser language', () => {
     const saved = JSON.stringify({ locale: 'en', defaultCommissionRateBp: 5000, weekStartDay: 1 })
     expect(resolveSettings(saved, ['vi-VN'])).toMatchObject({ locale: 'en', defaultCommissionRateBp: 5000, weekStartDay: 1 })
+  })
+
+  it('uses the app number pad unless the person turned it off', () => {
+    expect(resolveSettings(null, []).numberPad).toBe(true)
+    expect(resolveSettings(JSON.stringify({ numberPad: false }), []).numberPad).toBe(false)
   })
 
   it.each([

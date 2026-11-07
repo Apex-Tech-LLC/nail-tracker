@@ -1,6 +1,7 @@
 import { IconPlus, IconTrash, IconX } from '@tabler/icons-react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { useId, useRef, useState, type FormEvent } from 'react'
+import { useId, useRef, useState, type FocusEvent, type FormEvent } from 'react'
+import { createPortal } from 'react-dom'
 import { Link } from 'wouter'
 import { paths, useAppLocation } from '../../app/navigation.ts'
 import { updateSettings, useSettings } from '../../app/settings.ts'
@@ -17,6 +18,7 @@ import {
   centsToInput,
   formatUsd,
   formatUsdShort,
+  padAmount,
   parseCents,
   parseRateBp,
   rateToInput,
@@ -33,6 +35,7 @@ import { t } from '../../lib/i18n.ts'
 import type { Locale } from '../../lib/locale.ts'
 import { requestPersistence } from '../../pwa/persistStorage.ts'
 import { MoneyField } from '../../ui/MoneyField.tsx'
+import { NumberPad } from '../../ui/NumberPad.tsx'
 import { PercentField } from '../../ui/PercentField.tsx'
 import { useToast } from '../../ui/useToast.ts'
 import { WorkDateField } from '../../ui/WorkDateField.tsx'
@@ -250,6 +253,7 @@ function TurnFormFields({ presets, existing, quick, copy, onDone, onClose }: Fie
     cardTipHandling,
     lastServicePresetId,
     tipButtonsTarget,
+    numberPad,
   } = useSettings()
   const [, navigate] = useAppLocation()
   const id = useId()
@@ -303,6 +307,7 @@ function TurnFormFields({ presets, existing, quick, copy, onDone, onClose }: Fie
   const [savedAddAnother, setSavedAddAnother] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [errors, setErrors] = useState<Errors>({ lines: {} })
+  const [padTarget, setPadTarget] = useState<string | null>(null)
   const toast = useToast()
 
   // A quick double tap fires submit twice before React can re-render. The ref
@@ -324,6 +329,9 @@ function TurnFormFields({ presets, existing, quick, copy, onDone, onClose }: Fie
   )
   const showPerLine =
     perServiceRates || new Set(lines.map((line) => line.rate)).size > 1
+  // Screen order: every service price, then the cash tip, then the card tip.
+  const padTargets = [...lines.map((line) => `line:${line.key}`), 'cash', 'card']
+  const padShown = numberPad && padTarget !== null && padTargets.includes(padTarget)
 
   const useCounts = quick ? serviceUse(quick.entries) : new Map<string, number>()
   const lastPrices = quick ? lastPrice(quick.entries) : new Map<string, number>()
@@ -373,6 +381,72 @@ function TurnFormFields({ presets, existing, quick, copy, onDone, onClose }: Fie
       const next = { ...previous.lines }
       for (const key of keys) next[key] = { ...next[key], rate: undefined }
       return { ...previous, lines: next }
+    })
+  }
+
+  function padTextFor(target: string): string {
+    if (target === 'cash') return cashText
+    if (target === 'card') return cardText
+    const key = target.slice('line:'.length)
+    return lines.find((line) => line.key === key)?.amount ?? ''
+  }
+
+  function changePadText(target: string, value: string) {
+    if (target === 'cash') {
+      setCashText(value)
+      clearError('cash')
+    } else if (target === 'card') {
+      setCardText(value)
+      clearError('card')
+    } else {
+      const key = target.slice('line:'.length)
+      updateLine(key, (line) => ({ ...line, amount: value }))
+      clearLineError(key, 'amount')
+    }
+    changed()
+  }
+
+  /** One key from the app's pad: a digit or dot append, `back` removes the last character. */
+  function typeOnPad(key: string) {
+    if (!padTarget) return
+    const current = padTextFor(padTarget)
+    const next = key === 'back' ? current.slice(0, -1) : padAmount(current, key)
+    if (next !== current) changePadText(padTarget, next)
+  }
+
+  function focusPad(target: string, element: HTMLInputElement) {
+    if (!numberPad) return
+    setPadTarget(target)
+    // The pad is fixed over the bottom: scroll the box clear of it once it is up.
+    requestAnimationFrame(() => element.scrollIntoView({ block: 'nearest' }))
+  }
+
+  /** The pad stays while focus is on it or on another money box; anywhere else it hides. */
+  function blurPad(event: FocusEvent<HTMLInputElement>) {
+    const next = event.relatedTarget
+    if (next instanceof Element) {
+      if (next.closest('[data-number-pad]')) return
+      if (next.matches('[data-pad-target]')) return
+    }
+    setPadTarget(null)
+  }
+
+  /** Last money box in screen order: hide the pad instead of wrapping round. */
+  function focusNextPadTarget() {
+    if (!padTarget) return
+    const index = padTargets.indexOf(padTarget)
+    const next = index === -1 ? undefined : padTargets[index + 1]
+    if (!next) {
+      const active = document.activeElement
+      if (active instanceof HTMLElement) active.blur()
+      setPadTarget(null)
+      return
+    }
+    setPadTarget(next)
+    requestAnimationFrame(() => {
+      const element = document.querySelector<HTMLInputElement>(`[data-pad-target="${next}"]`)
+      element?.focus()
+      element?.scrollIntoView({ block: 'nearest' })
     })
   }
 
@@ -602,12 +676,16 @@ function TurnFormFields({ presets, existing, quick, copy, onDone, onClose }: Fie
     })
   }
 
-  async function submit(event: FormEvent) {
-    event.preventDefault()
+  async function saveAndClose() {
     const result = await save()
     if (!result) return
     showSaved(result)
     onDone()
+  }
+
+  function submit(event: FormEvent) {
+    event.preventDefault()
+    void saveAndClose()
   }
 
   function resetForNextTurn() {
@@ -662,11 +740,14 @@ function TurnFormFields({ presets, existing, quick, copy, onDone, onClose }: Fie
   }
 
   return (
-    <form
-      onSubmit={submit}
-      noValidate
-      className="flex min-h-[calc(100dvh-2rem)] flex-col gap-5"
-    >
+    <>
+      <form
+        onSubmit={submit}
+        noValidate
+        className={`flex min-h-[calc(100dvh-2rem)] flex-col gap-5 ${
+          padShown ? 'pb-[280px]' : ''
+        }`}
+      >
       <header className="flex items-center justify-between">
         <button
           type="button"
@@ -783,6 +864,10 @@ function TurnFormFields({ presets, existing, quick, copy, onDone, onClose }: Fie
           errors={errors.lines[line.key]}
           amountRef={index === 0 ? amountRef : undefined}
           autoFocus={index === 0}
+          usePad={numberPad}
+          activePad={padShown && padTarget === `line:${line.key}`}
+          onAmountFocus={(element) => focusPad(`line:${line.key}`, element)}
+          onAmountBlur={blurPad}
           onCustomName={(value) => {
             updateLine(line.key, (current) => ({ ...current, customName: value }))
             clearLineError(line.key, 'serviceName')
@@ -825,6 +910,11 @@ function TurnFormFields({ presets, existing, quick, copy, onDone, onClose }: Fie
             changed()
           }}
           error={errors.cash}
+          usePad={numberPad}
+          active={padShown && padTarget === 'cash'}
+          padTarget="cash"
+          onFieldFocus={(element) => focusPad('cash', element)}
+          onFieldBlur={blurPad}
         />
         <MoneyField
           label={t(locale, 'cardTip')}
@@ -835,6 +925,11 @@ function TurnFormFields({ presets, existing, quick, copy, onDone, onClose }: Fie
             changed()
           }}
           error={errors.card}
+          usePad={numberPad}
+          active={padShown && padTarget === 'card'}
+          padTarget="card"
+          onFieldFocus={(element) => focusPad('card', element)}
+          onFieldBlur={blurPad}
         />
       </div>
 
@@ -1060,6 +1155,20 @@ function TurnFormFields({ presets, existing, quick, copy, onDone, onClose }: Fie
         )}
       </div>
 
-    </form>
+      </form>
+      {padShown &&
+        createPortal(
+          <NumberPad
+            locale={locale}
+            onDigit={typeOnPad}
+            onBackspace={() => typeOnPad('back')}
+            onNext={focusNextPadTarget}
+            onSave={() => {
+              void saveAndClose()
+            }}
+          />,
+          document.body,
+        )}
+    </>
   )
 }
