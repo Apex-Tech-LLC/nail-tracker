@@ -4,6 +4,7 @@ import {
   centsToInput,
   formatRate,
   formatUsd,
+  formatUsdShort,
   parseCents,
   parseRateBp,
   parseSignedCents,
@@ -68,6 +69,19 @@ describe('formatUsd', () => {
     [-123456, '-$1,234.56'],
   ])('formats %d as %s', (cents, expected) => {
     expect(formatUsd(cents)).toBe(expected)
+  })
+})
+
+describe('formatUsdShort', () => {
+  it.each([
+    [0, '$0'],
+    [3500, '$35'],
+    [3550, '$35.50'],
+    [123400, '$1,234'],
+    [-500, '-$5'],
+    [5, '$0.05'],
+  ])('formats %d as %s', (cents, expected) => {
+    expect(formatUsdShort(cents)).toBe(expected)
   })
 })
 

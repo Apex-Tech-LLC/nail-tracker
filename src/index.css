@@ -80,6 +80,16 @@
   }
 }
 
+/* Slide only: fading would briefly lower the text contrast under an audit. */
+@keyframes toast-in {
+  from {
+    transform: translateY(12px);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
 /* Motion is opt-in: users who ask for reduced motion get none. */
 @media (prefers-reduced-motion: reduce) {
   *,

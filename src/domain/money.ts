@@ -46,6 +46,16 @@ export function formatUsd(cents: number): string {
   return `${sign}$${dollarFormat.format(dollars)}.${String(rest).padStart(2, '0')}`
 }
 
+/** Like formatUsd, but a whole dollar amount drops the cents: $35, $35.50. */
+export function formatUsdShort(cents: number): string {
+  const sign = cents < 0 ? '-' : ''
+  const abs = Math.abs(cents)
+  const dollars = Math.trunc(abs / 100)
+  const rest = abs % 100
+  if (rest === 0) return `${sign}$${dollarFormat.format(dollars)}`
+  return `${sign}$${dollarFormat.format(dollars)}.${String(rest).padStart(2, '0')}`
+}
+
 export function centsToInput(cents: number): string {
   const sign = cents < 0 ? '-' : ''
   const abs = Math.abs(cents)

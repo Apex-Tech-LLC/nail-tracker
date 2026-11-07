@@ -11,7 +11,7 @@ import { formatDayLong, isIsoDate, type IsoDate } from '../../domain/dates.ts'
 import { formatUsd } from '../../domain/money.ts'
 import { numberTurns, sumTotals } from '../../domain/totals.ts'
 import { t } from '../../lib/i18n.ts'
-import { card, field, primaryButton, secondaryButton } from '../../ui/styles.ts'
+import { card, field, list, primaryButton, secondaryButton } from '../../ui/styles.ts'
 import { loadRange, servicesByTurn } from '../turns/turnStore.ts'
 import { TurnRow } from '../turns/TurnRow.tsx'
 
@@ -118,7 +118,7 @@ export function TodayPage() {
       {recentTurns.length > 0 && (
         <section className="flex flex-col gap-2">
           <h2 className="font-medium">{t(locale, 'recentTurns')}</h2>
-          <div className="flex flex-col gap-2">
+          <div className={list}>
             {recentTurns.map((turn) => (
               <TurnRow
                 key={turn.id}

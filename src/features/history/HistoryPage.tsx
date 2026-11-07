@@ -7,9 +7,9 @@ import { useSettings } from '../../app/settings.ts'
 import { useToday } from '../../app/useToday.ts'
 import { db, type TurnService } from '../../db/schema.ts'
 import { formatDayLong, type IsoDate } from '../../domain/dates.ts'
-import { formatUsd } from '../../domain/money.ts'
+import { formatUsdShort } from '../../domain/money.ts'
 import { numberTurns } from '../../domain/totals.ts'
-import { t, type StringKey } from '../../lib/i18n.ts'
+import { t, tf, type StringKey } from '../../lib/i18n.ts'
 import {
   chip,
   chipOff,
@@ -17,6 +17,7 @@ import {
   errorText,
   field,
   label,
+  list,
   secondaryButton,
 } from '../../ui/styles.ts'
 import { AdjustmentRow } from '../adjustments/AdjustmentRow.tsx'
@@ -161,30 +162,37 @@ export function HistoryPage() {
       )}
 
       {!invalidRange &&
-        groups.map((group) => (
-          <section key={group.date} className="flex flex-col gap-2">
-            <div className="flex items-baseline justify-between gap-3">
-              <h2 className="font-medium">{formatDayLong(group.date, locale)}</h2>
-              <p className="text-sm text-text-secondary">
-                {t(locale, 'dayTotal')}{' '}
-                <span className="font-medium tabular-nums">{formatUsd(group.earnedCents)}</span>
-              </p>
-            </div>
-            <div className="flex flex-col gap-2">
-              {group.turns.map((turn) => (
-                <TurnRow
-                  key={turn.id}
-                  turn={turn}
-                  services={grouped.get(turn.id) ?? []}
-                  number={numbers.get(turn.id) ?? null}
-                />
-              ))}
-              {group.adjustments.map((adjustment) => (
-                <AdjustmentRow key={adjustment.id} adjustment={adjustment} />
-              ))}
-            </div>
-          </section>
-        ))}
+        groups.map((group) => {
+          const turnCount = group.turns.reduce((sum, turn) => sum + turn.turnCount, 0)
+          const countText = tf(
+            locale,
+            turnCount === 1 ? 'dayTurnCountOne' : 'dayTurnCount',
+            { n: turnCount },
+          )
+          return (
+            <section key={group.date}>
+              <div className="mt-[18px] mb-[7px] flex items-baseline justify-between gap-3 px-1 text-sm font-bold">
+                <h2>{formatDayLong(group.date, locale)}</h2>
+                <p className="font-semibold text-text-secondary">
+                  {countText} · {formatUsdShort(group.earnedCents)}
+                </p>
+              </div>
+              <div className={list}>
+                {group.turns.map((turn) => (
+                  <TurnRow
+                    key={turn.id}
+                    turn={turn}
+                    services={grouped.get(turn.id) ?? []}
+                    number={numbers.get(turn.id) ?? null}
+                  />
+                ))}
+                {group.adjustments.map((adjustment) => (
+                  <AdjustmentRow key={adjustment.id} adjustment={adjustment} />
+                ))}
+              </div>
+            </section>
+          )
+        })}
     </>
   )
 }

@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { rowAmount, seedSettings, selectServices, servicePicker } from './helpers.ts'
+import { rowAmount, seedSettings, selectServices, servicePicker, turnRow } from './helpers.ts'
 
 // Noon on 2026-11-04 in the browser's America/Chicago timezone. The offset is
 // explicit so a machine running in UTC cannot move the fixed day.
@@ -26,7 +26,7 @@ test('three picked services become one turn with the right totals', async ({ pag
   await expect(rowAmount(page, 'Commission')).toHaveText('$63.00')
   await expect(rowAmount(page, 'Total earned')).toHaveText('$78.00')
 
-  await page.getByRole('link', { name: /Turn #1/ }).click()
+  await turnRow(page, 1).click()
   await expect(page.getByTestId('service-line')).toHaveCount(3)
 })
 
@@ -71,14 +71,14 @@ test('editing a three-service turn and untapping one saves the smaller total', a
   await page.getByRole('button', { name: 'Save', exact: true }).click()
   await expect(page.getByText('$105.00 Service revenue', { exact: true })).toBeVisible()
 
-  await page.getByRole('link', { name: /Turn #1/ }).click()
+  await turnRow(page, 1).click()
   await expect(page.getByTestId('service-line')).toHaveCount(3)
 
   await servicePicker(page).getByRole('button', { name: 'Pedicure', exact: true }).click()
   await expect(page.getByTestId('service-line')).toHaveCount(2)
 
   await page.getByRole('button', { name: 'Save', exact: true }).click()
-  await expect(page.getByText('Turn #1')).toBeVisible()
+  await expect(turnRow(page, 1)).toBeVisible()
   await expect(page.getByText('$55.00 Service revenue', { exact: true })).toBeVisible()
 })
 

@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { addTurn, seedSettings } from './helpers.ts'
+import { addTurn, seedSettings, turnRow } from './helpers.ts'
 
 test('an empty day says there are no turns yet', async ({ page }) => {
   await seedSettings(page)
@@ -19,7 +19,7 @@ test('a turn shows the spec example numbers', async ({ page }) => {
   await expect(page.getByText('$10.00').first()).toBeVisible()
   await expect(page.getByText('$15.00').first()).toBeVisible()
   await expect(page.getByText('$85.00').first()).toBeVisible()
-  await expect(page.getByText('Turn #1')).toBeVisible()
+  await expect(turnRow(page, 1)).toBeVisible()
 })
 
 test('two turns add up', async ({ page }) => {
@@ -27,7 +27,7 @@ test('two turns add up', async ({ page }) => {
   await addTurn(page, { amount: '40' })
   await addTurn(page, { service: 'Pedicure', amount: '50' })
 
-  await expect(page.getByText('Turn #2')).toBeVisible()
+  await expect(turnRow(page, 2)).toBeVisible()
   await expect(page.getByText('$54.00').first()).toBeVisible()
 })
 
@@ -36,7 +36,7 @@ test('a saved turn survives a reload', async ({ page }) => {
   await addTurn(page, { amount: '45' })
   await page.reload()
 
-  await expect(page.getByText('Turn #1')).toBeVisible()
+  await expect(turnRow(page, 1)).toBeVisible()
 })
 
 test('another day can be viewed and left', async ({ page }) => {
@@ -51,7 +51,7 @@ test('another day can be viewed and left', async ({ page }) => {
   const back = page.getByRole('button', { name: 'Go to today' })
   await expect(back).toBeVisible()
   await back.click()
-  await expect(page.getByText('Turn #1')).toBeVisible()
+  await expect(turnRow(page, 1)).toBeVisible()
 })
 
 test('the page rolls over to the new day at midnight', async ({ page }) => {

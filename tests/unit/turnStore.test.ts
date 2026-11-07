@@ -5,6 +5,7 @@ import {
   addTurn,
   deleteTurn,
   loadRange,
+  restoreTurn,
   servicesByTurn,
   updateTurn,
   type TurnInput,
@@ -194,6 +195,35 @@ describe('deleteTurn', () => {
 
     expect(await fresh.turns.count()).toBe(0)
     expect(await fresh.turnServices.count()).toBe(0)
+  })
+
+  it('returns nothing when the id did not exist', async () => {
+    const fresh = openFresh()
+
+    expect(await deleteTurn(fresh, 'missing')).toBeNull()
+  })
+
+  it('restoreTurn puts the same rows back with the same ids', async () => {
+    const fresh = openFresh()
+    const id = await addTurn(
+      fresh,
+      turnInput({ lines: [line(4000, 6000), line(5000, 5000)], cardTipCents: 500 }),
+      100,
+    )
+    const before = {
+      turn: await fresh.turns.get(id),
+      services: await fresh.turnServices.where('turnId').equals(id).toArray(),
+    }
+
+    const removed = await deleteTurn(fresh, id)
+    expect(removed).not.toBeNull()
+    await restoreTurn(fresh, removed!)
+
+    expect(await fresh.turns.get(id)).toEqual(before.turn)
+    const restored = await fresh.turnServices.where('turnId').equals(id).toArray()
+    expect([...restored].sort((a, b) => a.sortOrder - b.sortOrder)).toEqual(
+      [...before.services].sort((a, b) => a.sortOrder - b.sortOrder),
+    )
   })
 })
 

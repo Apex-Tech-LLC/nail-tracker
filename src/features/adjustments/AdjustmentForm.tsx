@@ -9,8 +9,8 @@ import { isIsoDate, localDateTimeToMs, todayIso, type IsoDate } from '../../doma
 import { centsToInput, parseSignedCents } from '../../domain/money.ts'
 import type { AdjustmentCategory } from '../../domain/totals.ts'
 import { t } from '../../lib/i18n.ts'
-import { ConfirmDialog } from '../../ui/ConfirmDialog.tsx'
 import { MoneyField } from '../../ui/MoneyField.tsx'
+import { useToast } from '../../ui/useToast.ts'
 import {
   chip,
   chipOff,
@@ -24,6 +24,7 @@ import { ADJUSTMENT_LABEL } from './adjustmentLabels.ts'
 import {
   addAdjustment,
   deleteAdjustment,
+  restoreAdjustment,
   updateAdjustment,
   type AdjustmentInput,
 } from './adjustmentStore.ts'
@@ -86,8 +87,8 @@ function AdjustmentFormFields({ adjustment, onDone }: FieldsProps) {
   )
   const [noteText, setNoteText] = useState(adjustment?.note ?? '')
   const [errors, setErrors] = useState<Errors>({})
-  const [confirmingDelete, setConfirmingDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const toast = useToast()
 
   // A quick double tap submits twice before React can re-render. The ref is
   // set synchronously, so the second submit does nothing.
@@ -135,11 +136,24 @@ function AdjustmentFormFields({ adjustment, onDone }: FieldsProps) {
     if (await save()) onDone()
   }
 
-  async function confirmDelete() {
+  async function deleteNow() {
     if (!adjustment || deleting) return
     setDeleting(true)
     try {
-      await deleteAdjustment(db, adjustment.id)
+      const removed = await deleteAdjustment(db, adjustment.id)
+      if (removed) {
+        toast.show({
+          message: t(locale, 'adjustmentDeleted'),
+          actions: [
+            {
+              label: t(locale, 'undo'),
+              onClick: () => {
+                void restoreAdjustment(db, removed)
+              },
+            },
+          ],
+        })
+      }
       onDone()
     } catch (error) {
       setDeleting(false)
@@ -169,7 +183,10 @@ function AdjustmentFormFields({ adjustment, onDone }: FieldsProps) {
           <button
             type="button"
             aria-label={t(locale, 'delete')}
-            onClick={() => setConfirmingDelete(true)}
+            disabled={deleting}
+            onClick={() => {
+              void deleteNow()
+            }}
             className="flex min-h-11 min-w-11 items-center justify-center text-danger-text"
           >
             <IconTrash size={22} aria-hidden="true" />
@@ -245,19 +262,6 @@ function AdjustmentFormFields({ adjustment, onDone }: FieldsProps) {
         </button>
       </div>
 
-      {adjustment && (
-        <ConfirmDialog
-          open={confirmingDelete}
-          title={t(locale, 'deleteAdjustmentTitle')}
-          body={t(locale, 'deleteAdjustmentBody')}
-          confirmLabel={t(locale, 'delete')}
-          cancelLabel={t(locale, 'cancel')}
-          danger
-          confirmDisabled={deleting}
-          onConfirm={confirmDelete}
-          onCancel={() => setConfirmingDelete(false)}
-        />
-      )}
     </form>
   )
 }

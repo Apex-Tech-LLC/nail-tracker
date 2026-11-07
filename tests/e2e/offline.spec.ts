@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { addTurn, installApp, seedSettings } from './helpers.ts'
+import { addTurn, installApp, seedSettings, turnRow } from './helpers.ts'
 
 test.beforeEach(async ({ page }) => {
   await seedSettings(page)
@@ -37,15 +37,15 @@ test('works from start to finish with no connection', async ({ page, context }) 
 
   await context.setOffline(true)
   await page.reload()
-  await expect(page.getByText('Turn #1')).toBeVisible()
+  await expect(turnRow(page, 1)).toBeVisible()
 
   await addTurn(page, { amount: '50', service: 'Pedicure' })
-  await expect(page.getByText('Turn #2')).toBeVisible()
+  await expect(turnRow(page, 2)).toBeVisible()
 
   const nav = page.getByRole('navigation')
   await nav.getByRole('link', { name: 'History' }).click()
   await expect(page.getByRole('heading', { level: 1, name: 'History' })).toBeVisible()
-  await expect(page.getByText('Turn #2')).toBeVisible()
+  await expect(turnRow(page, 2)).toBeVisible()
 
   await nav.getByRole('link', { name: 'Earnings' }).click()
   // The amount on the card labelled "Total earned", never a matching amount elsewhere.
@@ -64,7 +64,7 @@ test('data is still there after the app is closed and opened again', async ({ pa
   await page.close()
   const reopened = await context.newPage()
   await reopened.goto('./')
-  await expect(reopened.getByText('Turn #1')).toBeVisible()
+  await expect(turnRow(reopened, 1)).toBeVisible()
 })
 
 test('makes no requests outside this app', async ({ page }) => {

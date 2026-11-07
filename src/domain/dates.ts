@@ -121,3 +121,11 @@ export function timeOf(ms: number): string {
   const date = new Date(ms)
   return `${pad(date.getHours())}:${pad(date.getMinutes())}`
 }
+
+/** 12-hour with AM/PM in English, 24-hour in Vietnamese. */
+export function formatTime(ms: number, locale: DateLocale): string {
+  return new Intl.DateTimeFormat(locale === 'vi' ? 'vi-VN' : 'en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+  }).format(new Date(ms))
+}

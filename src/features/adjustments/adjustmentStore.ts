@@ -54,6 +54,14 @@ export async function updateAdjustment(
   await db.adjustments.put(buildAdjustment(input, { id, createdAt: existing.createdAt }, now))
 }
 
-export async function deleteAdjustment(db: NailDb, id: string): Promise<void> {
+/** Removes an adjustment and hands back the row, so Undo can put it back. */
+export async function deleteAdjustment(db: NailDb, id: string): Promise<Adjustment | null> {
+  const existing = await db.adjustments.get(id)
+  if (!existing) return null
   await db.adjustments.delete(id)
+  return existing
+}
+
+export async function restoreAdjustment(db: NailDb, removed: Adjustment): Promise<void> {
+  await db.adjustments.put(removed)
 }

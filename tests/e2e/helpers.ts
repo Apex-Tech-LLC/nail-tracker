@@ -36,6 +36,11 @@ export function rowAmount(page: Page, label: string, section?: string): Locator 
   return root.getByText(label, { exact: true }).locator('..').locator('span').last()
 }
 
+/** The edit link of the row whose second line shows that turn number. */
+export function turnRow(page: Page, number: number | string): Locator {
+  return page.getByTestId('turn-row').filter({ hasText: new RegExp(`#${number}(?!\\d)`) })
+}
+
 /** The service chips above the service lines. */
 export function servicePicker(page: Page): Locator {
   return page.getByRole('group', { name: 'Services (pick one or more)' })

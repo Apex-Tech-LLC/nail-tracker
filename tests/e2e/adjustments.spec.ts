@@ -36,8 +36,8 @@ test('a negative adjustment shows on History and lowers the day total', async ({
 
   await expect(page.getByText('Commission correction')).toBeVisible()
   await expect(page.getByText('Wrong price')).toBeVisible()
-  await expect(page.getByText('-$25.00')).toBeVisible()
-  await expect(page.getByText('$35.00')).toBeVisible()
+  await expect(page.getByText('-$25')).toBeVisible()
+  await expect(page.getByText('1 turn · $35')).toBeVisible()
 })
 
 test('an adjustment shows on Today', async ({ page }) => {
@@ -80,7 +80,7 @@ test('editing an adjustment saves the new amount', async ({ page }) => {
   await page.getByRole('button', { name: 'Save', exact: true }).click()
 
   await expect(page.getByRole('heading', { name: 'History' })).toBeVisible()
-  await expect(page.getByRole('link', { name: /Bonus/ })).toContainText('$20.00')
+  await expect(page.getByRole('link', { name: /Bonus/ })).toContainText('$20')
 })
 
 test('deleting an adjustment removes it from History', async ({ page }) => {
@@ -91,7 +91,6 @@ test('deleting an adjustment removes it from History', async ({ page }) => {
 
   await page.getByRole('link', { name: /Bonus/ }).click()
   await page.getByRole('button', { name: 'Delete', exact: true }).click()
-  await page.getByRole('dialog').getByRole('button', { name: 'Delete', exact: true }).click()
 
   await expect(page.getByText('Nothing recorded for these dates.')).toBeVisible()
 })
