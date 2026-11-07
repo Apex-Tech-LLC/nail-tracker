@@ -24,6 +24,7 @@ const settings: Settings = {
   cashTipHandling: 'fromSalon',
   cardTipHandling: 'inHand',
   lastServicePresetId: 'gel-x',
+  tipButtonsTarget: 'cash',
   onboardingDone: true,
 }
 

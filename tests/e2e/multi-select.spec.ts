@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { rowAmount, seedSettings, selectServices, servicePicker, turnRow } from './helpers.ts'
+import { rowAmount, seedSettings, selectServices, serviceChip, turnRow } from './helpers.ts'
 
 // Noon on 2026-11-04 in the browser's America/Chicago timezone. The offset is
 // explicit so a machine running in UTC cannot move the fixed day.
@@ -37,7 +37,7 @@ test('untapping a service chip removes its line', async ({ page }) => {
   await selectServices(page, ['Manicure', 'Pedicure'])
   await expect(lines).toHaveCount(2)
 
-  const pedicure = servicePicker(page).getByRole('button', { name: 'Pedicure', exact: true })
+  const pedicure = serviceChip(page, 'Pedicure')
   await pedicure.click()
 
   await expect(pedicure).toHaveAttribute('aria-pressed', 'false')
@@ -74,7 +74,7 @@ test('editing a three-service turn and untapping one saves the smaller total', a
   await turnRow(page, 1).click()
   await expect(page.getByTestId('service-line')).toHaveCount(3)
 
-  await servicePicker(page).getByRole('button', { name: 'Pedicure', exact: true }).click()
+  await serviceChip(page, 'Pedicure').click()
   await expect(page.getByTestId('service-line')).toHaveCount(2)
 
   await page.getByRole('button', { name: 'Save', exact: true }).click()
@@ -95,7 +95,7 @@ test('a second chip keeps the shared rate the technician typed', async ({ page }
   await page.getByLabel('Service amount').fill('40')
   await page.getByLabel('Commission %').fill('55')
 
-  await servicePicker(page).getByRole('button', { name: 'Pedicure', exact: true }).click()
+  await serviceChip(page, 'Pedicure').click()
   await expect(lines).toHaveCount(2)
   await expect(lines.nth(1).getByLabel('Service amount')).toHaveValue('50.00')
 
@@ -144,7 +144,7 @@ test('with per-service rates on a new line still starts from its preset rate', a
   await page.goto('./#/add')
   const lines = page.getByTestId('service-line')
   await lines.first().getByLabel('Commission %').fill('55')
-  await servicePicker(page).getByRole('button', { name: 'Pedicure', exact: true }).click()
+  await serviceChip(page, 'Pedicure').click()
 
   await expect(lines).toHaveCount(2)
   await expect(lines.nth(1).getByLabel('Commission %')).toHaveValue('70')

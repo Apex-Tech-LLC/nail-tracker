@@ -2,7 +2,7 @@ import { IconPlus, IconTrash, IconX } from '@tabler/icons-react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useId, useRef, useState, type FormEvent } from 'react'
 import { Link } from 'wouter'
-import { paths } from '../../app/navigation.ts'
+import { paths, useAppLocation } from '../../app/navigation.ts'
 import { updateSettings, useSettings } from '../../app/settings.ts'
 import {
   db,
@@ -13,7 +13,22 @@ import {
 } from '../../db/schema.ts'
 import { turnTotals } from '../../domain/commission.ts'
 import { isIsoDate, localDateTimeToMs, timeOf, todayIso, type IsoDate } from '../../domain/dates.ts'
-import { centsToInput, formatUsd, parseCents, parseRateBp, rateToInput } from '../../domain/money.ts'
+import {
+  centsToInput,
+  formatUsd,
+  formatUsdShort,
+  parseCents,
+  parseRateBp,
+  rateToInput,
+  roundDiv,
+} from '../../domain/money.ts'
+import {
+  lastPrice,
+  serviceUse,
+  topCombos,
+  type QuickPickEntry,
+  type QuickPickLine,
+} from '../../domain/quickPicks.ts'
 import { t } from '../../lib/i18n.ts'
 import type { Locale } from '../../lib/locale.ts'
 import { requestPersistence } from '../../pwa/persistStorage.ts'
@@ -37,7 +52,14 @@ import {
   type LineErrors,
   type LineState,
 } from './ServiceLineFields.tsx'
-import { addTurn, deleteTurn, restoreTurn, updateTurn, type TurnLineInput } from './turnStore.ts'
+import {
+  addTurn,
+  deleteTurn,
+  loadQuickPickEntries,
+  restoreTurn,
+  updateTurn,
+  type TurnLineInput,
+} from './turnStore.ts'
 
 interface Errors {
   date?: string
@@ -131,6 +153,32 @@ interface Props {
   onClose?: () => void
 }
 
+interface QuickData {
+  entries: QuickPickEntry[]
+  latest: { turn: Turn; services: TurnService[] } | null
+}
+
+interface SaveResult {
+  id: string
+  earnedTotalCents: number
+}
+
+const TIP_VALUES = [500, 1000, 1500, 2000] as const
+const REPEAT_CHIP =
+  'flex min-h-11 flex-none items-center gap-1 whitespace-nowrap rounded-control bg-brand-50 px-3 py-2 text-[13px] font-semibold text-brand-800'
+
+function comboLabel(lines: readonly QuickPickLine[]): string {
+  const total = lines.reduce((sum, line) => sum + line.priceCents, 0)
+  return `${lines.map((line) => line.name).join(' + ')} ${formatUsdShort(total)}`
+}
+
+function sameAsLastLabel(latest: QuickData['latest'], locale: Locale): string {
+  if (!latest || latest.services.length === 0) return t(locale, 'sameAsLast')
+  const more = latest.services.length > 1 ? ' +1' : ''
+  const total = formatUsdShort(latest.turn.serviceRevenueTotalCents)
+  return `${t(locale, 'sameAsLast')}: ${latest.services[0].serviceNameSnapshot}${more} ${total}`
+}
+
 /** Loads the service presets and, when editing or copying, the saved turn first. */
 export function TurnForm({ turnId, copyId, onDone, onClose }: Props) {
   const { locale } = useSettings()
@@ -148,8 +196,18 @@ export function TurnForm({ turnId, copyId, onDone, onClose }: Props) {
     const services = await db.turnServices.where('turnId').equals(sourceId).sortBy('sortOrder')
     return { turn, services }
   }, [sourceId])
+  // Quick picks only speed up a brand new turn; edit and copy keep their values.
+  const quick = useLiveQuery(async (): Promise<QuickData | null> => {
+    if (sourceId) return null
+    const entries = await loadQuickPickEntries(db, todayIso())
+    const latestTurn = await db.turns.orderBy('occurredAt').last()
+    const services = latestTurn
+      ? await db.turnServices.where('turnId').equals(latestTurn.id).sortBy('sortOrder')
+      : []
+    return { entries, latest: latestTurn ? { turn: latestTurn, services } : null }
+  }, [sourceId])
 
-  if (!presets || existing === undefined) return null
+  if (!presets || existing === undefined || quick === undefined) return null
 
   if (sourceId && existing === null) {
     return (
@@ -166,6 +224,7 @@ export function TurnForm({ turnId, copyId, onDone, onClose }: Props) {
     <TurnFormFields
       presets={presets}
       existing={existing}
+      quick={quick}
       copy={!!copyId}
       onDone={onDone}
       onClose={onClose ?? onDone}
@@ -176,12 +235,13 @@ export function TurnForm({ turnId, copyId, onDone, onClose }: Props) {
 interface FieldsProps {
   presets: ServicePreset[]
   existing: { turn: Turn; services: TurnService[] } | null
+  quick: QuickData | null
   copy: boolean
   onDone: () => void
   onClose: () => void
 }
 
-function TurnFormFields({ presets, existing, copy, onDone, onClose }: FieldsProps) {
+function TurnFormFields({ presets, existing, quick, copy, onDone, onClose }: FieldsProps) {
   const {
     locale,
     defaultCommissionRateBp,
@@ -189,7 +249,9 @@ function TurnFormFields({ presets, existing, copy, onDone, onClose }: FieldsProp
     cashTipHandling,
     cardTipHandling,
     lastServicePresetId,
+    tipButtonsTarget,
   } = useSettings()
+  const [, navigate] = useAppLocation()
   const id = useId()
   const today = todayIso()
   // A copy is loaded from its source but saved as a brand new turn.
@@ -263,6 +325,26 @@ function TurnFormFields({ presets, existing, copy, onDone, onClose }: FieldsProp
   const showPerLine =
     perServiceRates || new Set(lines.map((line) => line.rate)).size > 1
 
+  const useCounts = quick ? serviceUse(quick.entries) : new Map<string, number>()
+  const lastPrices = quick ? lastPrice(quick.entries) : new Map<string, number>()
+  const combos = quick ? topCombos(quick.entries) : []
+  const latest = quick?.latest ?? null
+  // Most used first; the presets keep their own order on a tie (stable sort).
+  const orderedPresets = [...presets].sort(
+    (a, b) => (useCounts.get(b.id) ?? 0) - (useCounts.get(a.id) ?? 0),
+  )
+  const serviceCents = lines.reduce(
+    (sum, line) => sum + (parseCents(line.amount) ?? 0),
+    0,
+  )
+  const percentTipCents = roundDiv(serviceCents * 1800, 10_000)
+  const tipOptions = [
+    ...TIP_VALUES.map((cents) => ({ label: formatUsdShort(cents), cents })),
+    { label: '18%', cents: percentTipCents },
+  ]
+  const targetText = tipButtonsTarget === 'cash' ? cashText : cardText
+  const targetCents = targetText.trim() === '' ? null : parseCents(targetText)
+
   function changed() {
     setSavedAddAnother(false)
   }
@@ -326,9 +408,9 @@ function TurnFormFields({ presets, existing, copy, onDone, onClose }: FieldsProp
     const sharedRate = sharedRateForNewLine()
     const withRate =
       sharedRate === null ? line : { ...line, rate: sharedRate, rateTouched: true }
-    return preset?.defaultPriceCents != null
-      ? { ...withRate, amount: centsToInput(preset.defaultPriceCents) }
-      : withRate
+    // The chip shows and fills the usual price, or else the last one charged.
+    const priceCents = preset?.defaultPriceCents ?? lastPrices.get(choice) ?? null
+    return priceCents != null ? { ...withRate, amount: centsToInput(priceCents) } : withRate
   }
 
   function toggleService(choice: string) {
@@ -359,6 +441,40 @@ function TurnFormFields({ presets, existing, copy, onDone, onClose }: FieldsProp
     changed()
   }
 
+  /** A repeat chip replaces the whole service list, keeping the rate rules of hand-picked chips. */
+  function applyCombo(comboLines: readonly QuickPickLine[]) {
+    const shared =
+      !perServiceRates && lines[0]?.rateTouched ? lines[0].rate : null
+    const next = comboLines.map((line) => {
+      const preset = presets.find((item) => item.id === line.key)
+      const base = newLine(
+        preset ? preset.id : 'other',
+        preset?.defaultCommissionRateBp ?? defaultCommissionRateBp,
+      )
+      return {
+        ...base,
+        customName: preset ? '' : line.name,
+        amount: centsToInput(line.priceCents),
+        ...(shared === null ? {} : { rate: shared, rateTouched: true }),
+      }
+    })
+    setLines(next)
+    setErrors({ lines: {} })
+    changed()
+  }
+
+  function fillTip(cents: number) {
+    const value = centsToInput(cents)
+    if (tipButtonsTarget === 'cash') {
+      setCashText(value)
+      clearError('cash')
+    } else {
+      setCardText(value)
+      clearError('card')
+    }
+    changed()
+  }
+
   function changeSharedRate(value: string) {
     setLines((previous) =>
       previous.map((line) => ({ ...line, rate: value, rateTouched: true })),
@@ -367,12 +483,12 @@ function TurnFormFields({ presets, existing, copy, onDone, onClose }: FieldsProp
     changed()
   }
 
-  async function save(): Promise<boolean> {
-    if (saveInFlight.current) return false
+  async function save(): Promise<SaveResult | null> {
+    if (saveInFlight.current) return null
 
     if (lines.length === 0) {
       setErrors({ lines: {}, services: t(locale, 'errorNoService') })
-      return false
+      return null
     }
 
     const nextLineErrors: Record<string, LineErrors> = {}
@@ -426,7 +542,7 @@ function TurnFormFields({ presets, existing, copy, onDone, onClose }: FieldsProp
       // A hidden error would be invisible: open More options for the count.
       if (turnCount === null) setMoreOpen(true)
       setErrors(nextErrors)
-      return false
+      return null
     }
 
     setErrors({ lines: {} })
@@ -447,9 +563,10 @@ function TurnFormFields({ presets, existing, copy, onDone, onClose }: FieldsProp
       cardTipReceived,
       lines: nextLines,
     }
+    let savedId = turn?.id ?? ''
     try {
       if (turn) await updateTurn(db, turn.id, input)
-      else await addTurn(db, input)
+      else savedId = await addTurn(db, input)
     } catch (error) {
       saveInFlight.current = false
       throw error
@@ -459,12 +576,38 @@ function TurnFormFields({ presets, existing, copy, onDone, onClose }: FieldsProp
       if (lastPreset) updateSettings({ lastServicePresetId: lastPreset.id })
       void requestPersistence()
     }
-    return true
+    return { id: savedId, earnedTotalCents: preview.earnedTotalCents }
+  }
+
+  /** New and copied turns offer Undo and Copy again; editing an existing turn only says Saved. */
+  function showSaved(result: SaveResult) {
+    if (turn) {
+      toast.show({ message: t(locale, 'saved') })
+      return
+    }
+    toast.show({
+      message: `${t(locale, 'saved')} · ${t(locale, 'youEarn')} ${formatUsdShort(result.earnedTotalCents)}`,
+      actions: [
+        {
+          label: t(locale, 'undo'),
+          onClick: () => {
+            void deleteTurn(db, result.id)
+          },
+        },
+        {
+          label: t(locale, 'copyAgain'),
+          onClick: () => navigate(paths.copy(result.id)),
+        },
+      ],
+    })
   }
 
   async function submit(event: FormEvent) {
     event.preventDefault()
-    if (await save()) onDone()
+    const result = await save()
+    if (!result) return
+    showSaved(result)
+    onDone()
   }
 
   function resetForNextTurn() {
@@ -551,6 +694,32 @@ function TurnFormFields({ presets, existing, copy, onDone, onClose }: FieldsProp
         )}
       </header>
 
+      {quick && ((latest && latest.services.length > 0) || combos.length > 0) && (
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          {latest && latest.services.length > 0 && (
+            <button
+              type="button"
+              className={REPEAT_CHIP}
+              onClick={() => navigate(paths.copy(latest.turn.id), { replace: true })}
+            >
+              <span aria-hidden="true">↻</span>
+              {sameAsLastLabel(latest, locale)}
+            </button>
+          )}
+          {combos.map((combo, index) => (
+            <button
+              key={index}
+              type="button"
+              className={REPEAT_CHIP}
+              onClick={() => applyCombo(combo.lines)}
+            >
+              <span aria-hidden="true">↻</span>
+              {comboLabel(combo.lines)}
+            </button>
+          ))}
+        </div>
+      )}
+
       <WorkDateField
         value={date}
         onChange={(value) => {
@@ -568,22 +737,30 @@ function TurnFormFields({ presets, existing, copy, onDone, onClose }: FieldsProp
           aria-label={t(locale, 'servicesPick')}
           className="flex flex-wrap gap-2"
         >
-          {presets.map((preset) => {
+          {orderedPresets.map((preset) => {
             const on = lines.some((line) => line.choice === preset.id)
+            const price = preset.defaultPriceCents ?? lastPrices.get(preset.id) ?? null
             return (
               <button
                 key={preset.id}
                 type="button"
+                data-service-name={presetName(preset, locale)}
                 aria-pressed={on}
-                className={`${chip} ${on ? chipOn : chipOff}`}
+                className={`${chip} ${on ? chipOn : chipOff} flex items-center gap-1.5`}
                 onClick={() => toggleService(preset.id)}
               >
                 {presetName(preset, locale)}
+                {price !== null && (
+                  <em className="text-[13px] font-medium not-italic text-text-secondary">
+                    {formatUsdShort(price)}
+                  </em>
+                )}
               </button>
             )
           })}
           <button
             type="button"
+            data-service-name={t(locale, 'presetOther')}
             aria-pressed={lines.some((line) => line.choice === 'other')}
             className={`${chip} ${
               lines.some((line) => line.choice === 'other') ? chipOn : chipOff
@@ -659,6 +836,44 @@ function TurnFormFields({ presets, existing, copy, onDone, onClose }: FieldsProp
           }}
           error={errors.card}
         />
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="flex overflow-hidden rounded-control border-[1.5px] border-border-strong">
+          {(['cash', 'card'] as const).map((target) => (
+            <button
+              key={target}
+              type="button"
+              aria-pressed={tipButtonsTarget === target}
+              onClick={() => updateSettings({ tipButtonsTarget: target })}
+              className={`min-h-11 px-2.5 text-sm font-semibold ${
+                tipButtonsTarget === target
+                  ? 'bg-brand-50 text-brand-800'
+                  : 'bg-surface text-text-secondary'
+              }${target === 'cash' ? ' border-r-[1.5px] border-border-strong' : ''}`}
+            >
+              {t(locale, target === 'cash' ? 'methodCash' : 'methodCard')}
+            </button>
+          ))}
+        </div>
+        {tipOptions.map((option) => {
+          const on = targetCents === option.cents
+          return (
+            <button
+              key={option.label}
+              type="button"
+              aria-pressed={on}
+              onClick={() => fillTip(option.cents)}
+              className={`min-h-11 min-w-11 rounded-control border-[1.5px] px-3 text-sm font-semibold ${
+                on
+                  ? 'border-positive-text bg-positive-bg text-positive-text'
+                  : 'border-border bg-surface'
+              }`}
+            >
+              {option.label}
+            </button>
+          )
+        })}
       </div>
 
       {!showPerLine && lines.length > 0 && (

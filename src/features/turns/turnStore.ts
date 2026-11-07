@@ -1,5 +1,6 @@
 import { turnTotals, type TurnMoney } from '../../domain/commission.ts'
-import type { IsoDate } from '../../domain/dates.ts'
+import { addDays, type IsoDate } from '../../domain/dates.ts'
+import type { QuickPickEntry } from '../../domain/quickPicks.ts'
 import type { Adjustment, ClientType, NailDb, Turn, TurnService } from '../../db/schema.ts'
 
 export interface TurnLineInput {
@@ -165,6 +166,29 @@ export async function loadRange(
           .toArray()
 
   return { turns, services, adjustments }
+}
+
+/** A saved line's quick-pick key: its preset id, or the lower-cased name without one. */
+export function quickPickKey(service: TurnService): string {
+  return service.servicePresetId ?? `name:${service.serviceNameSnapshot.toLowerCase()}`
+}
+
+/** The last 30 days of turns and their lines, ready for the quick-pick maths. */
+export async function loadQuickPickEntries(
+  db: NailDb,
+  today: IsoDate,
+): Promise<QuickPickEntry[]> {
+  const { turns, services } = await loadRange(db, addDays(today, -29), today)
+  const grouped = servicesByTurn(services)
+
+  return turns.map((turn) => ({
+    turn: { id: turn.id, occurredAt: turn.occurredAt },
+    lines: (grouped.get(turn.id) ?? []).map((service) => ({
+      key: quickPickKey(service),
+      name: service.serviceNameSnapshot,
+      priceCents: service.servicePriceCents,
+    })),
+  }))
 }
 
 export function servicesByTurn(services: readonly TurnService[]): Map<string, TurnService[]> {

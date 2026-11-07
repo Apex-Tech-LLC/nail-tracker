@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { seedSettings, selectServices, turnRow } from './helpers.ts'
+import { seedSettings, selectServices, serviceChip, turnRow } from './helpers.ts'
 
 // Noon on 2026-11-04 in the browser's America/Chicago timezone. The offset is
 // explicit so a machine running in UTC cannot move the fixed day.
@@ -88,12 +88,7 @@ test('repeat last turn is hidden with no turns and opens the last turn once one 
   await expect(page).toHaveURL(/#\/copy\//)
   await expect(page.getByRole('heading', { name: 'Add Turn' })).toBeVisible()
   await expect(page.getByLabel('Service amount')).toHaveValue('50.00')
-  await expect(
-    page.getByRole('group', { name: 'Services (pick one or more)' }).getByRole('button', {
-      name: 'Pedicure',
-      exact: true,
-    }),
-  ).toHaveAttribute('aria-pressed', 'true')
+  await expect(serviceChip(page, 'Pedicure')).toHaveAttribute('aria-pressed', 'true')
 })
 
 test('copying a turn that no longer exists says so', async ({ page }) => {

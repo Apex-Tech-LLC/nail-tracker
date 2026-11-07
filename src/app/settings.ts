@@ -5,6 +5,7 @@ import type { PayPeriodType } from '../domain/payPeriods.ts'
 export type { PayPeriodType }
 
 export type TipHandling = 'inHand' | 'fromSalon'
+export type TipButtonsTarget = 'cash' | 'card'
 
 export interface Settings {
   locale: Locale
@@ -16,6 +17,7 @@ export interface Settings {
   cashTipHandling: TipHandling
   cardTipHandling: TipHandling
   lastServicePresetId: string | null
+  tipButtonsTarget: TipButtonsTarget
   onboardingDone: boolean
 }
 
@@ -52,6 +54,7 @@ export function resolveSettings(saved: string | null, languages: readonly string
     cashTipHandling: isTipHandling(parsed.cashTipHandling) ? parsed.cashTipHandling : 'inHand',
     cardTipHandling: isTipHandling(parsed.cardTipHandling) ? parsed.cardTipHandling : 'fromSalon',
     lastServicePresetId: typeof parsed.lastServicePresetId === 'string' ? parsed.lastServicePresetId : null,
+    tipButtonsTarget: parsed.tipButtonsTarget === 'card' ? 'card' : 'cash',
     onboardingDone: parsed.onboardingDone === true,
   }
 }

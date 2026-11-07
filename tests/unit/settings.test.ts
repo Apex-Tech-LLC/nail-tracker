@@ -24,6 +24,7 @@ describe('resolveSettings', () => {
     cashTipHandling: 'inHand',
     cardTipHandling: 'fromSalon',
     lastServicePresetId: null,
+    tipButtonsTarget: 'cash',
     onboardingDone: false,
   }
 
