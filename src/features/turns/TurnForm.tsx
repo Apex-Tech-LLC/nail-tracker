@@ -17,9 +17,9 @@ import { centsToInput, formatUsd, parseCents, parseRateBp, rateToInput } from '.
 import { t } from '../../lib/i18n.ts'
 import type { Locale } from '../../lib/locale.ts'
 import { requestPersistence } from '../../pwa/persistStorage.ts'
-import { ConfirmDialog } from '../../ui/ConfirmDialog.tsx'
 import { MoneyField } from '../../ui/MoneyField.tsx'
 import { PercentField } from '../../ui/PercentField.tsx'
+import { useToast } from '../../ui/Toast.tsx'
 import { WorkDateField } from '../../ui/WorkDateField.tsx'
 import {
   card,
@@ -37,7 +37,7 @@ import {
   type LineErrors,
   type LineState,
 } from './ServiceLineFields.tsx'
-import { addTurn, deleteTurn, updateTurn, type TurnLineInput } from './turnStore.ts'
+import { addTurn, deleteTurn, restoreTurn, updateTurn, type TurnLineInput } from './turnStore.ts'
 
 interface Errors {
   date?: string
@@ -239,9 +239,9 @@ function TurnFormFields({ presets, existing, copy, onDone, onClose }: FieldsProp
       : false,
   )
   const [savedAddAnother, setSavedAddAnother] = useState(false)
-  const [confirmingDelete, setConfirmingDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [errors, setErrors] = useState<Errors>({ lines: {} })
+  const toast = useToast()
 
   // A quick double tap fires submit twice before React can re-render. The ref
   // is set synchronously, so the second call does nothing.
@@ -493,11 +493,24 @@ function TurnFormFields({ presets, existing, copy, onDone, onClose }: FieldsProp
     saveInFlight.current = false
   }
 
-  async function confirmDelete() {
+  async function deleteNow() {
     if (!turn || deleting) return
     setDeleting(true)
     try {
-      await deleteTurn(db, turn.id)
+      const removed = await deleteTurn(db, turn.id)
+      if (removed) {
+        toast.show({
+          message: t(locale, 'turnDeleted'),
+          actions: [
+            {
+              label: t(locale, 'undo'),
+              onClick: () => {
+                void restoreTurn(db, removed)
+              },
+            },
+          ],
+        })
+      }
       onDone()
     } catch (error) {
       setDeleting(false)
@@ -525,7 +538,10 @@ function TurnFormFields({ presets, existing, copy, onDone, onClose }: FieldsProp
           <button
             type="button"
             aria-label={t(locale, 'delete')}
-            onClick={() => setConfirmingDelete(true)}
+            disabled={deleting}
+            onClick={() => {
+              void deleteNow()
+            }}
             className="flex min-h-11 min-w-11 items-center justify-center text-danger-text"
           >
             <IconTrash size={22} aria-hidden="true" />
@@ -829,19 +845,6 @@ function TurnFormFields({ presets, existing, copy, onDone, onClose }: FieldsProp
         )}
       </div>
 
-      {turn && (
-        <ConfirmDialog
-          open={confirmingDelete}
-          title={t(locale, 'deleteTurnTitle')}
-          body={t(locale, 'deleteTurnBody')}
-          confirmLabel={t(locale, 'delete')}
-          cancelLabel={t(locale, 'cancel')}
-          danger
-          confirmDisabled={deleting}
-          onConfirm={confirmDelete}
-          onCancel={() => setConfirmingDelete(false)}
-        />
-      )}
     </form>
   )
 }

@@ -30,6 +30,8 @@ const strings = {
     close: 'Close',
     edit: 'Edit',
     delete: 'Delete',
+    copy: 'Copy',
+    undo: 'Undo',
     next: 'Next',
     skip: 'Skip',
     back: 'Back',
@@ -65,12 +67,11 @@ const strings = {
     noTurnsTitle: 'No turns yet',
     noTurnsHint: 'Tap the button below after each customer. It takes about 10 seconds.',
     recentTurns: 'Recent turns',
-    turnNumber: 'Turn #{n}',
-    noTurnNumber: 'No turn',
-    tipShort: 'Tip {amount}',
+    copyTurnNumber: 'Copy turn #{n}',
+    tipInline: '+{amount} tip',
+    turnActions: 'Turn actions',
     viewAnotherDay: 'View another day',
     backToTodayShort: 'Go to today',
-    moreServices: '+{n} more',
 
     // Add and edit turn
     newTurn: 'Add Turn',
@@ -106,8 +107,7 @@ const strings = {
     errorRate: 'Enter a percent from 0 to 100, like 60 or 62.5.',
     errorTurnCount: 'Enter a whole number from 0 to 99.',
     errorDate: 'Pick a date.',
-    deleteTurnTitle: 'Delete this turn?',
-    deleteTurnBody: 'Every total that includes it will be updated. This cannot be undone.',
+    turnDeleted: 'Turn deleted',
     entryNotFound: 'This entry no longer exists.',
 
     // History
@@ -121,7 +121,8 @@ const strings = {
     searchPlaceholder: 'Gel-X, pedicure…',
     noEntries: 'Nothing recorded for these dates.',
     noMatches: 'No turns match this search.',
-    dayTotal: 'Day total',
+    dayTurnCountOne: '{n} turn',
+    dayTurnCount: '{n} turns',
     addAdjustment: 'Add adjustment',
     errorRange: 'The end date must be on or after the start date.',
 
@@ -138,8 +139,7 @@ const strings = {
     adjBookkeepingDeduction: 'Bookkeeping deduction',
     adjBookkeepingHint: 'Lowers what you earned, but not what the salon owes you.',
     errorAdjustmentAmount: 'Enter an amount that is not zero, like 25 or -25.',
-    deleteAdjustmentTitle: 'Delete this adjustment?',
-    deleteAdjustmentBody: 'Every total that includes it will be updated. This cannot be undone.',
+    adjustmentDeleted: 'Adjustment deleted',
 
     // Service presets
     servicePresets: 'Service presets',
@@ -361,6 +361,8 @@ const strings = {
     close: 'Đóng',
     edit: 'Chỉnh sửa',
     delete: 'Xóa',
+    copy: 'Sao chép',
+    undo: 'Hoàn tác',
     next: 'Tiếp',
     skip: 'Bỏ qua',
     back: 'Quay lại',
@@ -396,12 +398,11 @@ const strings = {
     noTurnsTitle: 'Chưa có turn nào',
     noTurnsHint: 'Bấm nút bên dưới sau mỗi khách. Chỉ mất khoảng 10 giây.',
     recentTurns: 'Turn gần đây',
-    turnNumber: 'Turn #{n}',
-    noTurnNumber: 'Không tính turn',
-    tipShort: 'Tip {amount}',
+    copyTurnNumber: 'Sao chép turn #{n}',
+    tipInline: '+{amount} tip',
+    turnActions: 'Thao tác turn',
     viewAnotherDay: 'Xem ngày khác',
     backToTodayShort: 'Về hôm nay',
-    moreServices: '+{n} dịch vụ',
 
     // Add and edit turn
     newTurn: 'Thêm turn',
@@ -437,8 +438,7 @@ const strings = {
     errorRate: 'Nhập phần trăm từ 0 đến 100, ví dụ 60 hoặc 62.5.',
     errorTurnCount: 'Nhập số nguyên từ 0 đến 99.',
     errorDate: 'Chọn ngày.',
-    deleteTurnTitle: 'Xóa turn này?',
-    deleteTurnBody: 'Các tổng tiền sẽ được tính lại. Xóa rồi không lấy lại được.',
+    turnDeleted: 'Đã xóa turn',
     entryNotFound: 'Mục này không còn nữa.',
 
     // History
@@ -452,7 +452,8 @@ const strings = {
     searchPlaceholder: 'Gel-X, làm móng chân…',
     noEntries: 'Chưa ghi khoản nào trong những ngày này.',
     noMatches: 'Không tìm thấy turn nào.',
-    dayTotal: 'Tổng trong ngày',
+    dayTurnCountOne: '{n} turn',
+    dayTurnCount: '{n} turn',
     addAdjustment: 'Thêm điều chỉnh',
     errorRange: 'Ngày kết thúc phải bằng hoặc sau ngày bắt đầu.',
 
@@ -469,8 +470,7 @@ const strings = {
     adjBookkeepingDeduction: 'Khoản trừ riêng',
     adjBookkeepingHint: 'Giảm số tiền bạn kiếm được, nhưng không giảm số tiền tiệm còn nợ bạn.',
     errorAdjustmentAmount: 'Nhập số tiền khác 0, ví dụ 25 hoặc -25.',
-    deleteAdjustmentTitle: 'Xóa điều chỉnh này?',
-    deleteAdjustmentBody: 'Các tổng tiền sẽ được tính lại. Xóa rồi không lấy lại được.',
+    adjustmentDeleted: 'Đã xóa điều chỉnh',
 
     // Service presets
     servicePresets: 'Danh sách dịch vụ',
@@ -674,7 +674,7 @@ export function t(locale: Locale, key: StringKey): string {
   return strings[locale][key]
 }
 
-/** Same as t(), then swaps each {name} for its value: tf('en', 'turnNumber', { n: 8 }) is "Turn #8". */
+/** Same as t(), then swaps each {name} for its value: tf('en', 'copyTurnNumber', { n: 8 }) is "Copy turn #8". */
 export function tf(locale: Locale, key: StringKey, values: Record<string, string | number>): string {
   return t(locale, key).replace(/\{(\w+)\}/g, (match, name: string) => (name in values ? String(values[name]) : match))
 }

@@ -121,10 +121,29 @@ export async function updateTurn(
   })
 }
 
-export async function deleteTurn(db: NailDb, id: string): Promise<void> {
-  await db.transaction('rw', db.turns, db.turnServices, async () => {
+export interface RemovedTurn {
+  turn: Turn
+  services: TurnService[]
+}
+
+/** Removes a turn and hands back the exact rows, so Undo can put them back. */
+export async function deleteTurn(db: NailDb, id: string): Promise<RemovedTurn | null> {
+  return db.transaction('rw', db.turns, db.turnServices, async () => {
+    const turn = await db.turns.get(id)
+    if (!turn) return null
+
+    const services = await db.turnServices.where('turnId').equals(id).toArray()
     await db.turns.delete(id)
     await db.turnServices.where('turnId').equals(id).delete()
+    return { turn, services }
+  })
+}
+
+/** Puts back the rows deleteTurn removed, with their original ids. */
+export async function restoreTurn(db: NailDb, removed: RemovedTurn): Promise<void> {
+  await db.transaction('rw', db.turns, db.turnServices, async () => {
+    await db.turns.put(removed.turn)
+    await db.turnServices.bulkPut(removed.services)
   })
 }
 

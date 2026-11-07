@@ -4,6 +4,7 @@ import { createDb, type NailDb } from '../../src/db/schema.ts'
 import {
   addAdjustment,
   deleteAdjustment,
+  restoreAdjustment,
   updateAdjustment,
   type AdjustmentInput,
 } from '../../src/features/adjustments/adjustmentStore.ts'
@@ -94,5 +95,23 @@ describe('deleteAdjustment', () => {
     await deleteAdjustment(fresh, id)
 
     expect(await fresh.adjustments.count()).toBe(0)
+  })
+
+  it('returns nothing when the id did not exist', async () => {
+    const fresh = openFresh()
+
+    expect(await deleteAdjustment(fresh, 'missing')).toBeNull()
+  })
+
+  it('restoreAdjustment puts the same row back with the same id', async () => {
+    const fresh = openFresh()
+    const id = await addAdjustment(fresh, adjustmentInput({ note: 'bonus' }), 100)
+    const before = await fresh.adjustments.get(id)
+
+    const removed = await deleteAdjustment(fresh, id)
+    expect(removed).not.toBeNull()
+    await restoreAdjustment(fresh, removed!)
+
+    expect(await fresh.adjustments.get(id)).toEqual(before)
   })
 })
