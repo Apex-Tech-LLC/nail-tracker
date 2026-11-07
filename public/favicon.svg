@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <rect width="512" height="512" rx="112" fill="#7a3b72"/>
   <!-- A single nail, kept inside the central 80% so maskable crops never cut it. -->
-  <path d="M176 392V232c0-66 36-120 80-120s80 54 80 120v160a24 24 0 0 1-24 24H200a24 24 0 0 1-24-24z" fill="#fbf8f4"/>
+  <path d="M176 392V232c0-66 36-120 80-120s80 54 80 120v160a24 24 0 0 1-24 24H200a24 24 0 0 1-24-24z" fill="#f7f4f8"/>
   <path d="M256 168c-30 0-48 36-48 76v12h96v-12c0-40-18-76-48-76z" fill="#dcb6d2"/>
 </svg>

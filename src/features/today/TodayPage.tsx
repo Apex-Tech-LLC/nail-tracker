@@ -74,7 +74,7 @@ export function TodayPage() {
       {/* ! needed: card's bg-surface is emitted after bg-brand-50 by Tailwind. */}
       <div className={`${card} bg-brand-50!`}>
         <p className="text-sm text-text-secondary">{t(locale, 'turns')}</p>
-        <p className="text-3xl font-semibold tabular-nums">{totals.turns}</p>
+        <p className="text-3xl font-extrabold tracking-[-0.03em] tabular-nums">{totals.turns}</p>
         <p className="text-xl tabular-nums">
           {formatUsd(totals.serviceRevenueCents)} {t(locale, 'serviceRevenue')}
         </p>
@@ -88,7 +88,7 @@ export function TodayPage() {
         {totals.adjustmentsCents !== 0 && (
           <Figure label={t(locale, 'adjustments')} value={formatUsd(totals.adjustmentsCents)} />
         )}
-        <div className="flex justify-between gap-3 text-xl font-semibold text-positive-text">
+        <div className="flex justify-between gap-3 text-xl font-extrabold tracking-[-0.03em] text-positive-text">
           <span>{t(locale, 'totalEarned')}</span>
           <span className="tabular-nums">{formatUsd(totals.earnedCents)}</span>
         </div>

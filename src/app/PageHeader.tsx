@@ -1,6 +1,7 @@
 import { IconWorld } from '@tabler/icons-react'
 import { t } from '../lib/i18n.ts'
 import { OfflineBadge } from '../pwa/OfflineBadge.tsx'
+import { pageTitle } from '../ui/styles.ts'
 import { updateSettings, useSettings } from './settings.ts'
 
 /** One tap to the other language, for when detection guessed wrong. */
@@ -15,7 +16,7 @@ export function LanguageButton() {
       // voice control, then says what the button does.
       aria-label={`${t(locale, 'otherLanguageShort')}, ${t(locale, 'switchLanguage')}`}
       lang={other}
-      className="flex min-h-11 items-center gap-1 rounded-full border border-border-strong px-2.5 py-1 text-xs"
+      className="flex min-h-11 items-center gap-1 rounded-full border border-border bg-surface px-2.5 py-1 text-xs font-semibold"
     >
       <IconWorld size={16} aria-hidden="true" />
       <span className="font-medium">{t(locale, 'otherLanguageShort')}</span>
@@ -27,7 +28,7 @@ export function LanguageButton() {
 export function PageHeader({ title, languageButton = true }: { title: string; languageButton?: boolean }) {
   return (
     <header className="flex items-center justify-between gap-2">
-      <h1 className="text-lg font-medium">{title}</h1>
+      <h1 className={pageTitle}>{title}</h1>
       <div className="flex items-center gap-2">
         <OfflineBadge />
         {languageButton && <LanguageButton />}

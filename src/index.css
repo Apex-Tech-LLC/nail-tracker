@@ -1,5 +1,14 @@
 @import 'tailwindcss';
-@import '@fontsource-variable/inter';
+@import '@fontsource/be-vietnam-pro/latin-400.css';
+@import '@fontsource/be-vietnam-pro/latin-500.css';
+@import '@fontsource/be-vietnam-pro/latin-600.css';
+@import '@fontsource/be-vietnam-pro/latin-700.css';
+@import '@fontsource/be-vietnam-pro/latin-800.css';
+@import '@fontsource/be-vietnam-pro/vietnamese-400.css';
+@import '@fontsource/be-vietnam-pro/vietnamese-500.css';
+@import '@fontsource/be-vietnam-pro/vietnamese-600.css';
+@import '@fontsource/be-vietnam-pro/vietnamese-700.css';
+@import '@fontsource/be-vietnam-pro/vietnamese-800.css';
 
 /*
  * Design tokens. Raw colors live on :root as CSS variables and Tailwind
@@ -7,33 +16,33 @@
  * variables. Brand is a plum ramp; status is never shown by color alone.
  */
 :root {
-  --brand-50: #f7eef5;
-  --brand-100: #ecd6e6;
-  --brand-200: #dcb6d2;
-  --brand-400: #a8649a;
-  --brand-600: #7a3b72;
-  --brand-800: #5a2a54;
-  --brand-900: #3d1c39;
+  --brand-50: #fbe7ef;
+  --brand-100: #f6d0df;
+  --brand-200: #eaa6c0;
+  --brand-400: #c42a64;
+  --brand-600: #a3164d;
+  --brand-800: #7d0f3a;
+  --brand-900: #5c0a2a;
 
-  --page: #fbf8f4;
+  --page: #f7f4f8;
   --surface: #ffffff;
-  --surface-subtle: #f3efe9;
-  --text: #241f26;
-  --text-secondary: #5e5862;
-  --text-muted: #6b6570; /* 4.5:1 or better on surface, page and brand-50 */
-  --border: rgb(36 31 38 / 0.12);
-  --border-strong: rgb(36 31 38 / 0.24);
+  --surface-subtle: #efe9f2;
+  --text: #1d1822;
+  --text-secondary: #5d5566;
+  --text-muted: #6e6676; /* 4.65:1 on brand-50, the lowest background it sits on */
+  --border: #ebe5ee;
+  --border-strong: #d6ccdb;
 
-  --positive-bg: #e6f2ea;
-  --positive-text: #2f6b46;
-  --warning-bg: #faeeda;
-  --warning-text: #854f0b;
+  --positive-bg: #e3f4ec;
+  --positive-text: #0d7a57;
+  --warning-bg: #fdeee6;
+  --warning-text: #b4441b;
   --danger-bg: #fcebeb;
-  --danger-text: #a32d2d;
+  --danger-text: #b42318;
 }
 
 @theme inline {
-  --font-sans: 'Inter Variable', system-ui, sans-serif;
+  --font-sans: 'Be Vietnam Pro', system-ui, sans-serif;
 
   --color-brand-50: var(--brand-50);
   --color-brand-100: var(--brand-100);
@@ -59,13 +68,15 @@
   --color-danger-bg: var(--danger-bg);
   --color-danger-text: var(--danger-text);
 
-  --radius-card: 12px;
-  --radius-control: 10px;
+  --radius-card: 18px;
+  --radius-control: 12px;
+  --radius-button: 16px;
 }
 
 @layer base {
   body {
     @apply bg-page font-sans text-text antialiased;
+    font-variant-numeric: tabular-nums;
   }
 }
 

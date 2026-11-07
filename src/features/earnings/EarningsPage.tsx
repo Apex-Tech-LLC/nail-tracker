@@ -204,7 +204,7 @@ export function EarningsPage() {
         <>
           <div className={`${card} bg-brand-50!`}>
             <p className="text-sm text-text-secondary">{t(locale, 'totalEarned')}</p>
-            <p className="text-3xl font-semibold tabular-nums">
+            <p className="text-3xl font-extrabold tracking-[-0.03em] tabular-nums">
               {formatUsd(data.totals.earnedCents)}
             </p>
           </div>

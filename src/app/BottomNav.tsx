@@ -19,7 +19,7 @@ export function BottomNav() {
   return (
     <nav
       aria-label={t(locale, 'mainNav')}
-      className="fixed inset-x-0 bottom-0 border-t border-border bg-surface pb-[env(safe-area-inset-bottom)]"
+      className="fixed inset-x-0 bottom-0 border-t border-border bg-surface/90 pb-[env(safe-area-inset-bottom)] backdrop-blur"
     >
       <ul className="mx-auto flex max-w-md">
         {TABS.map(({ path, label, icon: TabIcon }) => {
@@ -30,9 +30,9 @@ export function BottomNav() {
                 href={path}
                 replace
                 aria-current={active ? 'page' : undefined}
-                className={`flex flex-col items-center gap-0.5 py-2 text-[11px] ${active ? 'text-brand-600' : 'text-text-muted'}`}
+                className={`flex flex-col items-center gap-0.5 py-2 text-[11px] font-semibold ${active ? 'text-brand-600' : 'text-text-muted'}`}
               >
-                <TabIcon size={22} stroke={active ? 2 : 1.5} aria-hidden="true" />
+                <TabIcon size={24} stroke={active ? 2 : 1.5} aria-hidden="true" />
                 {t(locale, label)}
               </Link>
             </li>
