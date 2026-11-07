@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { Router, useLocation } from 'wouter'
 import { UpdatePrompt } from '../pwa/UpdatePrompt.tsx'
+import { ToastProvider } from '../ui/Toast.tsx'
 import { BottomNav } from './BottomNav.tsx'
 import { paths, useAppLocation } from './navigation.ts'
 import { Routes } from './routes.tsx'
@@ -9,7 +10,9 @@ import { useSettings } from './settings.ts'
 export default function App() {
   return (
     <Router hook={useAppLocation}>
-      <Shell />
+      <ToastProvider>
+        <Shell />
+      </ToastProvider>
     </Router>
   )
 }
