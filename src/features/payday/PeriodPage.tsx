@@ -18,6 +18,7 @@ import {
   secondaryButton,
 } from '../../ui/styles.ts'
 import { PAYMENT_METHOD_LABEL, PAY_STATE_COLOR, PAY_STATE_LABEL } from './payStateLabels.ts'
+import { CheckPanel } from '../paycheck/CheckPanel.tsx'
 import { loadPaymentsForPeriod } from './paymentStore.ts'
 import { deletePeriod, loadPeriodSummaries, setPeriodStatus } from './periodStore.ts'
 
@@ -89,6 +90,8 @@ export function PeriodPage({ periodId, onDone }: Props) {
           {t(locale, open ? 'statusOpen' : 'statusClosed')}
         </span>
       </header>
+
+      <CheckPanel summary={summary} />
 
       <div className={card}>
         <h2 className="font-medium">{t(locale, 'earnedSection')}</h2>
