@@ -52,3 +52,6 @@ opens the pull request, waits for checks, merges, updates this file. Product: `d
 | V20 | Speed with 20,000 turns; Vietnamese check of all new words at 375 pixels | ⬜ |
 
 Briefs for 2.3 and 2.4 are written when the release before them is merged, so they match the code as it is then.
+
+Build order for 2.4: V19 beside V15, then V18 beside V17, then V16 (it shares the V11 paycheck result and the V17 year
+summary), then V20 last (it checks every screen).
