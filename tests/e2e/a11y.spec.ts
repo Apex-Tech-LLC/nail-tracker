@@ -20,6 +20,8 @@ interface Copy {
   appName: string
   addTurn: string
   editTurn: string
+  sayYourTurns: string
+  makeTurns: string
   addService: string
   moreOptions: string
   delete: string
@@ -42,6 +44,8 @@ const TEXT: Record<Locale, Copy> = {
     appName: 'Nail Tracker',
     addTurn: 'Add Turn',
     editTurn: 'Edit Turn',
+    sayYourTurns: 'Say your turns',
+    makeTurns: 'Make turns',
     addService: 'Add service',
     moreOptions: 'More options',
     delete: 'Delete',
@@ -67,6 +71,8 @@ const TEXT: Record<Locale, Copy> = {
     appName: 'Nail Tracker',
     addTurn: 'Thêm turn',
     editTurn: 'Chỉnh sửa turn',
+    sayYourTurns: 'Nói các turn',
+    makeTurns: 'Tạo turn',
     addService: 'Thêm dịch vụ',
     moreOptions: 'Thêm tùy chọn',
     delete: 'Xóa',
@@ -157,6 +163,14 @@ async function start(page: Page, locale: Locale, withData = true) {
   await switchLocale(page, locale)
 }
 
+/** Types two jobs and one line the reader cannot use, then opens the Check screen. */
+async function openCheck(page: Page, text: Copy) {
+  await page.goto('./#/say')
+  await page.locator('textarea').fill('Gel manicure 45, 10 tip cash\nPedicure\nblah blah')
+  await page.getByRole('button', { name: text.makeTurns, exact: true }).click()
+  await expect(page.getByTestId('draft-card').first()).toBeVisible()
+}
+
 /**
  * Controls smaller than 40px. Checkboxes and radios are left out because the
  * whole label row or tile is their target.
@@ -225,6 +239,25 @@ for (const scheme of SCHEMES) {
           await audit(page)
           await noSidewaysScroll(page)
           await shoot(page, scheme, `${locale}-delete-undo`)
+        })
+
+        test('say your turns', async ({ page }) => {
+          await start(page, locale, false)
+          await page.goto('./#/say')
+          await expectScreen(page, scheme, `${locale}-say`, text.sayYourTurns)
+        })
+
+        test('check the drafts', async ({ page }) => {
+          await start(page, locale)
+          await openCheck(page, text)
+          await expectScreen(page, scheme, `${locale}-check`)
+        })
+
+        test('fix a draft', async ({ page }) => {
+          await start(page, locale)
+          await openCheck(page, text)
+          await page.getByTestId('draft-card').first().getByRole('button').first().click()
+          await expectScreen(page, scheme, `${locale}-draft-edit`)
         })
 
         test('history', async ({ page }) => {
@@ -299,6 +332,17 @@ for (const scheme of SCHEMES) {
             // A second service row is what shows the remove-service button.
             await page.getByRole('button', { name: text.addService, exact: true }).click()
             await page.getByRole('button', { name: text.moreOptions, exact: true }).click()
+            expect(await smallTapTargets(page)).toEqual([])
+          })
+
+          await test.step('Say your turns', async () => {
+            await page.goto('./#/say')
+            await expect(page.getByRole('heading', { level: 1, name: text.sayYourTurns })).toBeVisible()
+            expect(await smallTapTargets(page)).toEqual([])
+          })
+
+          await test.step('Check the drafts', async () => {
+            await openCheck(page, text)
             expect(await smallTapTargets(page)).toEqual([])
           })
 
