@@ -1,10 +1,15 @@
-﻿import { IconX } from '@tabler/icons-react'
+import { IconX } from '@tabler/icons-react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useId, useRef, useState, type FormEvent } from 'react'
 import { updateSettings, useSettings } from '../../app/settings.ts'
 import { useToday } from '../../app/useToday.ts'
-import { db } from '../../db/schema.ts'
-import type { IsoDate } from '../../domain/dates.ts'
+import { db, type PayPeriod } from '../../db/schema.ts'
+import {
+  formatDayShort,
+  isIsoDate,
+  weekRange,
+  type IsoDate,
+} from '../../domain/dates.ts'
 import {
   centsToInput,
   formatRate,
@@ -15,6 +20,7 @@ import {
   parseRateBp,
   rateToInput,
 } from '../../domain/money.ts'
+import { periodContaining, periodLengthDays, type PayPeriodType } from '../../domain/payPeriods.ts'
 import {
   defaultPayRules,
   type FeeWhen,
@@ -22,18 +28,35 @@ import {
   type SupplyFee,
 } from '../../domain/payRules.ts'
 import { t, tf } from '../../lib/i18n.ts'
+import type { Locale } from '../../lib/locale.ts'
+import { ConfirmDialog } from '../../ui/ConfirmDialog.tsx'
 import { MoneyField } from '../../ui/MoneyField.tsx'
 import { NumberPad } from '../../ui/NumberPad.tsx'
 import { PercentField } from '../../ui/PercentField.tsx'
+import { Row } from '../../ui/Row.tsx'
 import { TileGroup } from '../../ui/TileGroup.tsx'
-import { card, primaryButton } from '../../ui/styles.ts'
+import {
+  card,
+  dangerButton,
+  errorText,
+  label,
+  primaryButton,
+  secondaryButton,
+} from '../../ui/styles.ts'
 import { useToast } from '../../ui/useToast.ts'
 import { sampleStatement, specStatement, type RuleValues } from './examples.ts'
-import { loadPayRules, savePayRules } from './payRulesStore.ts'
+import { deletePayRules, loadPayRules, savePayRules } from './payRulesStore.ts'
+import {
+  cardTipFeeSummary,
+  payRulesSummary,
+  splitSummary,
+  supplyFeeSummary,
+} from './payRulesSummary.ts'
 
 type SupplyKind = SupplyFee['kind']
 type RateChoice = '6000' | '5000' | 'custom'
 type SplitChoice = 'none' | 'half' | 'custom'
+type StartChoice = 'today' | 'period' | 'other'
 
 interface FormErrors {
   supply?: string
@@ -42,16 +65,24 @@ interface FormErrors {
 }
 
 export function PayRulesPage({ onDone }: { onDone: () => void }) {
-  const { locale } = useSettings()
+  const { locale, weekStartDay, payPeriodType, payPeriodAnchorDate } = useSettings()
   const today = useToday()
   const rules = useLiveQuery(() => loadPayRules(db))
+  const periods = useLiveQuery(() => db.payPeriods.toArray())
 
-  if (rules === undefined) return null
+  if (rules === undefined || periods === undefined) return null
 
   const sorted = [...rules].sort(
     (a, b) => b.startDate.localeCompare(a.startDate) || b.createdAt - a.createdAt,
   )
   const current = sorted[0] ?? defaultPayRules(today)
+  const periodStart = startOfPeriod(
+    payPeriodType,
+    payPeriodAnchorDate,
+    periods,
+    today,
+    weekStartDay,
+  )
 
   return (
     <>
@@ -74,17 +105,43 @@ export function PayRulesPage({ onDone }: { onDone: () => void }) {
         key={`${current.id}:${current.updatedAt}`}
         initial={current}
         today={today}
+        periodStart={periodStart}
       />
+
+      <RulesList rules={sorted} />
     </>
   )
+}
+
+/** Start of the pay period that contains today, from the schedule the person set. */
+function startOfPeriod(
+  type: PayPeriodType,
+  anchor: IsoDate | null,
+  periods: readonly PayPeriod[],
+  today: IsoDate,
+  weekStartDay: 0 | 1,
+): IsoDate {
+  if ((type === 'weekly' || type === 'biweekly') && anchor !== null) {
+    return periodContaining(today, anchor, periodLengthDays(type)).startDate
+  }
+  if (type === 'custom') {
+    const period = periods.find((item) => item.startDate <= today && today <= item.endDate)
+    return period?.startDate ?? today
+  }
+  return weekRange(today, weekStartDay).start
+}
+
+function ruleDate(iso: IsoDate, locale: Locale): string {
+  return `${formatDayShort(iso, locale)}, ${iso.slice(0, 4)}`
 }
 
 interface FormProps {
   initial: PayRules
   today: IsoDate
+  periodStart: IsoDate
 }
 
-function PayRulesForm({ initial, today }: FormProps) {
+function PayRulesForm({ initial, today, periodStart }: FormProps) {
   const {
     locale,
     defaultCommissionRateBp: rate,
@@ -94,6 +151,7 @@ function PayRulesForm({ initial, today }: FormProps) {
   const toast = useToast()
   const formRef = useRef<HTMLFormElement | null>(null)
   const perServiceHintId = useId()
+  const startDateId = useId()
 
   const [customOpen, setCustomOpen] = useState(rate !== 6000 && rate !== 5000)
   const [customText, setCustomText] = useState(() => rateToInput(rate))
@@ -121,6 +179,10 @@ function PayRulesForm({ initial, today }: FormProps) {
   const [cardTipsPaidIn, setCardTipsPaidIn] = useState(initial.cardTipsPaidIn)
 
   const [errors, setErrors] = useState<FormErrors>({})
+  const [askingStart, setAskingStart] = useState(false)
+  const [startChoice, setStartChoice] = useState<StartChoice>('today')
+  const [otherDate, setOtherDate] = useState<IsoDate>(today)
+  const [startError, setStartError] = useState(false)
 
   const [padOpen, setPadOpen] = useState(false)
   const [padReplace, setPadReplace] = useState(false)
@@ -203,16 +265,29 @@ function PayRulesForm({ initial, today }: FormProps) {
     return Object.keys(next).length === 0 && !customInvalid
   }
 
-  function submit(event?: FormEvent) {
+  function startSaving(event?: FormEvent) {
     event?.preventDefault()
     if (!validate()) return
-    void savePayRules(db, draft, today).then(() => {
-      toast.show({ message: t(locale, 'rulesSaved') })
-    })
+    setStartChoice('today')
+    setStartError(false)
+    setAskingStart(true)
+  }
+
+  async function confirmSave() {
+    const startDate =
+      startChoice === 'today' ? today : startChoice === 'period' ? periodStart : otherDate
+    if (!isIsoDate(startDate)) {
+      setStartError(true)
+      return
+    }
+    await savePayRules(db, draft, startDate)
+    setAskingStart(false)
+    setStartError(false)
+    toast.show({ message: t(locale, 'rulesSaved') })
   }
 
   return (
-    <form ref={formRef} noValidate onSubmit={submit} className="flex flex-col gap-4">
+    <form ref={formRef} noValidate onSubmit={startSaving} className="flex flex-col gap-4">
       <section className={`${card} flex flex-col gap-3`}>
         <h2 className="font-medium">{t(locale, 'yourCommission')}</h2>
         <TileGroup<RateChoice>
@@ -414,9 +489,56 @@ function PayRulesForm({ initial, today }: FormProps) {
         </p>
       </section>
 
-      <button type="submit" className={primaryButton}>
-        {t(locale, 'save')}
-      </button>
+      {askingStart ? (
+        <section className={`${card} flex flex-col gap-3`}>
+          <h2 className="font-medium">{t(locale, 'whenDidThisStart')}</h2>
+          <TileGroup<StartChoice>
+            legend={t(locale, 'startDate')}
+            name="start-choice"
+            value={startChoice}
+            onChange={(value) => {
+              setStartChoice(value)
+              setStartError(false)
+            }}
+            stacked
+            options={[
+              { value: 'today', label: t(locale, 'startToday') },
+              { value: 'period', label: t(locale, 'startOfPayPeriod') },
+              { value: 'other', label: t(locale, 'startOtherDay') },
+            ]}
+          />
+          {startChoice === 'other' && (
+            <div>
+              <label htmlFor={startDateId} className={label}>
+                {t(locale, 'startDate')}
+              </label>
+              <input
+                id={startDateId}
+                type="date"
+                value={otherDate}
+                onChange={(event) => {
+                  if (isIsoDate(event.target.value)) {
+                    setOtherDate(event.target.value)
+                    setStartError(false)
+                  }
+                }}
+                className="w-full rounded-control border-[1.5px] border-border-strong bg-surface px-3.5 py-3 text-base focus:border-brand-600 focus:outline-none"
+              />
+            </div>
+          )}
+          {startError && <p className={errorText}>{t(locale, 'errorStartDate')}</p>}
+          <button type="button" onClick={() => void confirmSave()} className={primaryButton}>
+            {t(locale, 'saveRules')}
+          </button>
+          <button type="button" onClick={() => setAskingStart(false)} className={secondaryButton}>
+            {t(locale, 'cancel')}
+          </button>
+        </section>
+      ) : (
+        <button type="submit" className={primaryButton}>
+          {t(locale, 'save')}
+        </button>
+      )}
 
       {numberPad && padOpen && (
         <NumberPad
@@ -439,3 +561,77 @@ function PayRulesForm({ initial, today }: FormProps) {
   )
 }
 
+function RulesList({ rules }: { rules: PayRules[] }) {
+  const { locale, defaultCommissionRateBp: rate } = useSettings()
+  const toast = useToast()
+  const [viewingId, setViewingId] = useState<string | null>(null)
+  const [confirmingId, setConfirmingId] = useState<string | null>(null)
+
+  if (rules.length === 0) return null
+
+  async function remove(id: string) {
+    const deleted = await deletePayRules(db, id)
+    setConfirmingId(null)
+    if (!deleted) return
+    setViewingId(null)
+    toast.show({ message: t(locale, 'ruleDeleted') })
+  }
+
+  return (
+    <section className="flex flex-col gap-2">
+      <h2 className="font-medium">{t(locale, 'earlierPayRules')}</h2>
+      {rules.map((rule) => {
+        const open = viewingId === rule.id
+        return (
+          <div key={rule.id} className={`${card} flex flex-col gap-2`}>
+            <button
+              type="button"
+              onClick={() => setViewingId(open ? null : rule.id)}
+              className="flex flex-col items-start gap-1 text-left"
+            >
+              <span>{tf(locale, 'ruleStarts', { date: ruleDate(rule.startDate, locale) })}</span>
+              <span className="text-sm text-text-secondary">
+                {payRulesSummary(locale, rate, rule)}
+              </span>
+            </button>
+            {open && (
+              <div className="flex flex-col gap-2 border-t border-border pt-2">
+                <Row
+                  label={t(locale, 'supplyFeeTitle')}
+                  value={supplyFeeSummary(locale, rule.supplyFee)}
+                />
+                <Row
+                  label={t(locale, 'cardTipFeeTitle')}
+                  value={cardTipFeeSummary(locale, rule.cardTipFeeBp)}
+                />
+                <Row
+                  label={t(locale, 'checkCashTitle')}
+                  value={splitSummary(locale, rule.checkBp)}
+                />
+                {rules.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => setConfirmingId(rule.id)}
+                    className={dangerButton}
+                  >
+                    {t(locale, 'delete')}
+                  </button>
+                )}
+              </div>
+            )}
+            <ConfirmDialog
+              open={confirmingId === rule.id}
+              title={t(locale, 'deleteRuleTitle')}
+              body={t(locale, 'deleteRuleBody')}
+              confirmLabel={t(locale, 'delete')}
+              cancelLabel={t(locale, 'cancel')}
+              danger
+              onConfirm={() => void remove(rule.id)}
+              onCancel={() => setConfirmingId(null)}
+            />
+          </div>
+        )
+      })}
+    </section>
+  )
+}
