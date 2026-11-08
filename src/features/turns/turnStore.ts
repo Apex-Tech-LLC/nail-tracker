@@ -101,6 +101,19 @@ export async function addTurn(
   return id
 }
 
+/** Saves every input or none of them: one transaction round all the adds. */
+export async function addTurns(
+  db: NailDb,
+  inputs: readonly TurnInput[],
+  now: number = Date.now(),
+): Promise<string[]> {
+  return db.transaction('rw', db.turns, db.turnServices, async () => {
+    const ids: string[] = []
+    for (const input of inputs) ids.push(await addTurn(db, input, now))
+    return ids
+  })
+}
+
 export async function updateTurn(
   db: NailDb,
   id: string,

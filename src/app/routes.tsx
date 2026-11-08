@@ -14,6 +14,9 @@ import { GoalsPage } from '../features/settings/GoalsPage.tsx'
 import { SettingsPage } from '../features/settings/SettingsPage.tsx'
 import { TaxesPage } from '../features/taxes/TaxesPage.tsx'
 import { TurnForm } from '../features/turns/TurnForm.tsx'
+import { CheckPage } from '../features/voice/CheckPage.tsx'
+import { DraftEditPage } from '../features/voice/DraftEditPage.tsx'
+import { SayPage } from '../features/voice/SayPage.tsx'
 import { t } from '../lib/i18n.ts'
 import { paths, useGoBack } from './navigation.ts'
 import { useSettings } from './settings.ts'
@@ -74,6 +77,11 @@ export function Routes() {
             onClose={goBack}
           />
         )}
+      </Route>
+      <Route path={paths.say} component={SayPage} />
+      <Route path={paths.sayCheck} component={CheckPage} />
+      <Route path="/say/edit/:key">
+        {(params) => <DraftEditPage key={params.key} cardKey={params.key} />}
       </Route>
       <Route path={paths.adjustmentNew}>{() => <AdjustmentForm onDone={goBack} />}</Route>
       <Route path="/adjustment/:id">

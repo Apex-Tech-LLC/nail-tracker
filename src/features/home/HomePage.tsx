@@ -1,4 +1,4 @@
-import { IconPlus, IconX } from '@tabler/icons-react'
+import { IconMicrophone, IconPlus, IconX } from '@tabler/icons-react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'wouter'
@@ -617,13 +617,20 @@ export function HomePage() {
       </section>
 
       <div className="pointer-events-none fixed inset-x-0 bottom-[calc(72px+env(safe-area-inset-bottom))] z-40">
-        <div className="mx-auto max-w-md px-[18px]">
+        <div className="mx-auto flex max-w-md gap-2.5 px-[18px]">
           <Link
             href={paths.add}
-            className={`${primaryButton} pointer-events-auto flex min-h-[58px] items-center justify-center gap-2.5`}
+            className={`${primaryButton} pointer-events-auto flex min-h-[58px] flex-1 items-center justify-center gap-2.5`}
           >
             <IconPlus size={20} aria-hidden="true" />
             {t(locale, 'addTurn')}
+          </Link>
+          <Link
+            href={paths.say}
+            className={`${secondaryButton} pointer-events-auto flex min-h-[58px] flex-1 items-center justify-center gap-2`}
+          >
+            <IconMicrophone size={20} aria-hidden="true" />
+            {t(locale, 'sayYourTurns')}
           </Link>
         </div>
       </div>

@@ -1,4 +1,4 @@
-import { IconPlus, IconTrash, IconX } from '@tabler/icons-react'
+import { IconMicrophone, IconPlus, IconTrash, IconX } from '@tabler/icons-react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useId, useRef, useState, type FocusEvent, type FormEvent } from 'react'
 import { createPortal } from 'react-dom'
@@ -13,7 +13,7 @@ import {
   type TurnService,
 } from '../../db/schema.ts'
 import { turnTotals } from '../../domain/commission.ts'
-import { isIsoDate, localDateTimeToMs, timeOf, todayIso, type IsoDate } from '../../domain/dates.ts'
+import { timeOf, todayIso, type IsoDate } from '../../domain/dates.ts'
 import {
   centsToInput,
   formatUsd,
@@ -62,17 +62,16 @@ import {
   loadQuickPickEntries,
   restoreTurn,
   updateTurn,
-  type TurnLineInput,
+  type TurnInput,
 } from './turnStore.ts'
-
-interface Errors {
-  date?: string
-  cash?: string
-  card?: string
-  turnCount?: string
-  services?: string
-  lines: Record<string, LineErrors>
-}
+import {
+  newLine,
+  presetName,
+  tipCents,
+  turnInputFromForm,
+  type Errors,
+  type TurnFormValues,
+} from './turnInput.ts'
 
 const CLIENT_TYPES: {
   value: ClientType
@@ -82,19 +81,6 @@ const CLIENT_TYPES: {
   { value: 'walkIn', key: 'clientWalkIn' },
   { value: 'request', key: 'clientRequest' },
 ]
-
-function newLine(choice: string, rateBp: number): LineState {
-  return {
-    key: crypto.randomUUID(),
-    choice,
-    customName: '',
-    amount: '',
-    rate: rateToInput(rateBp),
-    rateTouched: false,
-    originalChoice: choice,
-    originalName: '',
-  }
-}
 
 /**
  * A new turn's first line: the last service used, with its usual price or else
@@ -146,25 +132,6 @@ function copiedLineFromService(service: TurnService, presets: ServicePreset[]): 
     originalChoice: choice,
     originalName: '',
   }
-}
-
-function presetName(preset: ServicePreset, locale: Locale): string {
-  return locale === 'vi' ? preset.nameVi : preset.nameEn
-}
-
-/** A typed time pins the moment; without one, the turn is simply now. */
-function occurredAtFor(date: IsoDate, time: string): number {
-  return time ? localDateTimeToMs(date, time) : Date.now()
-}
-
-/**
- * Editing keeps the saved moment unless the time or the day was changed.
- * A cleared time box keeps the original moment too.
- */
-function occurredAtForEdit(date: IsoDate, time: string, turn: Turn): number {
-  if (time === '') return turn.occurredAt
-  if (time === timeOf(turn.occurredAt) && date === turn.localWorkDate) return turn.occurredAt
-  return localDateTimeToMs(date, time)
 }
 
 interface Props {
@@ -253,6 +220,39 @@ export function TurnForm({ turnId, copyId, onDone, onClose }: Props) {
   )
 }
 
+/**
+ * The form used to fix one draft turn from the voice Check screen. It starts
+ * from the draft's values and hands the edited values back; nothing is saved.
+ */
+export interface DraftMode {
+  initial: TurnFormValues
+  /** Open More options at the start, so a time or client type to fix is in view. */
+  moreOpen?: boolean
+  onSave: (values: TurnFormValues) => void
+}
+
+/** The Add turn form in draft mode: its presets are loaded here, and there are no saved turns to read. */
+export function DraftTurnForm({ draft, onClose }: { draft: DraftMode; onClose: () => void }) {
+  const presets = useLiveQuery(() =>
+    db.servicePresets
+      .orderBy('sortOrder')
+      .filter((preset) => preset.isActive)
+      .toArray(),
+  )
+  if (!presets) return null
+  return (
+    <TurnFormFields
+      presets={presets}
+      existing={null}
+      quick={null}
+      copy={false}
+      onDone={onClose}
+      onClose={onClose}
+      draft={draft}
+    />
+  )
+}
+
 interface FieldsProps {
   presets: ServicePreset[]
   existing: { turn: Turn; services: TurnService[] } | null
@@ -260,9 +260,10 @@ interface FieldsProps {
   copy: boolean
   onDone: () => void
   onClose: () => void
+  draft?: DraftMode
 }
 
-function TurnFormFields({ presets, existing, quick, copy, onDone, onClose }: FieldsProps) {
+export function TurnFormFields({ presets, existing, quick, copy, onDone, onClose, draft }: FieldsProps) {
   const {
     locale,
     defaultCommissionRateBp,
@@ -281,8 +282,11 @@ function TurnFormFields({ presets, existing, quick, copy, onDone, onClose }: Fie
   const turn = copy ? undefined : source
   const initialPreset = presets.find((preset) => preset.id === lastServicePresetId) ?? presets[0]
 
+  const initial = draft?.initial
   const [lines, setLines] = useState<LineState[]>(() =>
-    existing && existing.services.length > 0
+    initial
+      ? initial.lines
+      : existing && existing.services.length > 0
       ? existing.services.map((service) =>
           copy
             ? copiedLineFromService(service, presets)
@@ -297,34 +301,54 @@ function TurnFormFields({ presets, existing, quick, copy, onDone, onClose }: Fie
         ],
   )
   const [cashText, setCashText] = useState(
-    source && source.cashTipCents > 0 ? centsToInput(source.cashTipCents) : '',
+    initial
+      ? initial.cashText
+      : source && source.cashTipCents > 0
+        ? centsToInput(source.cashTipCents)
+        : '',
   )
   const [cardText, setCardText] = useState(
-    source && source.cardTipCents > 0 ? centsToInput(source.cardTipCents) : '',
+    initial
+      ? initial.cardText
+      : source && source.cardTipCents > 0
+        ? centsToInput(source.cardTipCents)
+        : '',
   )
   // The tip box filled by the % button keeps following the services total
   // until the person types in it or taps another tip button.
   const [percentTipBox, setPercentTipBox] = useState<'cash' | 'card' | null>(null)
-  const [date, setDate] = useState<IsoDate>(turn?.localWorkDate ?? today)
-  const [turnCountText, setTurnCountText] = useState(String(source?.turnCount ?? 1))
-  const [time, setTime] = useState(turn ? timeOf(turn.occurredAt) : '')
+  const [date, setDate] = useState<IsoDate>(initial?.date ?? turn?.localWorkDate ?? today)
+  const [turnCountText, setTurnCountText] = useState(
+    initial?.turnCountText ?? String(source?.turnCount ?? 1),
+  )
+  const [time, setTime] = useState(initial?.time ?? (turn ? timeOf(turn.occurredAt) : ''))
   const [clientType, setClientType] = useState<ClientType>(
-    source?.clientType ?? 'unspecified',
+    initial?.clientType ?? source?.clientType ?? 'unspecified',
   )
 
   const [cashTipReceived, setCashTipReceived] = useState(
-    source ? source.cashTipReceived : cashTipHandling === 'inHand',
+    initial
+      ? initial.cashTipReceived
+      : source
+        ? source.cashTipReceived
+        : cashTipHandling === 'inHand',
   )
   const [cardTipReceived, setCardTipReceived] = useState(
-    source ? source.cardTipReceived : cardTipHandling === 'inHand',
+    initial
+      ? initial.cardTipReceived
+      : source
+        ? source.cardTipReceived
+        : cardTipHandling === 'inHand',
   )
-  const [note, setNote] = useState(source?.note ?? '')
+  const [note, setNote] = useState(initial?.note ?? source?.note ?? '')
   const [moreOpen, setMoreOpen] = useState(
-    source
-      ? source.turnCount !== 1 ||
-          source.clientType !== 'unspecified' ||
-          (source.note ?? '').trim() !== ''
-      : false,
+    initial
+      ? !!draft?.moreOpen
+      : source
+        ? source.turnCount !== 1 ||
+            source.clientType !== 'unspecified' ||
+            (source.note ?? '').trim() !== ''
+        : false,
   )
   const [savedAddAnother, setSavedAddAnother] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -350,8 +374,8 @@ function TurnFormFields({ presets, existing, quick, copy, onDone, onClose }: Fie
   const percentTipCents = roundDiv(serviceCents * 1800, 10_000)
   const cashShown = percentTipBox === 'cash' ? centsToInput(percentTipCents) : cashText
   const cardShown = percentTipBox === 'card' ? centsToInput(percentTipCents) : cardText
-  const cashCents = cashShown.trim() === '' ? 0 : parseCents(cashShown)
-  const cardCents = cardShown.trim() === '' ? 0 : parseCents(cardShown)
+  const cashCents = tipCents(cashShown)
+  const cardCents = tipCents(cardShown)
   // While a field cannot be read, the preview treats it as 0 instead of hiding.
   const preview = turnTotals(
     lines.map((line) => ({
@@ -613,89 +637,50 @@ function TurnFormFields({ presets, existing, quick, copy, onDone, onClose }: Fie
     changed()
   }
 
+  /** The form as the shared input builder reads it. */
+  function formValues(): TurnFormValues {
+    return {
+      lines,
+      cashText: cashShown,
+      cardText: cardShown,
+      turnCountText,
+      date,
+      time,
+      clientType,
+      cashTipReceived,
+      cardTipReceived,
+      note,
+    }
+  }
+
+  /** The built input, or null after showing what is wrong. */
+  function buildInput(): TurnInput | null {
+    const built = turnInputFromForm(formValues(), presets, locale, turn)
+    if ('input' in built) {
+      setErrors({ lines: {} })
+      return built.input
+    }
+    const nextErrors = built.errors
+    // A hidden error would be invisible: open More options for the count.
+    if (nextErrors.turnCount) setMoreOpen(true)
+    // The shared rate lives under a pill: open it so its error can be read.
+    if (Object.values(nextErrors.lines).some((line) => line.rate)) setRateOpen(true)
+    setErrors(nextErrors)
+    return null
+  }
+
   async function save(): Promise<SaveResult | null> {
     if (saveInFlight.current) return null
 
-    if (lines.length === 0) {
-      setErrors({ lines: {}, services: t(locale, 'errorNoService') })
-      return null
-    }
+    const input = buildInput()
+    if (!input) return null
 
-    const nextLineErrors: Record<string, LineErrors> = {}
-    const nextLines: TurnLineInput[] = []
-
-    for (const line of lines) {
-      const lineErrors: LineErrors = {}
-      const priceCents = parseCents(line.amount)
-      const rateBp = parseRateBp(line.rate)
-      if (priceCents === null) lineErrors.amount = t(locale, 'errorAmount')
-      if (rateBp === null) lineErrors.rate = t(locale, 'errorRate')
-      if (line.choice === 'other' && line.customName.trim() === '') {
-        lineErrors.serviceName = t(locale, 'errorServiceName')
-      }
-      if (priceCents === null || rateBp === null || lineErrors.serviceName) {
-        nextLineErrors[line.key] = lineErrors
-        continue
-      }
-
-      const preset = presets.find((item) => item.id === line.choice)
-      // An unchanged preset keeps the name saved on the turn, so editing a tip
-      // never rewrites history with a renamed preset.
-      const name =
-        preset && line.choice === line.originalChoice && line.originalName
-          ? line.originalName
-          : preset
-            ? presetName(preset, locale)
-            : line.customName.trim()
-      nextLines.push({
-        servicePresetId: preset?.id ?? null,
-        name,
-        priceCents,
-        rateBp,
-      })
-    }
-
-    const turnCount = /^\d{1,2}$/.test(turnCountText) ? Number(turnCountText) : null
-    const nextErrors: Errors = { lines: nextLineErrors }
-    if (cashCents === null) nextErrors.cash = t(locale, 'errorAmount')
-    if (cardCents === null) nextErrors.card = t(locale, 'errorAmount')
-    if (turnCount === null) nextErrors.turnCount = t(locale, 'errorTurnCount')
-    if (!isIsoDate(date)) nextErrors.date = t(locale, 'errorDate')
-
-    if (
-      cashCents === null ||
-      cardCents === null ||
-      turnCount === null ||
-      !isIsoDate(date) ||
-      Object.keys(nextLineErrors).length > 0
-    ) {
-      // A hidden error would be invisible: open More options for the count.
-      if (turnCount === null) setMoreOpen(true)
-      // The shared rate lives under a pill: open it so its error can be read.
-      if (Object.values(nextLineErrors).some((line) => line.rate)) setRateOpen(true)
-      setErrors(nextErrors)
-      return null
-    }
-
-    setErrors({ lines: {} })
     const lastLine = lines[lines.length - 1]
     const lastPreset = presets.find((item) => item.id === lastLine.choice)
     lastSavedChoice.current = lastLine.choice
     lastSavedPriceCents.current = parseCents(lastLine.amount)
 
     saveInFlight.current = true
-    const input = {
-      occurredAt: turn ? occurredAtForEdit(date, time, turn) : occurredAtFor(date, time),
-      localWorkDate: date,
-      turnCount,
-      clientType,
-      note,
-      cashTipCents: cashCents,
-      cardTipCents: cardCents,
-      cashTipReceived,
-      cardTipReceived,
-      lines: nextLines,
-    }
     let savedId = turn?.id ?? ''
     try {
       if (turn) await updateTurn(db, turn.id, input)
@@ -710,6 +695,15 @@ function TurnFormFields({ presets, existing, quick, copy, onDone, onClose }: Fie
       void requestPersistence()
     }
     return { id: savedId, earnedTotalCents: preview.earnedTotalCents }
+  }
+
+  /** Draft mode: check the values the same way, then hand them back. No save, no toast. */
+  function saveDraft() {
+    // A double tap must hand back once, or Back would run twice.
+    if (!draft || saveInFlight.current || !buildInput()) return
+    saveInFlight.current = true
+    draft.onSave(formValues())
+    onDone()
   }
 
   /** New and copied turns offer Undo and Copy again; editing an existing turn only says Saved. */
@@ -736,6 +730,10 @@ function TurnFormFields({ presets, existing, quick, copy, onDone, onClose }: Fie
   }
 
   async function saveAndClose() {
+    if (draft) {
+      saveDraft()
+      return
+    }
     const result = await save()
     if (!result) return
     showSaved(result)
@@ -822,7 +820,9 @@ function TurnFormFields({ presets, existing, quick, copy, onDone, onClose }: Fie
           >
             <IconX size={22} aria-hidden="true" />
           </button>
-          <h1 className="font-medium">{t(locale, turn ? 'editTurn' : 'newTurn')}</h1>
+          <h1 className="font-medium">
+            {t(locale, draft ? 'draftTurnTitle' : turn ? 'editTurn' : 'newTurn')}
+          </h1>
           {turn ? (
             <button
               type="button"
@@ -841,16 +841,27 @@ function TurnFormFields({ presets, existing, quick, copy, onDone, onClose }: Fie
         </div>
 
         <div className="flex flex-wrap items-start justify-end gap-2">
-          <WorkDateField
-            compact
-            value={date}
-            onChange={(value) => {
-              setDate(value)
-              clearError('date')
-              changed()
-            }}
-            error={errors.date}
-          />
+          {!existing && !draft && (
+            <Link
+              href={paths.say}
+              className={`${pill} mr-auto`}
+            >
+              <IconMicrophone size={18} aria-hidden="true" />
+              {t(locale, 'sayYourTurns')}
+            </Link>
+          )}
+          {!draft && (
+            <WorkDateField
+              compact
+              value={date}
+              onChange={(value) => {
+                setDate(value)
+                clearError('date')
+                changed()
+              }}
+              error={errors.date}
+            />
+          )}
           {!showPerLine && lines.length > 0 && (
             <button
               type="button"
@@ -1210,7 +1221,7 @@ function TurnFormFields({ presets, existing, quick, copy, onDone, onClose }: Fie
       )}
 
       <div className="mt-auto flex flex-col gap-3">
-        {!turn && (
+        {!turn && !draft && (
           <p role="status" className="text-sm text-positive-text">
             {savedAddAnother ? t(locale, 'savedAddAnother') : ''}
           </p>
@@ -1224,9 +1235,9 @@ function TurnFormFields({ presets, existing, quick, copy, onDone, onClose }: Fie
           </Link>
         )}
         <button type="submit" className={primaryButton}>
-          {t(locale, 'save')}
+          {t(locale, draft ? 'draftDone' : 'save')}
         </button>
-        {!turn && (
+        {!turn && !draft && (
           <button type="button" onClick={saveAndAddAnother} className={secondaryButton}>
             {t(locale, 'saveAndAddAnother')}
           </button>
