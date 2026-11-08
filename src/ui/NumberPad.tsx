@@ -13,9 +13,9 @@ interface Props {
 const DIGITS = ['1', '2', '3', '4', '5', '6', '7', '8', '9'] as const
 
 const KEY =
-  'h-[52px] select-none rounded-[11px] bg-white text-[22px] font-semibold text-text focus-visible:outline-2 focus-visible:outline-brand-600'
+  'h-[52px] select-none rounded-[11px] bg-pad-key text-[22px] font-semibold text-text focus-visible:outline-2 focus-visible:outline-brand-ink'
 const SIDE =
-  'flex select-none items-center justify-center rounded-[11px] font-bold text-white focus-visible:outline-2 focus-visible:outline-brand-600'
+  'flex select-none items-center justify-center rounded-[11px] font-bold focus-visible:outline-2 focus-visible:outline-brand-ink'
 
 /**
  * The app's own number pad. It sits over the bottom of the screen and types
@@ -35,7 +35,7 @@ export function NumberPad({ locale, onDigit, onBackspace, onNext, onSave }: Prop
       data-number-pad=""
       role="region"
       aria-label={t(locale, 'numberPad')}
-      className="fixed inset-x-0 bottom-0 z-30 mx-auto grid max-w-md grid-cols-[1fr_1fr_1fr_96px] auto-rows-[52px] gap-[7px] bg-[#e7e1ea] p-2 pb-[calc(26px+env(safe-area-inset-bottom))]"
+      className="fixed inset-x-0 bottom-0 z-30 mx-auto grid max-w-md grid-cols-[1fr_1fr_1fr_96px] auto-rows-[52px] gap-[7px] bg-pad-tray p-2 pb-[calc(26px+env(safe-area-inset-bottom))]"
     >
       {DIGITS.map((digit) => (
         <button
@@ -76,7 +76,7 @@ export function NumberPad({ locale, onDigit, onBackspace, onNext, onSave }: Prop
         type="button"
         aria-label={t(locale, 'next')}
         style={{ gridColumn: 4, gridRow: '1 / span 2' }}
-        className={`${SIDE} bg-text text-[15px]`}
+        className={`${SIDE} bg-inverse text-on-inverse text-[15px]`}
         onPointerDown={(event) => tap(event, onNext)}
       >
         {t(locale, 'next')}
@@ -85,7 +85,7 @@ export function NumberPad({ locale, onDigit, onBackspace, onNext, onSave }: Prop
         type="button"
         aria-label={t(locale, 'save')}
         style={{ gridColumn: 4, gridRow: '3 / span 2' }}
-        className={`${SIDE} bg-brand-600 text-[17px]`}
+        className={`${SIDE} bg-brand-600 text-white text-[17px]`}
         onPointerDown={(event) => tap(event, onSave)}
       >
         {t(locale, 'save')}

@@ -30,7 +30,7 @@ export function BottomNav() {
                 href={path}
                 replace
                 aria-current={active ? 'page' : undefined}
-                className={`flex flex-col items-center gap-0.5 py-2 text-[11px] font-semibold ${active ? 'text-brand-600' : 'text-text-muted'}`}
+                className={`flex flex-col items-center gap-0.5 py-2 text-[11px] font-semibold ${active ? 'text-brand-ink' : 'text-text-muted'}`}
               >
                 <TabIcon size={24} stroke={active ? 2 : 1.5} aria-hidden="true" />
                 {t(locale, label)}

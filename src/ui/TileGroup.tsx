@@ -33,15 +33,15 @@ export function TileGroup<T extends string>({
             <label
               key={option.value}
               lang={option.lang}
-              className={`flex flex-1 cursor-pointer flex-col items-center gap-1 rounded-card border p-3 has-focus-visible:outline-2 has-focus-visible:outline-brand-600 ${on ? 'border-brand-600 bg-brand-50' : 'border-border-strong bg-surface'}`}
+              className={`flex flex-1 cursor-pointer flex-col items-center gap-1 rounded-card border p-3 has-focus-visible:outline-2 has-focus-visible:outline-brand-ink ${on ? 'border-brand-ink bg-brand-50' : 'border-border-strong bg-surface'}`}
             >
               <input type="radio" name={name} value={option.value} checked={on} onChange={() => onChange(option.value)} className="sr-only" />
               {option.glyph !== undefined && (
-                <span aria-hidden="true" className={`text-xl ${on ? 'text-brand-600' : 'text-text-secondary'}`}>
+                <span aria-hidden="true" className={`text-xl ${on ? 'text-brand-ink' : 'text-text-secondary'}`}>
                   {option.glyph}
                 </span>
               )}
-              <span className={`text-sm ${on ? 'text-brand-900' : ''}`}>{option.label}</span>
+              <span className={`text-sm ${on ? 'text-brand-ink-strong' : ''}`}>{option.label}</span>
             </label>
           )
         })}

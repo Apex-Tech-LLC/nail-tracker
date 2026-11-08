@@ -16,6 +16,7 @@ describe('detectLocale', () => {
 describe('resolveSettings', () => {
   const defaults = {
     locale: 'en',
+    theme: 'system',
     defaultCommissionRateBp: 6000,
     perServiceRates: false,
     weekStartDay: 0,
@@ -44,6 +45,15 @@ describe('resolveSettings', () => {
   it('prefers the saved choice over the browser language', () => {
     const saved = JSON.stringify({ locale: 'en', defaultCommissionRateBp: 5000, weekStartDay: 1 })
     expect(resolveSettings(saved, ['vi-VN'])).toMatchObject({ locale: 'en', defaultCommissionRateBp: 5000, weekStartDay: 1 })
+  })
+
+  it.each(['light', 'dark'] as const)('keeps the saved theme %s', (theme) => {
+    expect(resolveSettings(JSON.stringify({ theme }), []).theme).toBe(theme)
+  })
+
+  it('reads any other theme as the phone choice', () => {
+    expect(resolveSettings(null, []).theme).toBe('system')
+    expect(resolveSettings(JSON.stringify({ theme: 'sepia' }), []).theme).toBe('system')
   })
 
   it('uses the app number pad unless the person turned it off', () => {

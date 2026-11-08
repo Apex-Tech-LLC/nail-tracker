@@ -42,7 +42,7 @@ export function StatementCard({ period, statement, endRules, status }: Props) {
           <span className="shrink-0 text-sm text-text-secondary">{daysWorked}</span>
         </div>
         <div className="mt-1 flex items-center justify-between gap-2">
-          <span className="rounded-full bg-brand-50 px-2 py-0.5 text-xs text-brand-900">
+          <span className="rounded-full bg-brand-50 px-2 py-0.5 text-xs text-brand-ink-strong">
             {t(locale, 'currentPeriod')}
           </span>
           <span className={`text-sm ${PAY_STATE_COLOR[status]}`}>

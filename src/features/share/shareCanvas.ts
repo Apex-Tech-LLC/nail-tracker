@@ -30,17 +30,30 @@ async function loadShareFonts(): Promise<void> {
   )
 }
 
+/**
+ * The picture goes to the salon owner, so it is always light, even when the
+ * technician's own screen is dark. A hidden element marked as light gives the
+ * colours without changing what is on screen.
+ */
 function sharePalette(): SharePalette {
-  const styles = getComputedStyle(document.documentElement)
-  const read = (name: string, fallback: string): string =>
-    styles.getPropertyValue(name).trim() || fallback
-  return {
-    background: read('--surface', '#ffffff'),
-    text: read('--text', '#1d1822'),
-    secondary: read('--text-secondary', '#5d5566'),
-    border: read('--border-strong', '#d6ccdb'),
-    brand: read('--brand-600', '#a3164d'),
-    brandSoft: read('--brand-200', '#eaa6c0'),
+  const host = document.createElement('div')
+  host.setAttribute('data-theme', 'light')
+  host.style.display = 'none'
+  document.body.append(host)
+  try {
+    const styles = getComputedStyle(host)
+    const read = (name: string, fallback: string): string =>
+      styles.getPropertyValue(name).trim() || fallback
+    return {
+      background: read('--surface', '#ffffff'),
+      text: read('--text', '#1d1822'),
+      secondary: read('--text-secondary', '#5d5566'),
+      border: read('--border-strong', '#d6ccdb'),
+      brand: read('--brand-600', '#a3164d'),
+      brandSoft: read('--brand-200', '#eaa6c0'),
+    }
+  } finally {
+    host.remove()
   }
 }
 

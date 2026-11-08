@@ -4,7 +4,7 @@ import { useId, useState } from 'react'
 import { Link } from 'wouter'
 import { PageHeader } from '../../app/PageHeader.tsx'
 import { paths } from '../../app/navigation.ts'
-import type { PayPeriodType } from '../../app/settings.ts'
+import type { PayPeriodType, ThemeChoice } from '../../app/settings.ts'
 import { updateSettings, useSettings } from '../../app/settings.ts'
 import { db } from '../../db/schema.ts'
 import { isIsoDate, parseIsoDate, todayIso, weekRange } from '../../domain/dates.ts'
@@ -43,6 +43,7 @@ function goalSummary(
 export function SettingsPage() {
   const {
     locale,
+    theme,
     defaultCommissionRateBp: rate,
     numberPad,
     weekStartDay,
@@ -102,6 +103,18 @@ export function SettingsPage() {
         options={[
           { value: 'vi', glyph: 'Vi', label: 'Tiếng Việt', lang: 'vi' },
           { value: 'en', glyph: 'Aa', label: 'English', lang: 'en' },
+        ]}
+      />
+
+      <TileGroup<ThemeChoice>
+        legend={t(locale, 'appearance')}
+        name="theme"
+        value={theme}
+        onChange={(value) => updateSettings({ theme: value })}
+        options={[
+          { value: 'system', label: t(locale, 'themeSystem') },
+          { value: 'light', label: t(locale, 'themeLight') },
+          { value: 'dark', label: t(locale, 'themeDark') },
         ]}
       />
 
@@ -230,10 +243,6 @@ export function SettingsPage() {
         <Row label={t(locale, 'currency')} value={t(locale, 'currencyUsd')} />
       </div>
 
-      <div className={card}>
-        <Row label={t(locale, 'theme')} value={t(locale, 'themeLight')} />
-      </div>
-
       <StorageStatus />
       <BackupSection />
       <DeleteAllSection />
@@ -256,7 +265,7 @@ function StorageStatus() {
     <section>
       <h2 className="mb-2 text-xs text-text-secondary">{t(locale, 'storage')}</h2>
       <div className="flex gap-3 rounded-card border border-border bg-surface p-3">
-        <Icon size={20} aria-hidden="true" className={`mt-0.5 flex-none ${safe ? 'text-brand-600' : 'text-warning-text'}`} />
+        <Icon size={20} aria-hidden="true" className={`mt-0.5 flex-none ${safe ? 'text-brand-ink' : 'text-warning-text'}`} />
         <div>
           <p className="text-sm">{t(locale, safe ? 'storagePersisted' : 'storageAtRisk')}</p>
           <p className="text-xs text-text-secondary">{t(locale, safe ? 'storagePersistedHint' : 'storageAtRiskHint')}</p>

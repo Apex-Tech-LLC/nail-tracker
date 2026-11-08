@@ -183,7 +183,7 @@ function DayCell({
       onPointerCancel={finishPress}
       onContextMenu={(event) => event.preventDefault()}
       className={`flex min-h-16 flex-col items-center justify-start rounded-[10px] border-2 px-0.5 py-1 ${
-        isToday ? 'border-brand-600' : 'border-transparent'
+        isToday ? 'border-brand-ink' : 'border-transparent'
       } ${
         inMonth
           ? `${STEP_CLASSES[step]} ${step === 4 ? 'text-white' : 'text-text'}`

@@ -11,11 +11,17 @@
 @import '@fontsource/be-vietnam-pro/vietnamese-800.css';
 
 /*
- * Design tokens. Raw colors live on :root as CSS variables and Tailwind
- * utilities point at them, so dark mode (1.1) only has to redefine the
- * variables. Brand is a plum ramp; status is never shown by color alone.
+ * Design tokens. Raw colors live as CSS variables and Tailwind utilities point
+ * at them, so dark mode only has to redefine the variables. Brand is a plum
+ * ramp; status is never shown by color alone.
+ *
+ * The light values also apply to any element marked data-theme="light", so the
+ * share picture can borrow them while the app itself is dark.
  */
-:root {
+:root,
+[data-theme='light'] {
+  color-scheme: light;
+
   --brand-50: #fbe7ef;
   --brand-100: #f6d0df;
   --brand-200: #eaa6c0;
@@ -23,6 +29,9 @@
   --brand-600: #a3164d;
   --brand-800: #7d0f3a;
   --brand-900: #5c0a2a;
+  /* Text, borders and outlines, which a lacquer fill cannot do on dark. */
+  --brand-ink: var(--brand-600);
+  --brand-ink-strong: var(--brand-800);
 
   --page: #f7f4f8;
   --surface: #ffffff;
@@ -39,6 +48,98 @@
   --warning-text: #b4441b;
   --danger-bg: #fcebeb;
   --danger-text: #b42318;
+
+  /* Dark blocks with light text (the undo bar, a number-pad key, a turn swipe). */
+  --inverse: #1d1822;
+  --on-inverse: #ffffff;
+  /* The number pad, the future-day bottle and the undo link. */
+  --pad-tray: #e7e1ea;
+  --pad-key: #ffffff;
+  --bottle-future: #ecd9d1;
+  --toast-link: #ffb3cd;
+}
+
+/*
+ * Deep plum-navy at night, never pure black. The list appears twice because
+ * plain CSS cannot share it; the second copy follows the phone's own setting.
+ * Both sit inside @media screen, so printing a tax summary stays light.
+ */
+@media screen {
+  :root[data-theme='dark'] {
+    color-scheme: dark;
+
+    --brand-50: #2e2233;
+    --brand-100: #3d2c45;
+    --brand-200: #523a5b;
+    --brand-400: #c42a64;
+    --brand-600: #a3164d;
+    --brand-800: #7d0f3a;
+    --brand-900: #5c0a2a;
+    --brand-ink: #f7a8c4;
+    --brand-ink-strong: #ffd3e2;
+
+    --page: #17131f;
+    --surface: #211b2a;
+    --surface-subtle: #2a2333;
+    --text: #f3eef6;
+    --text-secondary: #c6bbd0;
+    --text-muted: #a89db4;
+    --border: #332b3e;
+    --border-strong: #4a3e56;
+
+    --positive-bg: #14352a;
+    --positive-text: #7fe0b8;
+    --warning-bg: #3d2419;
+    --warning-text: #f6b08c;
+    --danger-bg: #3d1d1e;
+    --danger-text: #ffa8a0;
+
+    --inverse: #3a3046;
+    --on-inverse: #f7f4f8;
+    --pad-tray: #130f19;
+    --pad-key: #2b2333;
+    --bottle-future: #4a3140;
+    --toast-link: #ffc9dc;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']) {
+      color-scheme: dark;
+
+      --brand-50: #2e2233;
+      --brand-100: #3d2c45;
+      --brand-200: #523a5b;
+      --brand-400: #c42a64;
+      --brand-600: #a3164d;
+      --brand-800: #7d0f3a;
+      --brand-900: #5c0a2a;
+      --brand-ink: #f7a8c4;
+      --brand-ink-strong: #ffd3e2;
+
+      --page: #17131f;
+      --surface: #211b2a;
+      --surface-subtle: #2a2333;
+      --text: #f3eef6;
+      --text-secondary: #c6bbd0;
+      --text-muted: #a89db4;
+      --border: #332b3e;
+      --border-strong: #4a3e56;
+
+      --positive-bg: #14352a;
+      --positive-text: #7fe0b8;
+      --warning-bg: #3d2419;
+      --warning-text: #f6b08c;
+      --danger-bg: #3d1d1e;
+      --danger-text: #ffa8a0;
+
+      --inverse: #3a3046;
+      --on-inverse: #f7f4f8;
+      --pad-tray: #130f19;
+      --pad-key: #2b2333;
+      --bottle-future: #4a3140;
+      --toast-link: #ffc9dc;
+    }
+  }
 }
 
 @theme inline {
@@ -51,6 +152,8 @@
   --color-brand-600: var(--brand-600);
   --color-brand-800: var(--brand-800);
   --color-brand-900: var(--brand-900);
+  --color-brand-ink: var(--brand-ink);
+  --color-brand-ink-strong: var(--brand-ink-strong);
 
   --color-page: var(--page);
   --color-surface: var(--surface);
@@ -67,6 +170,13 @@
   --color-warning-text: var(--warning-text);
   --color-danger-bg: var(--danger-bg);
   --color-danger-text: var(--danger-text);
+
+  --color-inverse: var(--inverse);
+  --color-on-inverse: var(--on-inverse);
+  --color-pad-tray: var(--pad-tray);
+  --color-pad-key: var(--pad-key);
+  --color-bottle-future: var(--bottle-future);
+  --color-toast-link: var(--toast-link);
 
   --radius-card: 18px;
   --radius-control: 12px;

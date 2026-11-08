@@ -168,7 +168,7 @@ function Action({ icon: Icon, label, hint, onClick }: { icon: Icon; label: strin
       onClick={onClick}
       className="flex items-start gap-2.5 rounded-control border border-border-strong bg-surface px-3 py-2.5 text-start"
     >
-      <Icon size={18} aria-hidden="true" className="mt-0.5 flex-none text-brand-600" />
+      <Icon size={18} aria-hidden="true" className="mt-0.5 flex-none text-brand-ink" />
       <span>
         <span className="block text-sm">{label}</span>
         <span className="block text-xs text-text-secondary">{hint}</span>

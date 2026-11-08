@@ -8,9 +8,12 @@ export type TipHandling = 'inHand' | 'fromSalon'
 export type TipButtonsTarget = 'cash' | 'card'
 /** How often Home reminds the person to save a backup. 0 turns the reminder off. */
 export type BackupReminderDays = 7 | 14 | 30 | 0
+/** Light or dark by explicit choice, or whatever the phone shows. */
+export type ThemeChoice = 'system' | 'light' | 'dark'
 
 export interface Settings {
   locale: Locale
+  theme: ThemeChoice
   defaultCommissionRateBp: number
   perServiceRates: boolean
   weekStartDay: 0 | 1
@@ -45,6 +48,7 @@ export function detectLocale(languages: readonly string[]): Locale {
 }
 
 const isTipHandling = (value: unknown): value is TipHandling => value === 'inHand' || value === 'fromSalon'
+const isTheme = (value: unknown): value is ThemeChoice => value === 'light' || value === 'dark'
 const isPeriodType = (value: unknown): value is PayPeriodType =>
   value === 'weekly' || value === 'biweekly' || value === 'custom' || value === 'none'
 const isRate = (value: unknown): value is number =>
@@ -73,6 +77,7 @@ export function resolveSettings(saved: string | null, languages: readonly string
   }
   return {
     locale: parsed.locale === 'vi' || parsed.locale === 'en' ? parsed.locale : detectLocale(languages),
+    theme: isTheme(parsed.theme) ? parsed.theme : 'system',
     defaultCommissionRateBp: isRate(parsed.defaultCommissionRateBp) ? parsed.defaultCommissionRateBp : 6000,
     perServiceRates: parsed.perServiceRates === true,
     weekStartDay: parsed.weekStartDay === 1 ? 1 : 0,
@@ -125,10 +130,10 @@ export function updateSettings(change: Partial<Settings>): void {
   listeners.forEach((listener) => listener())
 }
 
-/** Back to first-launch defaults, except the language, which stays as the person chose it. */
+/** Back to first-launch defaults, except the language and theme, which stay as the person chose them. */
 export function resetSettings(): void {
-  const { locale } = current
-  current = resolveSettings(JSON.stringify({ locale }), [])
+  const { locale, theme } = current
+  current = resolveSettings(JSON.stringify({ locale, theme }), [])
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(current))
   } catch {
@@ -137,9 +142,24 @@ export function resetSettings(): void {
   listeners.forEach((listener) => listener())
 }
 
-/** Sets <html lang>. Both languages read left to right. */
-export function applyToDocument({ locale }: Settings): void {
+// The page colour for each mode, so the phone's top bar matches the app.
+// These are the only colours allowed outside index.css.
+const PAGE_COLOR = { light: '#f7f4f8', dark: '#17131f' } as const
+
+/**
+ * Sets <html lang> (both languages read left to right) and the theme, and
+ * points both theme-color tags at the colour of the mode on screen.
+ */
+export function applyToDocument({ locale, theme }: Settings): void {
   document.documentElement.lang = locale
+  if (theme === 'system') document.documentElement.removeAttribute('data-theme')
+  else document.documentElement.dataset.theme = theme
+
+  const light = theme === 'system' ? PAGE_COLOR.light : PAGE_COLOR[theme]
+  const dark = theme === 'system' ? PAGE_COLOR.dark : PAGE_COLOR[theme]
+  for (const meta of document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')) {
+    meta.content = meta.media.includes('dark') ? dark : light
+  }
 }
 
 function subscribe(listener: () => void) {

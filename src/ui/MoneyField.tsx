@@ -58,7 +58,7 @@ export function MoneyField({
           aria-invalid={!!error}
           aria-describedby={error ? `${id}-error` : undefined}
           className={`${field} pl-7 ${
-            usePad && active ? 'border-b-2 border-b-brand-600' : ''
+            usePad && active ? 'border-b-2 border-b-brand-ink' : ''
           }`}
         />
       </div>

@@ -311,7 +311,7 @@ export function TurnRow({ turn, services, number }: Props) {
             aria-hidden={open ? undefined : true}
             tabIndex={open ? 0 : -1}
             onClick={closeSelf}
-            className="flex w-[76px] flex-col items-center justify-center gap-[3px] bg-text text-[12px] font-bold text-white"
+            className="flex w-[76px] flex-col items-center justify-center gap-[3px] bg-inverse text-[12px] font-bold text-on-inverse"
           >
             <IconCopy size={20} aria-hidden="true" />
             {t(locale, 'copy')}

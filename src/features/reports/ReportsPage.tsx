@@ -155,7 +155,7 @@ function SummaryCard({
         type="button"
         aria-expanded={showDetails}
         onClick={onToggleDetails}
-        className="mt-3 min-h-11 font-semibold text-brand-600 underline"
+        className="mt-3 min-h-11 font-semibold text-brand-ink underline"
       >
         {t(locale, 'reportDetails')}
       </button>
@@ -437,7 +437,7 @@ export function ReportsPage() {
                 <button
                   type="button"
                   onClick={() => setShowAllServices((open) => !open)}
-                  className="mt-2 min-h-11 font-semibold text-brand-600 underline"
+                  className="mt-2 min-h-11 font-semibold text-brand-ink underline"
                 >
                   {t(locale, showAllServices ? 'reportShowLess' : 'reportShowAll')}
                 </button>
