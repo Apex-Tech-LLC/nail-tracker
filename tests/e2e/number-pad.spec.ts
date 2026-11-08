@@ -46,6 +46,22 @@ test('focusing the service amount shows the pad and its keys type', async ({ pag
   await expect(page.getByLabel('Service amount')).toHaveValue('3')
 })
 
+test('a key keeps typing when the phone takes focus off the box after a tap', async ({ page }) => {
+  await seedSettings(page)
+  await page.goto('./#/add')
+  const amount = page.getByLabel('Service amount')
+
+  // iPhone Safari blurs the box to nowhere after a tap on a pad key.
+  for (const digit of ['4', '5', '5', '0']) {
+    await pad(page).getByRole('button', { name: digit, exact: true }).click()
+    await amount.evaluate((element) => element.blur())
+  }
+
+  await expect(amount).toHaveValue('4550')
+  await expect(amount).toBeFocused()
+  await expect(pad(page)).toBeVisible()
+})
+
 test('the pad allows cents but refuses a third decimal digit', async ({ page }) => {
   await seedSettings(page)
   await page.goto('./#/add')

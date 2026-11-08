@@ -55,7 +55,7 @@ opens the pull request, waits for checks, merges, updates this file. Product: `d
 
 | Task | What | Status |
 |---|---|---|
-| V21 | Light and dark mode: Same as phone, Light, Dark; share pictures and printing stay light | 🔄 |
+| V21 | Light and dark mode: Same as phone, Light, Dark; share pictures and printing stay light | ✅ |
 
 Briefs for 2.3 and 2.4 are written when the release before them is merged, so they match the code as it is then.
 
