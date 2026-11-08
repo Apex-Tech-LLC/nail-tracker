@@ -21,6 +21,7 @@ export const paths = {
   pay: (id: string) => `/payday/${id}/pay`,
   payment: (id: string) => `/payment/${id}`,
   services: '/settings/services',
+  payRules: '/settings/pay',
   onboarding: '/onboarding',
 } as const
 

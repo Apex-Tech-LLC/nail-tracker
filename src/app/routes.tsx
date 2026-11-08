@@ -7,6 +7,7 @@ import { OnboardingPage } from '../features/onboarding/OnboardingPage.tsx'
 import { PaydayPage } from '../features/payday/PaydayPage.tsx'
 import { PaymentForm } from '../features/payday/PaymentForm.tsx'
 import { PeriodPage } from '../features/payday/PeriodPage.tsx'
+import { PayRulesPage } from '../features/payRules/PayRulesPage.tsx'
 import { PresetsPage } from '../features/presets/PresetsPage.tsx'
 import { SettingsPage } from '../features/settings/SettingsPage.tsx'
 import { TurnForm } from '../features/turns/TurnForm.tsx'
@@ -41,6 +42,7 @@ export function Routes() {
         )}
       </Route>
       <Route path={paths.services}>{() => <PresetsPage onDone={goBack} />}</Route>
+      <Route path={paths.payRules}>{() => <PayRulesPage onDone={goBack} />}</Route>
       <Route path={paths.settings} component={SettingsPage} />
       <Route path={paths.onboarding} component={OnboardingPage} />
       <Route path={paths.add}>{() => <TurnForm onDone={goBack} />}</Route>
