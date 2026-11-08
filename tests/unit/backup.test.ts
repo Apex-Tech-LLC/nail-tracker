@@ -365,8 +365,15 @@ describe('exportJson and importJson', () => {
       cardTipFeeBp: 300,
       checkBp: 5000,
       cardTipsPaidIn: 'split',
-      guarantee: { kind: 'none' },
-      tiers: null,
+      guarantee: { kind: 'perDay', cents: 15_000, minDays: 5 },
+      tiers: {
+        mode: 'eachPart',
+        levels: [
+          { fromCents: 0, rateBp: 5000 },
+          { fromCents: 50_000, rateBp: 5500 },
+          { fromCents: 100_000, rateBp: 6500 },
+        ],
+      },
       createdAt: 500,
       updatedAt: 500,
     })
@@ -392,8 +399,15 @@ describe('exportJson and importJson', () => {
       supplyFee: { kind: 'perService', cents: 200, when: 'beforeSplit' },
       cardTipFeeBp: 300,
       checkBp: 5000,
-      guarantee: { kind: 'none' },
-      tiers: null,
+      guarantee: { kind: 'perDay', cents: 15_000, minDays: 5 },
+      tiers: {
+        mode: 'eachPart',
+        levels: [
+          { fromCents: 0, rateBp: 5000 },
+          { fromCents: 50_000, rateBp: 5500 },
+          { fromCents: 100_000, rateBp: 6500 },
+        ],
+      },
     })
     expect(await copy.paycheckRecords.get('check-1')).toMatchObject({
       payPeriodId: PERIOD_ID,
@@ -488,6 +502,60 @@ describe('importJson refuses a bad file', () => {
     await seedFull(fresh)
     const data = JSON.parse(await exportJson(fresh, settings)) as Backup
     data.turnServices = data.turnServices.map((service) => ({ ...service, turnId: 'missing' }))
+
+    await expect(importJson(fresh, JSON.stringify(data))).rejects.toMatchObject({
+      code: 'invalidRecord',
+    })
+  })
+
+  it('refuses a tier table that does not start at zero', async () => {
+    const fresh = openFresh()
+    await seedFull(fresh)
+    const data = JSON.parse(await exportJson(fresh, settings)) as Backup
+    data.payRules = data.payRules.map((rule) => ({
+      ...rule,
+      tiers: {
+        mode: 'eachPart',
+        levels: [
+          { fromCents: 100, rateBp: 5000 },
+          { fromCents: 50_000, rateBp: 6500 },
+        ],
+      },
+    }))
+
+    await expect(importJson(fresh, JSON.stringify(data))).rejects.toMatchObject({
+      code: 'invalidRecord',
+    })
+  })
+
+  it('refuses tier levels that do not rise', async () => {
+    const fresh = openFresh()
+    await seedFull(fresh)
+    const data = JSON.parse(await exportJson(fresh, settings)) as Backup
+    data.payRules = data.payRules.map((rule) => ({
+      ...rule,
+      tiers: {
+        mode: 'wholeAtTop',
+        levels: [
+          { fromCents: 0, rateBp: 5000 },
+          { fromCents: 0, rateBp: 6500 },
+        ],
+      },
+    }))
+
+    await expect(importJson(fresh, JSON.stringify(data))).rejects.toMatchObject({
+      code: 'invalidRecord',
+    })
+  })
+
+  it('refuses a guarantee amount that is not whole cents', async () => {
+    const fresh = openFresh()
+    await seedFull(fresh)
+    const data = JSON.parse(await exportJson(fresh, settings)) as Backup
+    data.payRules = data.payRules.map((rule) => ({
+      ...rule,
+      guarantee: { kind: 'perDay', cents: 15_000.5, minDays: null },
+    }))
 
     await expect(importJson(fresh, JSON.stringify(data))).rejects.toMatchObject({
       code: 'invalidRecord',
