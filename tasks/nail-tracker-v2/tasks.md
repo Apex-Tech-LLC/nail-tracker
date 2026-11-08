@@ -39,7 +39,7 @@ opens the pull request, waits for checks, merges, updates this file. Product: `d
 | V12 | Reports maths: period and last-year comparisons, by service, by weekday, clients, tips, records | ✅ |
 | V13 | Reports screen (replaces Earnings) with trend chart and goal line | ✅ |
 | V14 | History calendar view, filters, day off | ✅ |
-| V15 | Goals: weekly and monthly, Home progress, goal-met message | 🔄 |
+| V15 | Goals: weekly and monthly, Home progress, goal-met message | ✅ |
 
 ## Release 2.4: Share, taxes, hours, guarantee, tiers
 
