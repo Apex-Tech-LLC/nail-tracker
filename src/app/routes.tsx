@@ -7,6 +7,7 @@ import { OnboardingPage } from '../features/onboarding/OnboardingPage.tsx'
 import { PaydayPage } from '../features/payday/PaydayPage.tsx'
 import { PaymentForm } from '../features/payday/PaymentForm.tsx'
 import { PeriodPage } from '../features/payday/PeriodPage.tsx'
+import { RecordWhatYouGotForm } from '../features/paycheck/RecordWhatYouGotForm.tsx'
 import { PayRulesPage } from '../features/payRules/PayRulesPage.tsx'
 import { PresetsPage } from '../features/presets/PresetsPage.tsx'
 import { SettingsPage } from '../features/settings/SettingsPage.tsx'
@@ -29,6 +30,15 @@ export function Routes() {
       <Route path="/payday/:periodId/pay">
         {(params) => (
           <PaymentForm key={params.periodId} periodId={params.periodId} onDone={goBack} />
+        )}
+      </Route>
+      <Route path="/payday/:periodId/record">
+        {(params) => (
+          <RecordWhatYouGotForm
+            key={params.periodId}
+            periodId={params.periodId}
+            onDone={goBack}
+          />
         )}
       </Route>
       <Route path="/payment/:id">
