@@ -23,6 +23,7 @@ export const paths = {
   payment: (id: string) => `/payment/${id}`,
   services: '/settings/services',
   payRules: '/settings/pay',
+  goals: '/settings/goals',
   onboarding: '/onboarding',
 } as const
 

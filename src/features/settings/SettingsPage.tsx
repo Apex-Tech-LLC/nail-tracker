@@ -8,8 +8,9 @@ import type { PayPeriodType } from '../../app/settings.ts'
 import { updateSettings, useSettings } from '../../app/settings.ts'
 import { db } from '../../db/schema.ts'
 import { isIsoDate, todayIso, weekRange } from '../../domain/dates.ts'
+import { formatUsdShort } from '../../domain/money.ts'
 import { rulesOn } from '../../domain/payRules.ts'
-import { t } from '../../lib/i18n.ts'
+import { t, tf } from '../../lib/i18n.ts'
 import type { Locale } from '../../lib/locale.ts'
 import { usePersistState } from '../../pwa/persistStorage.ts'
 import { Row } from '../../ui/Row.tsx'
@@ -22,6 +23,22 @@ import { TipHandlingFields } from './TipHandlingFields.tsx'
 
 type WeekStartChoice = 'sunday' | 'monday'
 
+/** "$1,000 a week · $4,000 a month", whichever goals are set, or "Not set". */
+function goalSummary(
+  locale: Locale,
+  weeklyGoalCents: number | null,
+  monthlyGoalCents: number | null,
+): string {
+  const parts: string[] = []
+  if (weeklyGoalCents !== null) {
+    parts.push(tf(locale, 'goalSummaryWeek', { amount: formatUsdShort(weeklyGoalCents) }))
+  }
+  if (monthlyGoalCents !== null) {
+    parts.push(tf(locale, 'goalSummaryMonth', { amount: formatUsdShort(monthlyGoalCents) }))
+  }
+  return parts.length === 0 ? t(locale, 'goalNotSet') : parts.join(' · ')
+}
+
 export function SettingsPage() {
   const {
     locale,
@@ -30,6 +47,8 @@ export function SettingsPage() {
     weekStartDay,
     payPeriodType,
     payPeriodAnchorDate,
+    weeklyGoalCents,
+    monthlyGoalCents,
   } = useSettings()
   const anchorId = useId()
   const numberPadHintId = useId()
@@ -71,6 +90,16 @@ export function SettingsPage() {
           <IconChevronRight size={18} aria-hidden="true" className="flex-none text-text-secondary" />
         </div>
         <p className="mt-1 text-sm text-text-secondary">{summary}</p>
+      </Link>
+
+      <Link href={paths.goals} className={`${card} block`}>
+        <div className="flex items-center justify-between gap-2">
+          <span className="font-medium">{t(locale, 'goals')}</span>
+          <IconChevronRight size={18} aria-hidden="true" className="flex-none text-text-secondary" />
+        </div>
+        <p className="mt-1 text-sm text-text-secondary">
+          {goalSummary(locale, weeklyGoalCents, monthlyGoalCents)}
+        </p>
       </Link>
 
       <div>
