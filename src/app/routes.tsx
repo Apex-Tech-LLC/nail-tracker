@@ -56,7 +56,9 @@ export function Routes() {
       <Route path={paths.services}>{() => <PresetsPage onDone={goBack} />}</Route>
       <Route path={paths.payRules}>{() => <PayRulesPage onDone={goBack} />}</Route>
       <Route path={paths.goals}>{() => <GoalsPage onDone={goBack} />}</Route>
-      <Route path="/taxes" component={TaxesPage} />
+      <Route path="/taxes/:year">
+        {(params) => <TaxesPage year={params.year} onDone={goBack} />}
+      </Route>
       <Route path={paths.settings} component={SettingsPage} />
       <Route path={paths.onboarding} component={OnboardingPage} />
       <Route path={paths.add}>{() => <TurnForm onDone={goBack} />}</Route>

@@ -62,6 +62,10 @@ test('opens from Reports in Year mode and shows the year totals', async ({ page 
   await expect(rowAmount(page, 'Cash tips')).toHaveText('$10.00')
   await expect(rowAmount(page, 'Card tips')).toHaveText('$15.00')
   await expect(rowAmount(page, 'Total earned')).toHaveText('$85.00')
+
+  // The page has no tabs, so Close is the way back.
+  await page.getByRole('button', { name: 'Close' }).click()
+  await expect(page.getByRole('heading', { name: 'Reports' })).toBeVisible()
 })
 
 test('setting 20 percent shows the set-aside and the quarter amounts', async ({ page }) => {

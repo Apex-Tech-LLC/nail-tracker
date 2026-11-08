@@ -1,8 +1,7 @@
-import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react'
+import { IconChevronLeft, IconChevronRight, IconX } from '@tabler/icons-react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useId, useState } from 'react'
-import { useLocation, useSearch } from 'wouter'
-import { PageHeader } from '../../app/PageHeader.tsx'
+import { useLocation } from 'wouter'
 import { paths } from '../../app/navigation.ts'
 import { updateSettings, useSettings } from '../../app/settings.ts'
 import { useToday } from '../../app/useToday.ts'
@@ -27,8 +26,8 @@ import { taxCsv } from './taxCsv.ts'
 const MIN_YEAR = 1900
 const MAX_YEAR = 2200
 
-function yearFromSearch(search: string, fallback: number): number {
-  const value = Number(new URLSearchParams(search).get('year'))
+function yearFromParam(param: string, fallback: number): number {
+  const value = Number(param)
   return Number.isInteger(value) && value >= MIN_YEAR && value <= MAX_YEAR ? value : fallback
 }
 
@@ -36,13 +35,12 @@ function quarterLabel(start: IsoDate, end: IsoDate, locale: DateLocale): string 
   return `${formatMonthShort(start, locale)}–${formatMonthShort(end, locale)}`
 }
 
-export function TaxesPage() {
+export function TaxesPage({ year: yearParam, onDone }: { year: string; onDone: () => void }) {
   const { locale, taxSetAsideBp } = useSettings()
   const today = useToday()
-  const search = useSearch()
   const [, navigate] = useLocation()
   const percentId = useId()
-  const [year, setYear] = useState(() => yearFromSearch(search, parseIsoDate(today).year))
+  const [year, setYear] = useState(() => yearFromParam(yearParam, parseIsoDate(today).year))
   const [percentText, setPercentText] = useState(() =>
     taxSetAsideBp === null ? '' : rateToInput(taxSetAsideBp),
   )
@@ -83,7 +81,18 @@ export function TaxesPage() {
 
   return (
     <>
-      <PageHeader title={t(locale, 'taxesTitle')} />
+      <header className="flex items-center justify-between gap-2">
+        <button
+          type="button"
+          onClick={onDone}
+          aria-label={t(locale, 'close')}
+          className="print-hide flex min-h-11 min-w-11 items-center justify-center"
+        >
+          <IconX size={22} aria-hidden="true" />
+        </button>
+        <h1 className="min-w-0 flex-1 text-center text-lg font-semibold">{t(locale, 'taxesTitle')}</h1>
+        <span className="w-11" />
+      </header>
 
       <p className="text-sm text-text-secondary">{t(locale, 'taxNotAdvice')}</p>
 
