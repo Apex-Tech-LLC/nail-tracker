@@ -1,4 +1,5 @@
 import type { IsoDate } from './dates.ts'
+import { roundDiv } from './money.ts'
 
 export type GoalKind = 'week' | 'month'
 
@@ -13,7 +14,7 @@ export interface GoalProgress {
 export function goalProgress(earnedCents: number, goalCents: number): GoalProgress {
   if (goalCents <= 0) return { toGoCents: 0, fillPercent: 0 }
   const toGoCents = Math.max(0, goalCents - earnedCents)
-  const fillPercent = Math.min(100, Math.max(0, Math.round((earnedCents / goalCents) * 100)))
+  const fillPercent = Math.min(100, Math.max(0, roundDiv(earnedCents * 100, goalCents)))
   return { toGoCents, fillPercent }
 }
 
