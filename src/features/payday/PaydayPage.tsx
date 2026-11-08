@@ -9,6 +9,7 @@ import { db } from '../../db/schema.ts'
 import { formatRange } from '../../domain/dates.ts'
 import { formatUsd } from '../../domain/money.ts'
 import { t } from '../../lib/i18n.ts'
+import { endLoad, startLoad } from '../../lib/loadMark.ts'
 import { list, primaryButton, secondaryButton } from '../../ui/styles.ts'
 import { CheckPanel } from '../paycheck/CheckPanel.tsx'
 import { checkStatusColor, checkStatusLabel } from '../paycheck/paycheckStatus.ts'
@@ -26,7 +27,12 @@ export function PaydayPage() {
     void ensurePayPeriods(db, { type, anchor }, today)
   }, [type, anchor, today])
 
-  const summaries = useLiveQuery(() => loadPeriodSummaries(db))
+  const summaries = useLiveQuery(async () => {
+    startLoad('load:paycheck')
+    const result = await loadPeriodSummaries(db)
+    endLoad('load:paycheck')
+    return result
+  })
 
   if (summaries === undefined) {
     return <PageHeader title={t(locale, 'paydayTitle')} />

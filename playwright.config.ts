@@ -19,7 +19,22 @@ export default defineConfig({
     viewport: { width: 390, height: 844 },
     trace: 'retain-on-failure',
   },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'], viewport: { width: 390, height: 844 } } }],
+  projects: [
+    {
+      name: 'chromium',
+      // Speed runs alone, after the main suite, so nothing else uses the PC then.
+      testIgnore: '**/speed.spec.ts',
+      use: { ...devices['Desktop Chrome'], viewport: { width: 390, height: 844 } },
+    },
+    {
+      name: 'speed',
+      testMatch: '**/speed.spec.ts',
+      dependencies: ['chromium'],
+      retries: 0,
+      fullyParallel: false,
+      use: { ...devices['Desktop Chrome'], viewport: { width: 390, height: 844 } },
+    },
+  ],
   webServer: {
     command: `pnpm build && pnpm preview --port ${PORT} --strictPort`,
     url: `http://localhost:${PORT}/nail-tracker/`,

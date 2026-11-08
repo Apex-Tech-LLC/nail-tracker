@@ -22,7 +22,7 @@ import {
   secondaryButton,
 } from '../../ui/styles.ts'
 import { addPayment } from '../payday/paymentStore.ts'
-import { loadPeriodSummaries, type PeriodSummary } from '../payday/periodStore.ts'
+import { loadPeriodSummary, type PeriodSummary } from '../payday/periodStore.ts'
 import { loadPaycheckRecord, saveStub } from './paycheckStore.ts'
 
 const OTHER_METHODS: PaymentMethod[] = ['zelle', 'directDeposit', 'other']
@@ -65,9 +65,10 @@ export function RecordWhatYouGotForm({ periodId, onDone }: Props) {
   const { locale } = useSettings()
 
   const loaded = useLiveQuery(async (): Promise<Loaded> => {
-    const summaries = await loadPeriodSummaries(db)
-    const summary = summaries.find((item) => item.period.id === periodId) ?? null
-    const record = await loadPaycheckRecord(db, periodId)
+    const [summary, record] = await Promise.all([
+      loadPeriodSummary(db, periodId),
+      loadPaycheckRecord(db, periodId),
+    ])
     return { summary, record: record ?? null }
   }, [periodId])
 

@@ -20,7 +20,7 @@ import {
 import { PAYMENT_METHOD_LABEL, PAY_STATE_COLOR, PAY_STATE_LABEL } from './payStateLabels.ts'
 import { CheckPanel } from '../paycheck/CheckPanel.tsx'
 import { loadPaymentsForPeriod } from './paymentStore.ts'
-import { deletePeriod, loadPeriodSummaries, setPeriodStatus } from './periodStore.ts'
+import { deletePeriod, loadPeriodSummary, setPeriodStatus } from './periodStore.ts'
 
 interface Props {
   periodId: string
@@ -32,10 +32,7 @@ export function PeriodPage({ periodId, onDone }: Props) {
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const [deleteBlocked, setDeleteBlocked] = useState(false)
 
-  const summary = useLiveQuery(async () => {
-    const all = await loadPeriodSummaries(db)
-    return all.find((item) => item.period.id === periodId) ?? null
-  }, [periodId])
+  const summary = useLiveQuery(() => loadPeriodSummary(db, periodId), [periodId])
 
   const payments = useLiveQuery(
     () => loadPaymentsForPeriod(db, periodId),
