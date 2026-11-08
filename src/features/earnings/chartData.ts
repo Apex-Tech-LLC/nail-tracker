@@ -10,7 +10,7 @@ import {
 } from '../../domain/dates.ts'
 import {
   sumTotals,
-  type AdjustmentFigures,
+  type DatedAdjustment,
   type TurnFigures,
 } from '../../domain/totals.ts'
 
@@ -90,7 +90,7 @@ function labelOf(key: IsoDate, size: BucketSize, locale: DateLocale): string {
  */
 export function buildBars(
   turns: readonly TurnFigures[],
-  adjustments: readonly (AdjustmentFigures & { localWorkDate: string })[],
+  adjustments: readonly DatedAdjustment[],
   start: IsoDate,
   end: IsoDate,
   weekStart: 0 | 1,
@@ -108,7 +108,7 @@ export function buildBars(
     else turnsByKey.set(key, [turn])
   }
 
-  const adjustmentsByKey = new Map<string, (AdjustmentFigures & { localWorkDate: string })[]>()
+  const adjustmentsByKey = new Map<string, DatedAdjustment[]>()
   for (const adjustment of adjustments) {
     if (adjustment.localWorkDate < start || adjustment.localWorkDate > end) continue
     const key = bucketStart(adjustment.localWorkDate, size, weekStart)
@@ -148,7 +148,7 @@ export function labelStep(bars: readonly ChartBar[]): number {
 /** The highest single day's earned money across every day that has data. */
 export function highestDayCents(
   turns: readonly TurnFigures[],
-  adjustments: readonly (AdjustmentFigures & { localWorkDate: string })[],
+  adjustments: readonly DatedAdjustment[],
 ): number {
   const turnsByDay = new Map<string, TurnFigures[]>()
   for (const turn of turns) {
@@ -157,7 +157,7 @@ export function highestDayCents(
     else turnsByDay.set(turn.localWorkDate, [turn])
   }
 
-  const adjustmentsByDay = new Map<string, (AdjustmentFigures & { localWorkDate: string })[]>()
+  const adjustmentsByDay = new Map<string, DatedAdjustment[]>()
   for (const adjustment of adjustments) {
     const group = adjustmentsByDay.get(adjustment.localWorkDate)
     if (group) group.push(adjustment)

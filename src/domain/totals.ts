@@ -1,3 +1,4 @@
+import type { IsoDate } from './dates.ts'
 import { roundDiv } from './money.ts'
 
 export type AdjustmentCategory = 'bonus' | 'commissionCorrection' | 'tipCorrection' | 'bookkeepingDeduction'
@@ -17,6 +18,8 @@ export interface AdjustmentFigures {
   amountCents: number
   category: AdjustmentCategory
 }
+
+export type DatedAdjustment = AdjustmentFigures & { localWorkDate: IsoDate }
 
 export interface Totals {
   turns: number
