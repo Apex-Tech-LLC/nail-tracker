@@ -144,3 +144,28 @@ test('marking a period checked shows its result in the past periods list', async
   const pastPeriod = page.getByRole('link', { name: /Nov 1 – Nov 7/ })
   await expect(pastPeriod).toContainText('Matches')
 })
+
+test('after the period ends Home reminds until the paycheck is checked', async ({ page }) => {
+  await start(page)
+  await seedPayRules(page, SPEC_RULES)
+  await logSpecTurns(page)
+
+  await page.goto('./#/payday')
+  await recordGot(page, { check: '166.40', cash: '166.40' })
+
+  await page.clock.setFixedTime(AFTER_PERIOD)
+  await page.goto('./')
+  await page.reload()
+
+  const reminder = 'Your Nov 1 – Nov 7 pay period ended. Check your paycheck.'
+  await expect(page.getByText(reminder, { exact: true })).toBeVisible()
+
+  await page.getByRole('link', { name: 'Check now', exact: true }).click()
+  await expect(page.getByRole('heading', { level: 1, name: 'Nov 1 – Nov 7' })).toBeVisible()
+
+  await page.getByRole('button', { name: 'Mark as checked', exact: true }).click()
+  await expect(page.getByText('Checked Nov 10', { exact: true })).toBeVisible()
+
+  await page.goto('./')
+  await expect(page.getByText(reminder, { exact: true })).toHaveCount(0)
+})

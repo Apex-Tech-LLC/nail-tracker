@@ -58,3 +58,60 @@ describe('dueReminder', () => {
     })
   })
 })
+
+describe('paycheck reminder', () => {
+  const period = {
+    id: 'period-2026-11-08-2026-11-14',
+    startDate: '2026-11-08',
+    endDate: '2026-11-14',
+    hasTurns: true,
+    checkedDate: null,
+  }
+
+  it('comes before the backup reminder', () => {
+    // The backup is also overdue here, so the order decides.
+    expect(dueReminder({ ...base, paycheckPeriods: [period] })).toEqual({
+      id: 'paycheck',
+      key: 'paycheck:period-2026-11-08-2026-11-14',
+      periodId: 'period-2026-11-08-2026-11-14',
+      startDate: '2026-11-08',
+      endDate: '2026-11-14',
+    })
+  })
+
+  it('waits until the period has ended', () => {
+    expect(
+      dueReminder({ ...base, paycheckPeriods: [{ ...period, endDate: '2026-11-18' }] }),
+    ).toMatchObject({ id: 'backup' })
+  })
+
+  it('ignores a period with no turns or a checked period', () => {
+    expect(
+      dueReminder({ ...base, paycheckPeriods: [{ ...period, hasTurns: false }] }),
+    ).toMatchObject({ id: 'backup' })
+    expect(
+      dueReminder({ ...base, paycheckPeriods: [{ ...period, checkedDate: '2026-11-16' }] }),
+    ).toMatchObject({ id: 'backup' })
+  })
+
+  it('takes the most recent unchecked period', () => {
+    const older = {
+      id: 'period-2026-11-01-2026-11-07',
+      startDate: '2026-11-01',
+      endDate: '2026-11-07',
+      hasTurns: true,
+      checkedDate: null,
+    }
+    expect(
+      dueReminder({ ...base, paycheckPeriods: [older, period] }),
+    ).toMatchObject({ periodId: period.id })
+  })
+
+  it('stays hidden for the day it was dismissed, then lets the backup through', () => {
+    const dismissed = { 'paycheck:period-2026-11-08-2026-11-14': '2026-11-18' }
+    expect(dueReminder({ ...base, dismissed, paycheckPeriods: [period] })).toEqual({
+      id: 'backup',
+      key: 'backup:2026-11-04',
+    })
+  })
+})

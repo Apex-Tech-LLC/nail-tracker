@@ -1,10 +1,22 @@
 import { diffDays, type IsoDate } from './dates.ts'
 
-export type ReminderId = 'backup' // later tasks add 'paycheck', 'goal', 'tax'
+export type ReminderId = 'backup' | 'paycheck' // later tasks add 'goal', 'tax'
 
 export interface Reminder {
   id: ReminderId
   key: string // the occurrence, e.g. 'backup:2026-11-04'
+  periodId?: string
+  startDate?: IsoDate
+  endDate?: IsoDate
+}
+
+/** A pay period the paycheck reminder can look at. */
+export interface PaycheckPeriod {
+  id: string
+  startDate: IsoDate
+  endDate: IsoDate
+  hasTurns: boolean
+  checkedDate: IsoDate | null
 }
 
 export interface DueReminderInput {
@@ -14,6 +26,8 @@ export interface DueReminderInput {
   lastBackupDate: IsoDate | null
   firstTurnDate: IsoDate | null
   dismissed: Record<string, IsoDate>
+  /** Only periods that could raise the reminder; harmless to pass them all. */
+  paycheckPeriods?: readonly PaycheckPeriod[]
 }
 
 type ReminderRule = (input: DueReminderInput) => Reminder | null
@@ -31,8 +45,33 @@ function backupReminder(input: DueReminderInput): Reminder | null {
   return { id: 'backup', key: `backup:${start}` }
 }
 
+/**
+ * A pay period that ended before today, has turns and was never checked.
+ * The most recent one wins, so a dismissed old period does not hide the next.
+ */
+function paycheckReminder(input: DueReminderInput): Reminder | null {
+  const periods = input.paycheckPeriods ?? []
+  const due = periods
+    .filter(
+      (period) =>
+        period.endDate < input.today &&
+        period.hasTurns &&
+        period.checkedDate === null &&
+        input.dismissed[`paycheck:${period.id}`] === undefined,
+    )
+    .sort((a, b) => b.endDate.localeCompare(a.endDate))[0]
+  if (!due) return null
+  return {
+    id: 'paycheck',
+    key: `paycheck:${due.id}`,
+    periodId: due.id,
+    startDate: due.startDate,
+    endDate: due.endDate,
+  }
+}
+
 // Most urgent first. Later reminders are one more entry here.
-const RULES: readonly ReminderRule[] = [backupReminder]
+const RULES: readonly ReminderRule[] = [paycheckReminder, backupReminder]
 
 /** The most urgent reminder that is due and not dismissed for this occurrence, or null. */
 export function dueReminder(input: DueReminderInput): Reminder | null {

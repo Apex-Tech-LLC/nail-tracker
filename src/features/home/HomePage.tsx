@@ -20,6 +20,7 @@ import {
   addDays,
   diffDays,
   formatDayLong,
+  formatRange,
   formatWeekdayLong,
   formatWeekdayShort,
   weekRange,
@@ -149,6 +150,13 @@ export function HomePage() {
     lastBackupDate,
     firstTurnDate: data.firstTurn?.localWorkDate ?? null,
     dismissed: dismissedReminders,
+    paycheckPeriods: summaries.map((summary) => ({
+      id: summary.period.id,
+      startDate: summary.period.startDate,
+      endDate: summary.period.endDate,
+      hasTurns: summary.statement.turns > 0,
+      checkedDate: summary.record?.checkedDate ?? null,
+    })),
   })
   const reminderStart = lastBackupDate ?? data.firstTurn?.localWorkDate ?? null
   const reminderDays = reminderStart === null ? 0 : diffDays(today, reminderStart)
@@ -247,18 +255,36 @@ export function HomePage() {
       {reminder !== null && (
         <section className="flex items-start gap-2 rounded-card border border-border bg-surface p-3">
           <div className="min-w-0 flex-1">
-            <p className="text-sm">
-              {lastBackupDate === null
-                ? t(locale, 'reminderNoBackup')
-                : tf(locale, 'reminderBackupOverdue', { n: reminderDays })}
-            </p>
-            <button
-              type="button"
-              onClick={backUpNow}
-              className="mt-2 min-h-11 rounded-control bg-brand-600 px-4 text-sm font-semibold text-white"
-            >
-              {t(locale, 'backUpNow')}
-            </button>
+            {reminder.id === 'paycheck' && reminder.periodId ? (
+              <>
+                <p className="text-sm">
+                  {tf(locale, 'reminderPaycheckEnded', {
+                    range: formatRange(reminder.startDate ?? '', reminder.endDate ?? '', locale),
+                  })}
+                </p>
+                <Link
+                  href={paths.period(reminder.periodId)}
+                  className="mt-2 inline-flex min-h-11 items-center rounded-control bg-brand-600 px-4 text-sm font-semibold text-white"
+                >
+                  {t(locale, 'checkNow')}
+                </Link>
+              </>
+            ) : (
+              <>
+                <p className="text-sm">
+                  {lastBackupDate === null
+                    ? t(locale, 'reminderNoBackup')
+                    : tf(locale, 'reminderBackupOverdue', { n: reminderDays })}
+                </p>
+                <button
+                  type="button"
+                  onClick={backUpNow}
+                  className="mt-2 min-h-11 rounded-control bg-brand-600 px-4 text-sm font-semibold text-white"
+                >
+                  {t(locale, 'backUpNow')}
+                </button>
+              </>
+            )}
           </div>
           <button
             type="button"
