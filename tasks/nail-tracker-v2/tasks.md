@@ -64,9 +64,9 @@ Say the day's jobs once and get the turns to check. Plan: `docs/voice-options-sp
 
 | Task | What | Status |
 |---|---|---|
-| V22 | The reader: spoken or typed text into draft turns, English and Vietnamese, on the phone | waiting |
-| V23 | Say and Check screens, entry buttons, save | waiting |
-| V24 | ChatGPT by copy and paste | waiting |
+| V22 | The reader: spoken or typed text into draft turns, English and Vietnamese, on the phone | ✅ |
+| V23 | Say and Check screens, entry buttons, save | ✅ |
+| V24 | ChatGPT by copy and paste | ✅ |
 | V25 | Own AI key (later, if people ask) | waiting |
 
 Briefs for 2.3 and 2.4 are written when the release before them is merged, so they match the code as it is then.
