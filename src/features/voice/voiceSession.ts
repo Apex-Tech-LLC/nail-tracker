@@ -82,42 +82,72 @@ export interface CardDefaults {
 }
 
 /**
- * One card per draft turn, in the order said. A service with no heard price
- * takes its usual price, and the commission rate is the service's own or the
- * default, exactly as for a new turn: the reader never sets it.
+ * The card for one draft turn. A service with no heard price takes its usual
+ * price, and the commission rate is the service's own or the default, exactly
+ * as for a new turn: the reader never sets it. The time is the one said, else
+ * the slot for this card's position among all the cards.
  */
+export function cardFromTurn(
+  turn: DraftTurn,
+  index: number,
+  presets: readonly ServicePreset[],
+  defaults: CardDefaults,
+  date: IsoDate,
+): DraftCard {
+  const lines = turn.services.map((service): LineState => {
+    const preset = presets.find((item) => item.id === service.presetId)
+    const line = newLine(
+      preset ? preset.id : 'other',
+      preset?.defaultCommissionRateBp ?? defaults.defaultCommissionRateBp,
+    )
+    const priceCents = service.priceCents ?? service.usualPriceCents
+    return priceCents === null ? line : { ...line, amount: centsToInput(priceCents) }
+  })
+  return {
+    key: crypto.randomUUID(),
+    reader: turn,
+    reviewed: false,
+    values: {
+      lines,
+      cashText: turn.cashTipCents > 0 ? centsToInput(turn.cashTipCents) : '',
+      cardText: turn.cardTipCents > 0 ? centsToInput(turn.cardTipCents) : '',
+      turnCountText: '1',
+      date,
+      time: turn.startTime ?? slotTime(index),
+      clientType: turn.request ? 'request' : 'walkIn',
+      cashTipReceived: defaults.cashTipHandling === 'inHand',
+      cardTipReceived: defaults.cardTipHandling === 'inHand',
+      note: '',
+    },
+  }
+}
+
+/** One card per draft turn, in the order said. */
 export function cardsFromReader(
   result: ReaderResult,
   presets: readonly ServicePreset[],
   defaults: CardDefaults,
   date: IsoDate,
 ): DraftCard[] {
-  return result.turns.map((turn, index) => {
-    const lines = turn.services.map((service): LineState => {
-      const preset = presets.find((item) => item.id === service.presetId)
-      const line = newLine(
-        preset ? preset.id : 'other',
-        preset?.defaultCommissionRateBp ?? defaults.defaultCommissionRateBp,
-      )
-      const priceCents = service.priceCents ?? service.usualPriceCents
-      return priceCents === null ? line : { ...line, amount: centsToInput(priceCents) }
-    })
-    return {
-      key: crypto.randomUUID(),
-      reader: turn,
-      reviewed: false,
-      values: {
-        lines,
-        cashText: turn.cashTipCents > 0 ? centsToInput(turn.cashTipCents) : '',
-        cardText: turn.cardTipCents > 0 ? centsToInput(turn.cardTipCents) : '',
-        turnCountText: '1',
-        date,
-        time: slotTime(index),
-        clientType: turn.request ? 'request' : 'walkIn',
-        cashTipReceived: defaults.cashTipHandling === 'inHand',
-        cardTipReceived: defaults.cardTipHandling === 'inHand',
-        note: '',
-      },
-    }
-  })
+  return result.turns.map((turn, index) => cardFromTurn(turn, index, presets, defaults, date))
+}
+
+/** A card made straight from words the reader could not place: no service yet, the words as heard. */
+export function cardFromLeftover(
+  heard: string,
+  index: number,
+  presets: readonly ServicePreset[],
+  defaults: CardDefaults,
+  date: IsoDate,
+): DraftCard {
+  const turn: DraftTurn = {
+    heard,
+    services: [],
+    cashTipCents: 0,
+    cardTipCents: 0,
+    request: false,
+    startTime: null,
+    checks: [{ code: 'noService', text: 'No service heard; choose one.' }],
+  }
+  return cardFromTurn(turn, index, presets, defaults, date)
 }

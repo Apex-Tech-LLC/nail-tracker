@@ -217,6 +217,7 @@ function readTurn(
     cashTipCents: tips[0] ?? 0,
     cardTipCents: tips[1] ?? 0,
     request: raw.request === true,
+    startTime: null,
     checks,
   }
 }

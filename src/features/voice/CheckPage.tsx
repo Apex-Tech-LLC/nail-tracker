@@ -13,9 +13,10 @@ import { requestPersistence } from '../../pwa/persistStorage.ts'
 import { primaryButton } from '../../ui/styles.ts'
 import { useToast } from '../../ui/useToast.ts'
 import { presetName, tipCents, turnInputFromForm } from '../turns/turnInput.ts'
-import { addTurns, type TurnInput } from '../turns/turnStore.ts'
+import { addTurns, deleteTurn, type TurnInput } from '../turns/turnStore.ts'
 import { answerNotUnderstood, countNotUnderstood, reasonsFor } from './checkReasons.ts'
 import {
+  cardFromLeftover,
   clearVoiceSession,
   sessionDate,
   updateVoiceSession,
@@ -60,7 +61,7 @@ export function CheckPage() {
 }
 
 function CheckCards({ presets }: { presets: ServicePreset[] }) {
-  const { locale } = useSettings()
+  const { locale, defaultCommissionRateBp, cashTipHandling, cardTipHandling } = useSettings()
   const session = useVoiceSession()
   const goBack = useGoBack()
   const [, navigate] = useAppLocation()
@@ -96,12 +97,29 @@ function CheckCards({ presets }: { presets: ServicePreset[] }) {
     updateVoiceSession({ cards: session.cards.filter((card) => card.key !== key) })
   }
 
+  /** Words the reader could not place become a card with no service, to be fixed like any other. */
+  function addLeftover(index: number) {
+    const card = cardFromLeftover(
+      session.notUnderstood[index],
+      session.cards.length,
+      presets,
+      { defaultCommissionRateBp, cashTipHandling, cardTipHandling },
+      date,
+    )
+    updateVoiceSession({
+      cards: [...session.cards, card],
+      notUnderstood: session.notUnderstood.filter((_, line) => line !== index),
+    })
+    navigate(paths.sayEdit(card.key))
+  }
+
   async function saveAll() {
     if (saveInFlight.current || blocked || inputs.length === 0) return
     saveInFlight.current = true
     setSaving(true)
+    let ids: string[]
     try {
-      await addTurns(db, inputs)
+      ids = await addTurns(db, inputs)
     } catch (error) {
       saveInFlight.current = false
       setSaving(false)
@@ -114,6 +132,17 @@ function CheckCards({ presets }: { presets: ServicePreset[] }) {
         n: inputs.length,
         amount: formatUsdShort(earnedCents),
       }),
+      actions: [
+        {
+          label: t(locale, 'undo'),
+          // Exactly the turns this Save made, all or none.
+          onClick: () => {
+            void db.transaction('rw', db.turns, db.turnServices, async () => {
+              for (const id of ids) await deleteTurn(db, id)
+            })
+          },
+        },
+      ],
     })
     navigate(paths.today, { replace: true })
   }
@@ -162,25 +191,28 @@ function CheckCards({ presets }: { presets: ServicePreset[] }) {
 
       {session.notUnderstood.length > 0 && (
         <ul className="flex flex-col gap-2">
-          {session.notUnderstood.map((text, index) => (
-            <li
-              key={index}
-              className="flex flex-col gap-2 rounded-card border border-dashed border-border-strong bg-surface p-3 text-sm"
-            >
-              <span className="text-text-secondary">
-                {answerNotUnderstood(text, locale) ??
-                  countNotUnderstood(text, locale) ??
-                  tf(locale, 'notUnderstood', { text })}
-              </span>
-              <button
-                type="button"
-                className="min-h-11 self-start text-sm font-semibold text-brand-ink underline"
-                onClick={() => navigate(paths.add)}
+          {session.notUnderstood.map((text, index) => {
+            const refusal = answerNotUnderstood(text, locale) ?? countNotUnderstood(text, locale)
+            return (
+              <li
+                key={index}
+                className="flex flex-col gap-2 rounded-card border border-dashed border-border-strong bg-surface p-3 text-sm"
               >
-                {t(locale, 'addAsTurn')}
-              </button>
-            </li>
-          ))}
+                <span className="text-text-secondary">
+                  {refusal ?? tf(locale, 'notUnderstood', { text })}
+                </span>
+                {refusal === null && (
+                  <button
+                    type="button"
+                    className="min-h-11 self-start text-sm font-semibold text-brand-ink underline"
+                    onClick={() => addLeftover(index)}
+                  >
+                    {t(locale, 'addAsTurn')}
+                  </button>
+                )}
+              </li>
+            )
+          })}
         </ul>
       )}
 

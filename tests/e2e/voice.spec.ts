@@ -72,7 +72,7 @@ test('two jobs said become two cards with the total earned', async ({ page }) =>
   await expect(cards(page).nth(0)).toContainText('$45')
   await expect(cards(page).nth(0)).toContainText('+$10 cash tip')
   await expect(cards(page).nth(0)).toContainText('9:00 AM')
-  await expect(cards(page).nth(0)).toContainText('"Gel manicure 45, 10')
+  await expect(cards(page).nth(0)).toContainText('"Gel manicure 45, 10 tip cash"')
   await expect(cards(page).nth(1)).toContainText('Pedicure')
   await expect(cards(page).nth(1)).toContainText('$35')
   await expect(cards(page).nth(1)).toContainText('9:45 AM')
@@ -118,13 +118,123 @@ test('Vietnamese words are read and every reason is in Vietnamese', async ({ pag
   await expect(page.getByRole('button', { name: 'Lưu 2 turn' })).toBeEnabled()
 })
 
-test('words the reader cannot place can be added by hand', async ({ page }) => {
+test('words the reader cannot place become a card that is fixed and saved with the others', async ({ page }) => {
   await startSay(page)
   await sayText(page, 'Manicure 30. blah blah')
 
   await expect(page.getByText('Not understood: "blah blah"')).toBeVisible()
   await page.getByRole('button', { name: 'Add as a turn' }).click()
-  await expect(page.getByRole('heading', { level: 1, name: 'Add Turn' })).toBeVisible()
+
+  // The line is gone and the new card opens in the usual form, with no service yet.
+  await expect(page.getByRole('heading', { level: 1, name: 'Fix this turn' })).toBeVisible()
+  await page.getByRole('button', { name: 'Close' }).click()
+  await expect(page.getByText('Not understood: "blah blah"')).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Add as a turn' })).toHaveCount(0)
+  await expect(cards(page)).toHaveCount(2)
+  await expect(cards(page).nth(1)).toContainText('No service')
+  await expect(cards(page).nth(1)).toContainText('"blah blah"')
+  await expect(page.getByRole('button', { name: 'Save 2 turns' })).toBeDisabled()
+
+  await cards(page).nth(1).click()
+  await page.getByRole('button', { name: 'Pedicure', exact: true }).click()
+  await page.getByLabel('Service amount').fill('40')
+  await page.getByRole('button', { name: 'Done', exact: true }).click()
+  await page.getByRole('button', { name: 'Save 2 turns' }).click()
+  await expect(page.getByRole('status').filter({ hasText: 'Saved 2 turns' })).toBeVisible()
+
+  const names = (await rows(page, 'turnServices')).map((service) => [service.serviceNameSnapshot, service.servicePriceCents])
+  expect(names.sort()).toEqual([
+    ['Manicure', 3000],
+    ['Pedicure', 4000],
+  ])
+})
+
+test('a ChatGPT refusal line has no Add as a turn button', async ({ page }) => {
+  await startSay(page)
+  await page.getByLabel("Paste ChatGPT's answer").fill(answer('{"services":[{"id":"nails","price":"20"}]}'))
+  await page.getByRole('button', { name: 'Check the answer' }).click()
+
+  await expect(page.getByText('Not understood: turn 1 has a service that is not on your list (nails)')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Add as a turn' })).toHaveCount(0)
+})
+
+test('a said time shows on its card and is saved', async ({ page }) => {
+  await startSay(page)
+  await sayText(page, 'Gel manicure 45 at 2 PM. Pedicure 35 at 2:30. Manicure 30. Acrylic fill 50 at 7.')
+
+  await expect(cards(page)).toHaveCount(4)
+  await expect(cards(page).nth(0)).toContainText('2:00 PM')
+  await expect(cards(page).nth(1)).toContainText('2:30 PM')
+  // No time said: the slot for its place among all the cards.
+  await expect(cards(page).nth(2)).toContainText('10:30 AM')
+  await expect(cards(page).nth(3)).toContainText('7:00 PM')
+  await expect(cards(page).nth(3)).toContainText('Check this: Is that morning or evening?')
+
+  // Opening the guessed card shows the time box already open.
+  await cards(page).nth(3).click()
+  await expect(page.getByLabel('Time')).toHaveValue('19:00')
+  await page.getByLabel('Time').fill('07:00')
+  await page.getByRole('button', { name: 'Done', exact: true }).click()
+  await expect(cards(page).nth(3)).toContainText('7:00 AM')
+
+  await page.getByRole('button', { name: 'Save 4 turns' }).click()
+  await expect(page.getByRole('status').filter({ hasText: 'Saved 4 turns' })).toBeVisible()
+
+  const times = (await rows(page, 'turns')).map((turn) => turn.occurredAt as number).sort((a, b) => a - b)
+  expect(times).toEqual(
+    [
+      '2026-11-04T07:00:00-06:00',
+      '2026-11-04T10:30:00-06:00',
+      '2026-11-04T14:00:00-06:00',
+      '2026-11-04T14:30:00-06:00',
+    ].map((time) => new Date(time).getTime()),
+  )
+})
+
+test('a time said in Vietnamese shows on its card', async ({ page }) => {
+  await page.clock.setFixedTime(NOON)
+  await seedSettings(page)
+  await page.goto('./')
+  await page.evaluate(() => {
+    const saved = JSON.parse(localStorage.getItem('nail-tracker.settings') ?? '{}')
+    localStorage.setItem('nail-tracker.settings', JSON.stringify({ ...saved, locale: 'vi' }))
+  })
+  await page.goto('./#/say')
+  await page.reload()
+  await sayText(page, 'Lúc hai giờ chiều, sơn gel tay bốn lăm. Làm móng chân ba lăm lúc 3 giờ rưỡi', 'Tạo turn')
+
+  await expect(cards(page)).toHaveCount(2)
+  await expect(cards(page).nth(0)).toContainText('14:00')
+  await expect(cards(page).nth(1)).toContainText('15:30')
+  await expect(page.getByText('Cần xem lại')).toHaveCount(0)
+  await page.getByRole('button', { name: 'Lưu 2 turn' }).click()
+  await expect(page.getByRole('status').filter({ hasText: 'Đã lưu 2 turn' })).toBeVisible()
+
+  const times = (await rows(page, 'turns')).map((turn) => turn.occurredAt as number).sort((a, b) => a - b)
+  expect(times).toEqual(
+    ['2026-11-04T14:00:00-06:00', '2026-11-04T15:30:00-06:00'].map((time) => new Date(time).getTime()),
+  )
+})
+
+test('Undo after Save removes exactly those turns and leaves older turns alone', async ({ page }) => {
+  await page.clock.setFixedTime(NOON)
+  await seedSettings(page)
+  await addTurn(page, { service: 'Pedicure', amount: '35' })
+  await page.goto('./#/say')
+  const older = await rows(page, 'turns')
+  const olderServices = await rows(page, 'turnServices')
+  expect(older).toHaveLength(1)
+
+  await sayText(page, 'Manicure 30. Gel manicure 50, 5 tip card.')
+  await page.getByRole('button', { name: 'Save 2 turns' }).click()
+  await expect(page.getByRole('status').filter({ hasText: 'Saved 2 turns' })).toBeVisible()
+  expect(await rows(page, 'turns')).toHaveLength(3)
+  expect(await rows(page, 'turnServices')).toHaveLength(3)
+
+  await page.getByRole('button', { name: 'Undo', exact: true }).click()
+  await expect.poll(async () => (await rows(page, 'turns')).length).toBe(1)
+  expect(await rows(page, 'turns')).toEqual(older)
+  expect(await rows(page, 'turnServices')).toEqual(olderServices)
 })
 
 test('Save writes every draft on the chosen day, and nothing before', async ({ page }) => {

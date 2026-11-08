@@ -21,6 +21,7 @@ type PlainCode =
   | 'paymentNotTip'
   | 'appointment'
   | 'requestConflict'
+  | 'timeGuessedHalf'
 
 const PLAIN: Record<PlainCode, StringKey> = {
   noService: 'reasonNoService',
@@ -31,6 +32,7 @@ const PLAIN: Record<PlainCode, StringKey> = {
   paymentNotTip: 'reasonPaymentNotTip',
   appointment: 'reasonAppointment',
   requestConflict: 'reasonRequestConflict',
+  timeGuessedHalf: 'reasonTimeGuessedHalf',
 }
 
 // Codes that show what the person said, as the first thing in quotes.

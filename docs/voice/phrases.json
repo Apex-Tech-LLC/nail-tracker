@@ -2475,12 +2475,11 @@
         ],
         "cashTipCents": 800,
         "cardTipCents": 0,
-        "request": false
+        "request": false,
+        "startTime": "14:00"
       }
     ],
-    "check": [
-      "Turn 1: Time \"2 PM\" is not asserted by this fixture; preserve it for time handling."
-    ]
+    "check": []
   },
   {
     "id": "en-118",
@@ -5114,12 +5113,11 @@
         ],
         "cashTipCents": 800,
         "cardTipCents": 0,
-        "request": false
+        "request": false,
+        "startTime": "14:00"
       }
     ],
-    "check": [
-      "Turn 1: Time \"hai giờ chiều\" is not asserted by this fixture; preserve it for time handling."
-    ]
+    "check": []
   },
   {
     "id": "vi-117",
@@ -6534,12 +6532,11 @@
         ],
         "cashTipCents": 0,
         "cardTipCents": 0,
-        "request": false
+        "request": false,
+        "startTime": "14:00"
       }
     ],
-    "check": [
-      "Turn 1: Time \"hai giờ chiều\" is not asserted by this fixture; preserve it for time handling."
-    ]
+    "check": []
   },
   {
     "id": "mixed-058",

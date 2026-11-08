@@ -47,6 +47,7 @@ export type CheckCode =
   | 'requestConflict'
   | 'priceChange'
   | 'timeNotRead'
+  | 'timeGuessedHalf'
   | 'backReference'
 
 /** A reason to look at a turn again. `text` is plain English for the next card to translate. */
@@ -70,6 +71,8 @@ export interface DraftTurn {
   cashTipCents: number
   cardTipCents: number
   request: boolean
+  // The time of day said for this turn, "HH:MM" in 24 hours, or null when none was said or it could not be read.
+  startTime: string | null
   checks: DraftCheck[]
 }
 
@@ -396,8 +399,17 @@ const CENT_UNITS = new Set(['xu', 'cent', 'cents'])
 const FOREIGN_UNITS = new Set(['nghin', 'ngan', 'vnd'])
 const POINT_WORDS = new Set(['point', 'phay', 'cham'])
 const MINUS_WORDS = new Set(['minus', 'negative'])
-const TIME_UNITS = new Set(['gio', 'pm', 'am', 'oclock'])
-const TIME_AFTER = new Set(['chieu', 'sang', 'toi', 'trua'])
+const HOUR_UNITS = new Set(['gio', 'h'])
+const MINUTE_UNITS = new Set(['phut', 'min', 'mins', 'minute', 'minutes'])
+type DayPart = 'am' | 'pm' | 'noon' | 'evening'
+const DAY_PARTS = new Map<string, DayPart>([
+  ['am', 'am'],
+  ['sang', 'am'],
+  ['pm', 'pm'],
+  ['chieu', 'pm'],
+  ['trua', 'noon'],
+  ['toi', 'evening'],
+])
 const COUNT_NOUNS = new Set(['customer', 'customers', 'client', 'clients', 'job', 'jobs', 'turn', 'turns', 'khach', 'luot'])
 
 // ---------------------------------------------------------------------------
@@ -710,18 +722,112 @@ function readMoney(tokens: readonly Token[], i: number): MoneyRead | null {
   return { money: { cents: problem === null ? cents : null, problem, notes }, end }
 }
 
-/** A time of day: "at 2", "at 2 PM", "lúc hai giờ chiều", "hai giờ". */
-function readTime(tokens: readonly Token[], i: number): number | null {
+interface TimeRead {
+  end: number
+  // "HH:MM" in 24 hours; null when a time was said but cannot be read.
+  time: string | null
+  // 7 or 8 with no am/pm: the hour was guessed.
+  guessed: boolean
+}
+
+const pad2 = (value: number) => String(value).padStart(2, '0')
+
+/** The 24-hour hour for what was said. With no am/pm: 1 to 6 is afternoon, 9 to 12 morning or noon, 7 and 8 a guess. */
+function twentyFourHour(hour: number, part: DayPart | null): { hour: number; guessed: boolean } {
+  if (hour > 12) return { hour, guessed: false }
+  if (part === 'pm') return { hour: hour === 12 ? 12 : hour + 12, guessed: false }
+  if (part === 'am') return { hour: hour === 12 ? 0 : hour, guessed: false }
+  if (part === 'noon') return { hour: hour >= 1 && hour <= 5 ? hour + 12 : hour, guessed: false }
+  if (part === 'evening') return { hour: hour === 12 ? 0 : hour + 12, guessed: false }
+  if (hour >= 1 && hour <= 6) return { hour: hour + 12, guessed: false }
+  if (hour === 7) return { hour: 19, guessed: true }
+  if (hour === 8) return { hour: 8, guessed: true }
+  return { hour, guessed: false }
+}
+
+/** Minutes straight after "giờ" or "h": "15", "mười lăm", "rưỡi" (30). */
+function readMinutes(tokens: readonly Token[], k: number): { minutes: number; end: number } | null {
+  if (pieceAt(tokens, k)?.k === 'half') return { minutes: 30, end: k + 1 }
+  const token = tokens[k]
+  if (!token || (token.kind !== 'number' && token.kind !== 'word')) return null
+  if (token.kind === 'number' && /[.,]/.test(token.lo)) return null
+  const read = readQuantity(tokens, k)
+  if (!read || read.ambiguous || read.extraCents > 0 || read.whole >= 60) return null
+  return { minutes: read.whole, end: read.end }
+}
+
+/**
+ * A time of day: "at 2", "at 2 PM", "2:30", "14:30", "lúc hai giờ chiều", "2 giờ rưỡi", "3 giờ 15".
+ * Minutes count only straight after a colon, "giờ" or "h", never after am/pm or a day part ("at 2 PM 45 gel":
+ * 45 is a price). "at 2 30" and "at two thirty" are times that cannot be read. `afterService` is true when the
+ * words just before are a service with no price yet: "pedicure at 20" is a price, not a time.
+ */
+function readTime(tokens: readonly Token[], i: number, afterService: boolean): TimeRead | null {
   const token = tokens[i]
-  if (!token || token.kind !== 'word') return null
-  const marked = token.fo === 'at' || token.fo === 'luc'
-  const lead = readQuantity(tokens, marked ? i + 1 : i)
-  if (!lead || lead.ambiguous || lead.extraCents > 0 || lead.whole > 24) return null
+  if (!token || (token.kind !== 'word' && token.kind !== 'number')) return null
+  const marked = token.kind === 'word' && (token.fo === 'at' || token.fo === 'luc')
+  const first = marked ? i + 1 : i
+  const lead = readQuantity(tokens, first)
+  if (!lead || lead.extraCents > 0 || lead.tooManyDecimals || lead.whole > 23) return null
+  if (tokens[first].kind === 'number' && /[.,]/.test(tokens[first].lo)) return null
+  // Words that may be two numbers: a time, but not a readable one.
+  if (lead.ambiguous) return marked ? { end: lead.end, time: null, guessed: false } : null
 
   let end = lead.end
-  if (!marked && !isWord(tokens, end, TIME_UNITS)) return null
-  while (isWord(tokens, end, TIME_UNITS) || isWord(tokens, end, TIME_AFTER)) end += 1
-  return end
+  let minutes = 0
+  let colon = false
+  let unit = false
+  const mark = tokens[end]
+  const digits = tokens[end + 1]
+  if (
+    mark?.kind === 'colon' &&
+    tokens[first].kind === 'number' &&
+    mark.start === tokens[end - 1].end &&
+    digits?.kind === 'number' &&
+    digits.start === mark.end
+  ) {
+    // "2:75": a time with minutes that do not exist.
+    if (!/^\d{2}$/.test(digits.lo) || Number(digits.lo) >= 60) return { end: end + 2, time: null, guessed: false }
+    minutes = Number(digits.lo)
+    colon = true
+    end += 2
+  } else if (isWord(tokens, end, HOUR_UNITS)) {
+    unit = true
+    end += 1
+    const read = readMinutes(tokens, end)
+    if (read) {
+      minutes = read.minutes
+      end = read.end
+      if (isWord(tokens, end, MINUTE_UNITS)) end += 1
+    }
+  }
+
+  let part: DayPart | null = null
+  let clock = false
+  for (; end < tokens.length; end++) {
+    const word = tokens[end]
+    if (word.kind !== 'word') break
+    const found = DAY_PARTS.get(word.fo)
+    if (found) {
+      part ??= found
+      clock ||= word.fo === 'am' || word.fo === 'pm'
+    } else if (word.fo === "o'clock" || word.fo === 'oclock') clock = true
+    else if (word.fo !== 'gio') break
+  }
+
+  // Said without a mark: only a time when it says so itself.
+  if (!marked && !colon && !unit && !clock) return null
+  const sure = colon || unit || part !== null
+  if (!sure) {
+    if (lead.whole < 1 || lead.whole > 12) return null
+    if (token.fo === 'at' && afterService) return null
+    // "at 2 30": a time followed by a number with nothing to say they belong together.
+    const tail = readQuantity(tokens, end)
+    if (tail) return { end: tail.end, time: null, guessed: false }
+  }
+
+  const { hour, guessed } = twentyFourHour(lead.whole, part)
+  return { end, time: `${pad2(hour)}:${pad2(minutes)}`, guessed }
 }
 
 // ---------------------------------------------------------------------------
@@ -738,7 +844,7 @@ type AtomBody =
   | { t: 'service'; presetId: string; assumed: boolean; guessed: boolean }
   | { t: 'unclear' }
   | { t: 'money'; money: Money }
-  | { t: 'time' }
+  | { t: 'time'; time: string | null; guessed: boolean }
   | { t: 'reduce' }
   | { t: 'count'; n: number; noun: string }
   | { t: 'comma' | 'colon' | 'stop' | 'unknown' }
@@ -859,10 +965,11 @@ function scan(tokens: readonly Token[], lexicon: Lexicon): Atom[] {
       }
     }
 
-    const timeEnd = readTime(tokens, i)
-    if (timeEnd !== null) {
-      push({ t: 'time' }, i, timeEnd)
-      i = timeEnd
+    const previous = atoms.at(-1)
+    const time = readTime(tokens, i, previous?.t === 'service' || previous?.t === 'unclear')
+    if (time) {
+      push({ t: 'time', time: time.time, guessed: time.guessed }, i, time.end)
+      i = time.end
       continue
     }
 
@@ -910,6 +1017,7 @@ interface Draft {
   tipSeen: boolean
   tipWithoutAmount: boolean
   noTip: boolean
+  startTime: string | null
   sawRequest: boolean
   sawWalkIn: boolean
   // Pointed back at an earlier client ("first customer was 30").
@@ -946,6 +1054,7 @@ function newDraft(): Draft {
     tipSeen: false,
     tipWithoutAmount: false,
     noTip: false,
+    startTime: null,
     sawRequest: false,
     sawWalkIn: false,
     backRef: false,
@@ -1088,6 +1197,11 @@ function onMoney(draft: Draft, ctx: Context, atoms: readonly Atom[], i: number):
     const open = draft.entries.filter((entry) => !entry.priced)
     if (open.length > 0) return shareTotal(draft, ctx, open, atom, atoms[i + 1]?.t === 'total' ? i + 1 : i)
   }
+  const paired = pairedPrices(draft, atoms, i)
+  if (paired) {
+    paired.run.forEach((entry, n) => setPrice(draft, ctx, entry, atoms[paired.at[n]] as Atom & { t: 'money' }))
+    return paired.at[paired.at.length - 1]
+  }
   if (last && !last.priced) {
     const earlier = draft.entries.at(-2)
     if (last.joined && earlier && !earlier.priced) shareTotal(draft, ctx, [earlier, last], atom, i)
@@ -1096,6 +1210,26 @@ function onMoney(draft: Draft, ctx: Context, atoms: readonly Atom[], i: number):
   }
   draft.loose.push(atom)
   return i
+}
+
+/**
+ * "manicure and pedicure 25 and 35", "mani pedi 25 35": services named one after another, then exactly as many
+ * prices. A price with a tip, channel or total word after it is not one of them. Any other count: null.
+ */
+function pairedPrices(draft: Draft, atoms: readonly Atom[], i: number): { run: Entry[]; at: number[] } | null {
+  let from = draft.entries.length
+  while (from > 0 && !draft.entries[from - 1].priced) from -= 1
+  const run = draft.entries.slice(from)
+  if (run.length < 2 || draft.nextIsTotal) return null
+
+  const at: number[] = []
+  for (let k = i; atoms[k]?.t === 'money'; k++) {
+    const after = atoms[k + 1]
+    if (after && (after.t === 'tip' || after.t === 'channel' || after.t === 'total')) break
+    at.push(k)
+    if (atoms[k + 1]?.t === 'join') k += 1
+  }
+  return at.length === run.length ? { run, at } : null
 }
 
 function shareTotal(draft: Draft, ctx: Context, entries: Entry[], atom: Atom & { t: 'money' }, at: number): number {
@@ -1162,6 +1296,24 @@ function onTip(draft: Draft, ctx: Context, atoms: readonly Atom[], i: number): n
   return j - 1
 }
 
+/** Moves past the atoms a handler used up, so the heard text reaches the last of them. */
+function skipTo(draft: Draft, atoms: readonly Atom[], from: number, to: number): number {
+  if (to > from) draft.end = atoms[to].end
+  return to
+}
+
+function onTime(draft: Draft, ctx: Context, atom: Atom & { t: 'time' }) {
+  const heard = heardOf(ctx, atom)
+  if (atom.time === null) {
+    check(draft, 'timeNotRead', `A time was said ("${heard}") but it could not be read; set it on the turn.`)
+  } else if (draft.startTime === null) {
+    draft.startTime = atom.time
+    if (atom.guessed) check(draft, 'timeGuessedHalf', 'Is that morning or evening?')
+  } else if (draft.startTime !== atom.time) {
+    check(draft, 'timeNotRead', `A second time was said ("${heard}"); the first one was kept. Set the time on the turn.`)
+  }
+}
+
 function run(draft: Draft, ctx: Context, atoms: readonly Atom[]) {
   for (let i = 0; i < atoms.length; i++) {
     const atom = atoms[i]
@@ -1176,10 +1328,10 @@ function run(draft: Draft, ctx: Context, atoms: readonly Atom[]) {
         addEntry(draft, ctx, atom)
         break
       case 'money':
-        i = onMoney(draft, ctx, atoms, i)
+        i = skipTo(draft, atoms, i, onMoney(draft, ctx, atoms, i))
         break
       case 'tip':
-        i = onTip(draft, ctx, atoms, i)
+        i = skipTo(draft, atoms, i, onTip(draft, ctx, atoms, i))
         break
       case 'noTip':
         draft.noTip = true
@@ -1222,7 +1374,7 @@ function run(draft: Draft, ctx: Context, atoms: readonly Atom[]) {
         check(draft, 'appointment', 'An appointment does not mean the client asked for you by name.')
         break
       case 'time':
-        check(draft, 'timeNotRead', `A time was said ("${heardOf(ctx, atom)}") but times are not read yet; set it on the turn.`)
+        onTime(draft, ctx, atom)
         break
       case 'pay': {
         // "paid 35 on card": how the client paid, not a tip.
@@ -1230,7 +1382,7 @@ function run(draft: Draft, ctx: Context, atoms: readonly Atom[]) {
         if (atoms[j]?.t === 'money') j += 1
         if (atoms[j]?.t === 'channel') j += 1
         check(draft, 'paymentNotTip', 'How the client paid is not a tip; no tip was taken from it.')
-        i = j - 1
+        i = skipTo(draft, atoms, i, j - 1)
         break
       }
       case 'backRef':
@@ -1337,6 +1489,7 @@ function finish(draft: Draft, ctx: Context, leftovers: string[]): DraftTurn {
     cashTipCents: draft.cash,
     cardTipCents: draft.card,
     request: draft.sawRequest && !draft.sawWalkIn,
+    startTime: draft.startTime,
     checks,
   }
 }
@@ -1346,7 +1499,7 @@ function hasWork(draft: Draft) {
 }
 
 function hasFollowUp(draft: Draft) {
-  return draft.tipSeen || draft.noTip || draft.sawRequest || draft.sawWalkIn || draft.checks.length > 0
+  return draft.tipSeen || draft.noTip || draft.sawRequest || draft.sawWalkIn || draft.startTime !== null || draft.checks.length > 0
 }
 
 export function readVoice(input: ReaderInput): ReaderResult {

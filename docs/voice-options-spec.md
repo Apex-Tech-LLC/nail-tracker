@@ -43,11 +43,16 @@ top. Both open the Say screen.
   Each card shows what was heard under it in small grey text, so a wrong turn is easy to spot.
 - A card the reader is unsure about is marked `Check this` in orange with the reason: `No price heard, used your usual
   $35`, `"Gel X" matched to Gel-X`, `Price for two services: split by usual prices`.
-- Words it could not use show at the end as `Not understood: "…"`, with `Add as a turn` to open Add turn.
+- Words it could not use show at the end as `Not understood: "…"`. A plain line of leftover words also has `Add as a
+  turn`: it makes a new card from those words (no service yet, the words shown as heard), removes the line and opens
+  the card to fix. Lines about a ChatGPT refusal or a client count have no such button.
 - Tap a card to fix it in the usual Add turn form; swipe or `Remove` to drop it.
 - At the bottom: the total earned for these turns and `Save 3 turns` / `Lưu 3 turn`. Nothing is saved before this.
-- Times: turns get times spread across the work day in the order said (9:00, then every 45 minutes), unless a time
-  was said ("at 2", "lúc 2 giờ").
+  After saving, the `Saved 3 turns` message has `Undo`, which removes exactly those turns.
+- Times: a card shows the time that was said ("at 2", "2:30", "lúc 2 giờ chiều", "2 giờ rưỡi"). With no am or pm, 1 to
+  6 is read as afternoon and 9 to 12 as morning or noon; 7 and 8 are guessed (evening and morning) and marked `Is that
+  morning or evening?`. A time that cannot be read ("at 2 30") is marked, never guessed. Cards with no time said get
+  times spread across the work day by their place in the list (9:00, then every 45 minutes).
 
 ## 4. The reader (free, on the phone)
 
@@ -57,7 +62,9 @@ and the locale, and returns draft turns with a confidence note on each. No netwo
   counted lists ("three jobs: …"). A count said up front that does not match what follows gets a `Check this`.
 - **Services:** match against the person's own service names in both languages, ignoring case, accents and spaces,
   plus common short forms (mani, pedi, full set, fill, gel X, dip, bột, sơn gel, đắp bột, chân, tay). Several services
-  joined by "and" / "với" / "và" make one turn.
+  joined by "and" / "với" / "và" make one turn. Services named one after another followed by as many prices
+  ("manicure and pedicure 25 and 35", "mani pedi 25 35") are priced in order; one price for several services is
+  shared between them.
 - **Money:** "45", "$45", "45 dollars", "forty five", "45.50", and Vietnamese "bốn mươi lăm", "bốn lăm", "45 đô". A
   price with no service, or a service with no price, uses the usual price and is marked.
 - **Tips:** "10 tip", "tip 10", "10 cash tip", "8 on card", "boa 10", "tiền tip 10", "tip thẻ 8". Cash is the
