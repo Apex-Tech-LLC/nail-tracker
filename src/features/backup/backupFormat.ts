@@ -36,16 +36,29 @@ export interface Backup {
 }
 
 export function backupFileName(
-  kind: 'backup' | 'turns',
-  extension: 'json' | 'csv',
+  kind: 'backup' | 'turns' | 'statement' | 'report',
+  extension: 'json' | 'csv' | 'png',
   today: IsoDate,
 ): string {
   return `nail-tracker-${kind}-${today}.${extension}`
 }
 
-/** Hands a file to the browser as a download. */
-export function download(content: string, fileName: string, type: string): void {
-  const url = URL.createObjectURL(new Blob([content], { type }))
+/** A file named after a whole year, used by the tax CSV and the year picture. */
+export function yearFileName(
+  kind: 'taxes' | 'year',
+  extension: 'csv' | 'png',
+  year: number,
+): string {
+  return `nail-tracker-${kind}-${year}.${extension}`
+}
+
+/**
+ * Hands a file to the browser as a download. It takes the file itself, not
+ * just text, so a picture downloads as a real PNG instead of broken text.
+ */
+export function download(content: Blob | string, fileName: string, type: string): void {
+  const blob = typeof content === 'string' ? new Blob([content], { type }) : content
+  const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
   link.href = url
   link.download = fileName
@@ -78,6 +91,6 @@ export async function shareOrDownload(
       // so any other error falls through to the download.
     }
   }
-  download(await file.text(), file.name, file.type)
+  download(file, file.name, file.type)
   return 'downloaded'
 }
