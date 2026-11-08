@@ -1,4 +1,4 @@
-import { IconX } from '@tabler/icons-react'
+import { IconPlus, IconX } from '@tabler/icons-react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useId, useRef, useState, type FormEvent } from 'react'
 import { updateSettings, useSettings } from '../../app/settings.ts'
@@ -25,9 +25,13 @@ import {
   defaultPayRules,
   NO_RULES,
   ruleInForce,
+  tierShare,
   type FeeWhen,
+  type Guarantee,
   type PayRules,
   type SupplyFee,
+  type Tiers,
+  type TierLevel,
 } from '../../domain/payRules.ts'
 import { t, tf } from '../../lib/i18n.ts'
 import type { Locale } from '../../lib/locale.ts'
@@ -41,6 +45,7 @@ import {
   card,
   dangerButton,
   errorText,
+  field,
   label,
   primaryButton,
   secondaryButton,
@@ -64,6 +69,25 @@ interface FormErrors {
   supply?: string
   cardFee?: string
   check?: string
+  guarantee?: string
+  minDays?: string
+  tiers?: string
+}
+
+interface TierRow {
+  from: string
+  rate: string
+}
+
+function parseTierRows(rows: readonly TierRow[]): TierLevel[] | null {
+  const levels: TierLevel[] = []
+  for (let index = 0; index < rows.length; index += 1) {
+    const fromCents = index === 0 ? 0 : parseCents(rows[index].from)
+    const rateBp = parseRateBp(rows[index].rate)
+    if (fromCents === null || rateBp === null) return null
+    levels.push({ fromCents, rateBp })
+  }
+  return levels
 }
 
 export function PayRulesPage({ onDone }: { onDone: () => void }) {
@@ -160,6 +184,7 @@ function PayRulesForm({ initial, today, periodStart }: FormProps) {
   const formRef = useRef<HTMLFormElement | null>(null)
   const perServiceHintId = useId()
   const startDateId = useId()
+  const minDaysId = useId()
 
   const [customOpen, setCustomOpen] = useState(rate !== 6000 && rate !== 5000)
   const [customText, setCustomText] = useState(() => rateToInput(rate))
@@ -185,6 +210,33 @@ function PayRulesForm({ initial, today, periodStart }: FormProps) {
     initial.checkBp !== null && initial.checkBp !== 5000 ? rateToInput(initial.checkBp) : '',
   )
   const [cardTipsPaidIn, setCardTipsPaidIn] = useState(initial.cardTipsPaidIn)
+
+  const [guaranteeOn, setGuaranteeOn] = useState(initial.guarantee.kind !== 'none')
+  const [guaranteeKind, setGuaranteeKind] = useState<'perDay' | 'perPeriod'>(
+    initial.guarantee.kind === 'perPeriod' ? 'perPeriod' : 'perDay',
+  )
+  const [guaranteeAmount, setGuaranteeAmount] = useState(() =>
+    initial.guarantee.kind === 'none' ? '' : centsToInput(initial.guarantee.cents),
+  )
+  const [minDays, setMinDays] = useState(() =>
+    initial.guarantee.kind === 'none' || initial.guarantee.minDays === null
+      ? ''
+      : String(initial.guarantee.minDays),
+  )
+
+  const [tiersOn, setTiersOn] = useState(initial.tiers !== null)
+  const [tierMode, setTierMode] = useState<Tiers['mode']>(initial.tiers?.mode ?? 'eachPart')
+  const [tierRows, setTierRows] = useState<TierRow[]>(() =>
+    initial.tiers === null
+      ? [
+          { from: centsToInput(0), rate: '' },
+          { from: '', rate: '' },
+        ]
+      : initial.tiers.levels.map((level) => ({
+          from: centsToInput(level.fromCents),
+          rate: rateToInput(level.rateBp),
+        })),
+  )
 
   const [errors, setErrors] = useState<FormErrors>({})
   const [askingStart, setAskingStart] = useState(false)
@@ -235,6 +287,33 @@ function PayRulesForm({ initial, today, periodStart }: FormProps) {
     setErrors((previous) => ({ ...previous, supply: undefined }))
   }
 
+  function updateTierRow(index: number, patch: Partial<TierRow>) {
+    setTierRows((rows) => rows.map((row, rowIndex) => (rowIndex === index ? { ...row, ...patch } : row)))
+    setErrors((previous) => ({ ...previous, tiers: undefined }))
+  }
+
+  function addTierRow() {
+    setTierRows((rows) => (rows.length >= 5 ? rows : [...rows, { from: '', rate: '' }]))
+    setErrors((previous) => ({ ...previous, tiers: undefined }))
+  }
+
+  function removeTierRow(index: number) {
+    setTierRows((rows) => (rows.length <= 2 ? rows : rows.filter((_, rowIndex) => rowIndex !== index)))
+    setErrors((previous) => ({ ...previous, tiers: undefined }))
+  }
+
+  const parsedLevels = tiersOn ? parseTierRows(tierRows) : null
+  const tiers: Tiers | null =
+    parsedLevels === null ? null : { mode: tierMode, levels: parsedLevels }
+  const guaranteeCents = parseCents(guaranteeAmount) ?? 0
+  const guarantee: Guarantee = guaranteeOn
+    ? {
+        kind: guaranteeKind,
+        cents: guaranteeCents,
+        minDays: minDays.trim() === '' ? null : Number(minDays),
+      }
+    : { kind: 'none' }
+
   const rateBp = customOpen ? (parseRateBp(customText) ?? rate) : rate
   const supplyFee: SupplyFee =
     supplyKind === 'none'
@@ -254,13 +333,29 @@ function PayRulesForm({ initial, today, periodStart }: FormProps) {
     cardTipFeeBp,
     checkBp,
     cardTipsPaidIn,
-    guarantee: initial.guarantee,
-    tiers: initial.tiers,
+    guarantee,
+    tiers,
   }
 
   const sample = sampleStatement(draft, rateBp, today)
   const rateOnly = sampleStatement({ ...draft, supplyFee: { kind: 'none' } }, rateBp, today)
   const spec = specStatement(draft, rateBp, today)
+
+  const guaranteeExample = !guaranteeOn
+    ? ''
+    : guaranteeKind === 'perDay'
+      ? tf(locale, 'guaranteeExamplePerDay', {
+          amount: formatUsdShort(guaranteeCents),
+          total: formatUsdShort(guaranteeCents * 6),
+        })
+      : tf(locale, 'guaranteeExamplePerPeriod', { amount: formatUsdShort(guaranteeCents) })
+  const tiersExample =
+    parsedLevels === null
+      ? ''
+      : tf(locale, 'tiersExample', {
+          base: formatUsdShort(120_000),
+          share: formatUsdShort(tierShare(120_000, { mode: tierMode, levels: parsedLevels })),
+        })
 
   function validate(): boolean {
     const next: FormErrors = {}
@@ -275,6 +370,28 @@ function PayRulesForm({ initial, today, periodStart }: FormProps) {
     }
     if (checkChoice === 'custom' && parseRateBp(checkPercent) === null) {
       next.check = t(locale, 'errorRate')
+    }
+    if (guaranteeOn && parseCents(guaranteeAmount) === null) {
+      next.guarantee = t(locale, 'errorAmount')
+    }
+    if (guaranteeOn && minDays.trim() !== '' && !/^\d+$/.test(minDays.trim())) {
+      next.minDays = t(locale, 'errorMinDays')
+    }
+    if (guaranteeOn && minDays.trim() !== '' && Number(minDays) < 1) {
+      next.minDays = t(locale, 'errorMinDays')
+    }
+    if (tiersOn) {
+      if (tierRows.length < 2 || tierRows.length > 5) {
+        next.tiers = t(locale, 'errorTierCount')
+      } else if (parsedLevels === null) {
+        next.tiers = t(locale, 'errorRate')
+      } else if (
+        parsedLevels.some(
+          (level, index) => index > 0 && level.fromCents <= parsedLevels[index - 1].fromCents,
+        )
+      ) {
+        next.tiers = t(locale, 'errorTierOrder')
+      }
     }
     setErrors(next)
     return Object.keys(next).length === 0 && !customInvalid
@@ -339,9 +456,70 @@ function PayRulesForm({ initial, today, periodStart }: FormProps) {
             {t(locale, 'perServiceRatesHint')}
           </p>
         </div>
+        {tiersOn && (
+          <p className="text-sm text-text-secondary">{t(locale, 'tiersOnNote')}</p>
+        )}
         <p className="text-sm text-text-secondary">
           {tf(locale, 'commissionExample', { amount: formatUsd(rateOnly.shareCents) })}
         </p>
+      </section>
+
+      <section className={`${card} flex flex-col gap-3`}>
+        <h2 className="font-medium">{t(locale, 'tiersTitle')}</h2>
+        <label className="flex items-center gap-3 py-2">
+          <input
+            type="checkbox"
+            className="size-5"
+            checked={tiersOn}
+            onChange={(event) => {
+              setTiersOn(event.target.checked)
+              setErrors((previous) => ({ ...previous, tiers: undefined }))
+            }}
+          />
+          <span>{t(locale, 'tiersOn')}</span>
+        </label>
+        {tiersOn && (
+          <>
+            <div className="flex flex-col gap-2">
+              {tierRows.map((row, index) => (
+                <TierRowFields
+                  key={index}
+                  index={index}
+                  from={row.from}
+                  rate={row.rate}
+                  canRemove={tierRows.length > 2}
+                  onChange={(patch) => updateTierRow(index, patch)}
+                  onRemove={() => removeTierRow(index)}
+                />
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={addTierRow}
+              disabled={tierRows.length >= 5}
+              className={`${secondaryButton} disabled:opacity-50`}
+            >
+              <span className="inline-flex items-center justify-center gap-2">
+                <IconPlus size={18} aria-hidden="true" />
+                {t(locale, 'tierAddLevel')}
+              </span>
+            </button>
+            <TileGroup<'eachPart' | 'wholeAtTop'>
+              legend={t(locale, 'tierMode')}
+              name="tier-mode"
+              value={tierMode}
+              onChange={setTierMode}
+              options={[
+                { value: 'eachPart', label: t(locale, 'tierEachPart') },
+                { value: 'wholeAtTop', label: t(locale, 'tierWholeAtTop') },
+              ]}
+            />
+            {errors.tiers && <p className={errorText}>{errors.tiers}</p>}
+            {tiersExample !== '' && (
+              <p className="text-sm text-text-secondary">{tiersExample}</p>
+            )}
+          </>
+        )}
       </section>
 
       <section className={`${card} flex flex-col gap-3`}>
@@ -453,6 +631,70 @@ function PayRulesForm({ initial, today, periodStart }: FormProps) {
                 net: formatUsd(1000 - sample.cardTipFeeCents),
               })}
         </p>
+      </section>
+
+      <section className={`${card} flex flex-col gap-3`}>
+        <h2 className="font-medium">{t(locale, 'guaranteeTitle')}</h2>
+        <label className="flex items-center gap-3 py-2">
+          <input
+            type="checkbox"
+            className="size-5"
+            checked={guaranteeOn}
+            onChange={(event) => {
+              setGuaranteeOn(event.target.checked)
+              setErrors((previous) => ({
+                ...previous,
+                guarantee: undefined,
+                minDays: undefined,
+              }))
+            }}
+          />
+          <span>{t(locale, 'guaranteeOn')}</span>
+        </label>
+        {guaranteeOn && (
+          <>
+            <TileGroup<'perDay' | 'perPeriod'>
+              legend={t(locale, 'guaranteeKind')}
+              name="guarantee-kind"
+              value={guaranteeKind}
+              onChange={setGuaranteeKind}
+              options={[
+                { value: 'perDay', label: t(locale, 'guaranteePerDay') },
+                { value: 'perPeriod', label: t(locale, 'guaranteePerPeriod') },
+              ]}
+            />
+            <MoneyField
+              label={t(locale, 'guaranteeAmountLabel')}
+              value={guaranteeAmount}
+              onChange={(value) => {
+                setGuaranteeAmount(value)
+                setErrors((previous) => ({ ...previous, guarantee: undefined }))
+              }}
+              error={errors.guarantee}
+            />
+            <div>
+              <label htmlFor={minDaysId} className={label}>
+                {t(locale, 'guaranteeMinDaysLabel')}
+              </label>
+              <input
+                id={minDaysId}
+                type="text"
+                inputMode="numeric"
+                autoComplete="off"
+                value={minDays}
+                onChange={(event) => {
+                  setMinDays(event.target.value)
+                  setErrors((previous) => ({ ...previous, minDays: undefined }))
+                }}
+                className={field}
+              />
+              {errors.minDays && <p className={errorText}>{errors.minDays}</p>}
+            </div>
+            {guaranteeExample !== '' && (
+              <p className="text-sm text-text-secondary">{guaranteeExample}</p>
+            )}
+          </>
+        )}
       </section>
 
       <section className={`${card} flex flex-col gap-3`}>
@@ -573,6 +815,63 @@ function PayRulesForm({ initial, today, periodStart }: FormProps) {
       )}
       {padOpen && <div className="h-[280px]" aria-hidden="true" />}
     </form>
+  )
+}
+
+function TierRowFields({
+  index,
+  from,
+  rate,
+  canRemove,
+  onChange,
+  onRemove,
+}: {
+  index: number
+  from: string
+  rate: string
+  canRemove: boolean
+  onChange: (patch: Partial<TierRow>) => void
+  onRemove: () => void
+}) {
+  const { locale } = useSettings()
+  return (
+    <div className="flex items-end gap-2">
+      {index === 0 ? (
+        <div className="flex-1">
+          <span className={label}>{t(locale, 'tierFrom')}</span>
+          <p className="rounded-control border border-border bg-surface-subtle px-3 py-3 text-base">
+            $0.00
+          </p>
+        </div>
+      ) : (
+        <div className="flex-1">
+          <MoneyField
+            label={t(locale, 'tierFrom')}
+            value={from}
+            onChange={(value) => onChange({ from: value })}
+          />
+        </div>
+      )}
+      <div className="flex-1">
+        <PercentField
+          label={t(locale, 'tierRate')}
+          value={rate}
+          onChange={(value) => onChange({ rate: value })}
+        />
+      </div>
+      {canRemove ? (
+        <button
+          type="button"
+          onClick={onRemove}
+          aria-label={tf(locale, 'tierRemoveLevel', { n: index + 1 })}
+          className="flex min-h-11 min-w-11 items-center justify-center"
+        >
+          <IconX size={18} aria-hidden="true" />
+        </button>
+      ) : (
+        <span className="w-11" aria-hidden="true" />
+      )}
+    </div>
   )
 }
 
