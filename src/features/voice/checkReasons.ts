@@ -4,6 +4,7 @@
 // filled in. Plain TypeScript: no React, no database.
 
 import type { ServicePreset } from '../../db/schema.ts'
+import { decodeProblem, type ProblemCode } from '../../domain/chatGptAnswer.ts'
 import type { DraftCheck, DraftTurn } from '../../domain/voiceReader.ts'
 import { formatUsdShort } from '../../domain/money.ts'
 import { tf, type StringKey } from '../../lib/i18n.ts'
@@ -77,6 +78,30 @@ function countReason(text: string, locale: Locale): string | null {
 /** The "Not understood" line for words the reader could not place; null when it is not a count note. */
 export function countNotUnderstood(text: string, locale: Locale): string | null {
   return text.startsWith('Count mismatch:') ? countReason(text, locale) : null
+}
+
+const PROBLEM_WORDS: Record<ProblemCode, StringKey> = {
+  empty: 'answerEmpty',
+  tooBig: 'answerTooBig',
+  noJson: 'answerNoJson',
+  badJson: 'answerBadJson',
+  noTurns: 'answerNoTurns',
+  tooMany: 'answerTooMany',
+  notObject: 'answerNotObject',
+  noServices: 'answerNoServices',
+  unknownService: 'answerUnknownService',
+  badPrice: 'answerBadPrice',
+  badTip: 'answerBadTip',
+  negativeTip: 'answerNegativeTip',
+  badRequest: 'answerBadRequest',
+}
+
+/** The "Not understood" line for a refused part of ChatGPT's answer; null when the line is not one. */
+export function answerNotUnderstood(text: string, locale: Locale): string | null {
+  const problem = decodeProblem(text)
+  if (!problem) return null
+  const why = tf(locale, PROBLEM_WORDS[problem.code], { turn: problem.turn ?? '', detail: problem.detail })
+  return tf(locale, 'notUnderstoodWhy', { why })
 }
 
 /**

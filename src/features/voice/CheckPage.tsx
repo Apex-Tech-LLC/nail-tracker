@@ -14,7 +14,7 @@ import { primaryButton } from '../../ui/styles.ts'
 import { useToast } from '../../ui/useToast.ts'
 import { presetName, tipCents, turnInputFromForm } from '../turns/turnInput.ts'
 import { addTurns, type TurnInput } from '../turns/turnStore.ts'
-import { countNotUnderstood, reasonsFor } from './checkReasons.ts'
+import { answerNotUnderstood, countNotUnderstood, reasonsFor } from './checkReasons.ts'
 import {
   clearVoiceSession,
   sessionDate,
@@ -168,7 +168,9 @@ function CheckCards({ presets }: { presets: ServicePreset[] }) {
               className="flex flex-col gap-2 rounded-card border border-dashed border-border-strong bg-surface p-3 text-sm"
             >
               <span className="text-text-secondary">
-                {countNotUnderstood(text, locale) ?? tf(locale, 'notUnderstood', { text })}
+                {answerNotUnderstood(text, locale) ??
+                  countNotUnderstood(text, locale) ??
+                  tf(locale, 'notUnderstood', { text })}
               </span>
               <button
                 type="button"

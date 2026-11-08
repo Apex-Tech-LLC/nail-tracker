@@ -166,7 +166,7 @@ async function start(page: Page, locale: Locale, withData = true) {
 /** Types two jobs and one line the reader cannot use, then opens the Check screen. */
 async function openCheck(page: Page, text: Copy) {
   await page.goto('./#/say')
-  await page.locator('textarea').fill('Gel manicure 45, 10 tip cash\nPedicure\nblah blah')
+  await page.locator('textarea').first().fill('Gel manicure 45, 10 tip cash\nPedicure\nblah blah')
   await page.getByRole('button', { name: text.makeTurns, exact: true }).click()
   await expect(page.getByTestId('draft-card').first()).toBeVisible()
 }

@@ -347,7 +347,7 @@ test('every screen fits in Vietnamese at 375 pixels', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Nói các turn', exact: true })).toBeVisible()
   await checkScreen(page, 'say-your-turns')
 
-  await page.locator('textarea').fill('Gel manicure 45, 10 tip cash\nPedicure\nblah blah')
+  await page.locator('textarea').first().fill('Gel manicure 45, 10 tip cash\nPedicure\nblah blah')
   await page.getByRole('button', { name: 'Tạo turn', exact: true }).click()
   await expect(page.getByTestId('draft-card').first()).toBeVisible()
   await checkScreen(page, 'say-check')

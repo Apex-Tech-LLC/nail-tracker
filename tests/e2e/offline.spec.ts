@@ -43,7 +43,7 @@ test('works from start to finish with no connection', async ({ page, context }) 
   await expect(turnRow(page, 2)).toBeVisible()
 
   await page.goto('./#/say')
-  await page.locator('textarea').fill('Gel manicure 45')
+  await page.locator('textarea').first().fill('Gel manicure 45')
   await page.getByRole('button', { name: 'Make turns', exact: true }).click()
   await expect(page.getByTestId('draft-card')).toHaveCount(1)
   // Nothing is saved until Save, so the Reports total below stays the same.
@@ -84,7 +84,7 @@ test('makes no requests outside this app', async ({ page }) => {
   await addTurn(page, { amount: '40', service: 'Pedicure' })
 
   await page.goto('./#/say')
-  await page.locator('textarea').fill('Gel manicure 45\nPedicure 50')
+  await page.locator('textarea').first().fill('Gel manicure 45\nPedicure 50')
   await page.getByRole('button', { name: 'Make turns', exact: true }).click()
   await expect(page.getByTestId('draft-card')).toHaveCount(2)
 
