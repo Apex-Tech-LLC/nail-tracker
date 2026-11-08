@@ -13,6 +13,7 @@ import {
   isIsoDate,
   localDateTimeToMs,
   monthRange,
+  monthShift,
   parseIsoDate,
   timeOf,
   todayIso,
@@ -95,6 +96,15 @@ describe('monthRange and yearRange', () => {
 
   it('covers the whole year', () => {
     expect(yearRange('2026-11-04')).toEqual({ start: '2026-01-01', end: '2026-12-31' })
+  })
+})
+
+describe('monthShift', () => {
+  it('lands on the first day of the month a number of months away', () => {
+    expect(monthShift('2026-11-04', 1)).toBe('2026-12-01')
+    expect(monthShift('2026-01-31', -1)).toBe('2025-12-01')
+    expect(monthShift('2026-11-04', 0)).toBe('2026-11-01')
+    expect(monthShift('2026-11-04', 14)).toBe('2028-01-01')
   })
 })
 

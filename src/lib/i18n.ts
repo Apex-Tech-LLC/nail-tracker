@@ -147,6 +147,12 @@ const strings = {
 
     // History
     historyTitle: 'History',
+    historyView: 'History view',
+    historyList: 'List',
+    historyCalendar: 'Calendar',
+    previousMonth: 'Previous month',
+    nextMonth: 'Next month',
+    dayOff: 'Off',
     rangeToday: 'Today',
     rangeYesterday: 'Yesterday',
     rangeThisWeek: 'This Week',
@@ -609,6 +615,12 @@ const strings = {
 
     // History
     historyTitle: 'Lịch sử',
+    historyView: 'Kiểu xem lịch sử',
+    historyList: 'Danh sách',
+    historyCalendar: 'Lịch',
+    previousMonth: 'Tháng trước',
+    nextMonth: 'Tháng sau',
+    dayOff: 'Nghỉ',
     rangeToday: 'Hôm nay',
     rangeYesterday: 'Hôm qua',
     rangeThisWeek: 'Tuần này',

@@ -70,6 +70,13 @@ export function monthRange(iso: IsoDate): { start: IsoDate; end: IsoDate } {
   return { start: toIso(year, month, 1), end: toIso(year, month, lastDay) }
 }
 
+/** The first day of the month a number of months away, so month ends never overflow. */
+export function monthShift(iso: IsoDate, months: number): IsoDate {
+  const { year, month } = parseIsoDate(iso)
+  const date = new Date(Date.UTC(year, month - 1 + months, 1))
+  return toIso(date.getUTCFullYear(), date.getUTCMonth() + 1, 1)
+}
+
 export function yearRange(iso: IsoDate): { start: IsoDate; end: IsoDate } {
   const { year } = parseIsoDate(iso)
   return { start: toIso(year, 1, 1), end: toIso(year, 12, 31) }
