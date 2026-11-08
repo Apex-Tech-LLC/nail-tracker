@@ -113,6 +113,15 @@ export interface PaycheckRecord {
   updatedAt: number
 }
 
+export interface WorkDay {
+  date: IsoDate // primary key: one record per work day
+  dayOff: boolean
+  startTime: string | null // 'HH:MM', filled by hours tracking later; null in this task
+  endTime: string | null
+  createdAt: number
+  updatedAt: number
+}
+
 export type NailDb = Dexie & {
   salons: EntityTable<Salon, 'id'>
   servicePresets: EntityTable<ServicePreset, 'id'>
@@ -124,6 +133,7 @@ export type NailDb = Dexie & {
   payPeriods: EntityTable<PayPeriod, 'id'>
   payRules: EntityTable<PayRules, 'id'>
   paycheckRecords: EntityTable<PaycheckRecord, 'id'>
+  workDays: EntityTable<WorkDay, 'date'>
 }
 
 /**
@@ -153,6 +163,11 @@ export function createDb(name = 'nail-tracker'): NailDb {
       const firstTurn = await tx.table('turns').orderBy('localWorkDate').first()
       await tx.table('payRules').add(defaultPayRules(firstTurn?.localWorkDate))
     })
+
+  // No upgrade step: a work day with no record is a normal working day.
+  db.version(3).stores({
+    workDays: 'date',
+  })
 
   // Runs once, when the database is first created.
   db.on('populate', (tx) => {

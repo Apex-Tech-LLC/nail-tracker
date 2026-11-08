@@ -52,6 +52,49 @@ describe('seeded database', () => {
   })
 })
 
+describe('version 3 upgrade', () => {
+  it('opens a version 2 database as version 3 and keeps its data', async () => {
+    const name = `upgrade-v3-${++counter}`
+    const old = new Dexie(name)
+    old.version(1).stores({
+      salons: 'id',
+      servicePresets: 'id, sortOrder',
+      turns: 'id, localWorkDate, occurredAt, updatedAt',
+      turnServices: 'id, turnId, serviceNameSnapshot',
+      adjustments: 'id, localWorkDate',
+      payments: 'id, paymentDate',
+      paymentAllocations: 'id, paymentId, payPeriodId',
+      payPeriods: 'id, startDate, endDate',
+    })
+    old.version(2).stores({
+      payRules: 'id, startDate',
+      paycheckRecords: 'id, payPeriodId',
+    })
+    await old.open()
+    await old.table('turns').add({ id: 'kept', localWorkDate: '2026-11-04' })
+    await old.table('payRules').add({ id: 'rules', startDate: '2026-11-01' })
+    old.close()
+
+    const fresh = createDb(name)
+    db = fresh
+
+    expect(fresh.verno).toBe(3)
+    expect(await fresh.turns.count()).toBe(1)
+    expect(await fresh.payRules.count()).toBe(1)
+    expect(await fresh.workDays.count()).toBe(0)
+
+    await fresh.workDays.put({
+      date: '2026-11-08',
+      dayOff: true,
+      startTime: null,
+      endTime: null,
+      createdAt: 1,
+      updatedAt: 1,
+    })
+    expect(await fresh.workDays.get('2026-11-08')).toMatchObject({ dayOff: true })
+  })
+})
+
 describe('version 2 upgrade', () => {
   it('adds one rules record starting on the first turn work date', async () => {
     const name = `upgrade-test-${++counter}`
