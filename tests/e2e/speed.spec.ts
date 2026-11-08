@@ -106,26 +106,10 @@ test.describe('speed with five years of data', () => {
         await expect(page.getByTestId('history-total')).toBeVisible()
       },
     )
-    await measureStep(
-      page,
-      'load:history',
-      async () => {
-        await page.getByRole('button', { name: 'Custom', exact: true }).click()
-      },
-      async () => {
-        await expect(page.getByTestId('history-total')).toBeVisible()
-      },
-    )
-    await measureStep(
-      page,
-      'load:history',
-      async () => {
-        await page.getByLabel('From', { exact: true }).fill('2026-11-01')
-      },
-      async () => {
-        await expect(page.getByTestId('history-total')).toBeVisible()
-      },
-    )
+    // Custom opens on the week already shown (from Nov 1), so nothing new
+    // loads until the end moves out to the whole month.
+    await page.getByRole('button', { name: 'Custom', exact: true }).click()
+    await expect(page.getByLabel('From', { exact: true })).toHaveValue('2026-11-01')
     times['load:history list'] = await measureStep(
       page,
       'load:history',
