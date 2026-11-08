@@ -14,6 +14,8 @@ const SPEC_RULES = {
   cardTipFeeBp: 300,
   checkBp: 5000,
   cardTipsPaidIn: 'split',
+  guarantee: { kind: 'none' },
+  tiers: null,
   createdAt: 1,
   updatedAt: 1,
 }
