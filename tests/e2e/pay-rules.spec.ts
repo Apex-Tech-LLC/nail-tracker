@@ -25,6 +25,19 @@ function countPayRules(page: Page): Promise<number> {
   )
 }
 
+test('a fresh install shows the only rule as from the start and now', async ({ page }) => {
+  await page.clock.setFixedTime(NOON)
+  await seedSettings(page)
+  await page.goto('./#/settings/pay')
+
+  const list = page.getByRole('heading', { name: 'Earlier pay rules' }).locator('..')
+  await expect(list.getByText('From the start', { exact: true })).toBeVisible()
+  await expect(list.getByText('Now', { exact: true })).toBeVisible()
+  await expect(page.getByText('2000')).toHaveCount(0)
+
+  await expect(page.getByText('The salon pays you in one payment.')).toBeVisible()
+})
+
 test('sets up commission, supply fee, card-tip fee and a 50/50 split', async ({ page }) => {
   await page.clock.setFixedTime(NOON)
   await seedSettings(page)
@@ -98,6 +111,6 @@ test('a rule saved with another day is replaced, not duplicated, on a later chan
   await page.getByRole('button', { name: 'Save rules', exact: true }).click()
 
   await expect(page.getByText('Starts Nov 4, 2026')).toBeVisible()
-  await expect(page.getByText('Starts Jan 1, 2000')).toBeVisible()
+  await expect(page.getByText('From the start', { exact: true })).toBeVisible()
   expect(await countPayRules(page)).toBe(2)
 })

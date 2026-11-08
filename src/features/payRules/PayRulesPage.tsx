@@ -23,6 +23,8 @@ import {
 import { periodContaining, periodLengthDays, type PayPeriodType } from '../../domain/payPeriods.ts'
 import {
   defaultPayRules,
+  NO_RULES,
+  ruleInForce,
   type FeeWhen,
   type PayRules,
   type SupplyFee,
@@ -108,7 +110,7 @@ export function PayRulesPage({ onDone }: { onDone: () => void }) {
         periodStart={periodStart}
       />
 
-      <RulesList rules={sorted} />
+      <RulesList rules={sorted} today={today} />
     </>
   )
 }
@@ -133,6 +135,12 @@ function startOfPeriod(
 
 function ruleDate(iso: IsoDate, locale: Locale): string {
   return `${formatDayShort(iso, locale)}, ${iso.slice(0, 4)}`
+}
+
+/** The list's start line; the app's "from the beginning" marker is not a real date. */
+function ruleStartText(iso: IsoDate, locale: Locale): string {
+  if (iso === NO_RULES.startDate) return t(locale, 'fromTheStart')
+  return tf(locale, 'ruleStarts', { date: ruleDate(iso, locale) })
 }
 
 interface FormProps {
@@ -480,7 +488,7 @@ function PayRulesForm({ initial, today, periodStart }: FormProps) {
         />
         <p className="text-sm text-text-secondary">
           {checkBp === null
-            ? tf(locale, 'noSplitExample', { owed: formatUsdShort(spec.salonPaysCents) })
+            ? t(locale, 'noSplitExample')
             : tf(locale, 'splitExample', {
                 owed: formatUsdShort(spec.salonPaysCents),
                 check: formatUsdShort(spec.checkCents ?? 0),
@@ -561,11 +569,12 @@ function PayRulesForm({ initial, today, periodStart }: FormProps) {
   )
 }
 
-function RulesList({ rules }: { rules: PayRules[] }) {
+function RulesList({ rules, today }: { rules: PayRules[]; today: IsoDate }) {
   const { locale, defaultCommissionRateBp: rate } = useSettings()
   const toast = useToast()
   const [viewingId, setViewingId] = useState<string | null>(null)
   const [confirmingId, setConfirmingId] = useState<string | null>(null)
+  const currentId = ruleInForce(rules, today)?.id ?? null
 
   if (rules.length === 0) return null
 
@@ -589,7 +598,14 @@ function RulesList({ rules }: { rules: PayRules[] }) {
               onClick={() => setViewingId(open ? null : rule.id)}
               className="flex flex-col items-start gap-1 text-left"
             >
-              <span>{tf(locale, 'ruleStarts', { date: ruleDate(rule.startDate, locale) })}</span>
+              <span className="flex items-center gap-2">
+                <span>{ruleStartText(rule.startDate, locale)}</span>
+                {rule.id === currentId && (
+                  <span className="rounded-full bg-brand-50 px-2 py-0.5 text-xs text-brand-900">
+                    {t(locale, 'ruleNow')}
+                  </span>
+                )}
+              </span>
               <span className="text-sm text-text-secondary">
                 {payRulesSummary(locale, rate, rule)}
               </span>

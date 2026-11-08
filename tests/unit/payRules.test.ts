@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { defaultPayRules, NO_RULES, rulesOn, type PayRules } from '../../src/domain/payRules.ts'
+import { defaultPayRules, NO_RULES, ruleInForce, rulesOn, type PayRules } from '../../src/domain/payRules.ts'
 
 function rule(overrides: Partial<PayRules> = {}): PayRules {
   return {
@@ -39,6 +39,28 @@ describe('rulesOn', () => {
       checkBp: null,
       cardTipsPaidIn: 'split',
     })
+  })
+})
+
+describe('ruleInForce', () => {
+  it('returns the saved record that is in force on the date', () => {
+    const oldRule = rule({ id: 'old', startDate: '2020-01-01' })
+    const newRule = rule({ id: 'new', startDate: '2026-11-04' })
+
+    expect(ruleInForce([newRule, oldRule], '2026-11-03')?.id).toBe('old')
+    expect(ruleInForce([newRule, oldRule], '2026-11-04')?.id).toBe('new')
+    expect(ruleInForce([oldRule, newRule], '2027-01-01')?.id).toBe('new')
+  })
+
+  it('returns the earliest record for a date before the first one', () => {
+    const first = rule({ id: 'first', startDate: '2026-01-01' })
+    const later = rule({ id: 'later', startDate: '2026-06-01' })
+
+    expect(ruleInForce([later, first], '2025-12-31')?.id).toBe('first')
+  })
+
+  it('returns null when nothing is saved', () => {
+    expect(ruleInForce([], '2026-11-04')).toBeNull()
   })
 })
 
