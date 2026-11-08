@@ -348,6 +348,15 @@ const strings = {
     statementTotal: 'Total',
     homeCheckCashLine: 'Check {check} · Cash {cash}',
 
+    // Share pictures
+    shareStatement: 'Share statement',
+    shareSummary: 'Share summary',
+    shareYear: 'Share',
+    statementPictureTitle: 'Pay statement',
+    yearPictureTitle: 'Year summary',
+    reportSummaryTitle: 'Summary',
+    madeWithNailTracker: 'Made with Nail Tracker on my phone',
+
     // What you got and the check
     recordWhatYouGot: 'Record what you got',
     checkAmount: 'Check amount',
@@ -978,6 +987,15 @@ const strings = {
     statementServicesColumn: 'Dịch vụ',
     statementTotal: 'Tổng',
     homeCheckCashLine: 'Check {check} · Tiền mặt {cash}',
+
+    // Share pictures
+    shareStatement: 'Chia sẻ bảng lương',
+    shareSummary: 'Chia sẻ tóm tắt',
+    shareYear: 'Chia sẻ',
+    statementPictureTitle: 'Bảng lương',
+    yearPictureTitle: 'Tóm tắt năm',
+    reportSummaryTitle: 'Tóm tắt',
+    madeWithNailTracker: 'Làm bằng Nail Tracker trên điện thoại',
 
     // What you got and the check
     recordWhatYouGot: 'Ghi số tiền đã nhận',

@@ -4,11 +4,11 @@ import { t, type StringKey } from '../../lib/i18n.ts'
 import { BOM, csvCell, moneyCell } from '../backup/exportCsv.ts'
 
 /** An English term with the Vietnamese one beside it, so the preparer and the technician both read it. */
-function bilingual(key: StringKey): string {
-  return csvCell(`${t('en', key)} (${t('vi', key)})`)
+export function bilingual(key: StringKey): string {
+  return `${t('en', key)} (${t('vi', key)})`
 }
 
-const TOTAL_ROWS: { key: StringKey; value: (summary: TaxYearSummary) => number }[] = [
+export const TOTAL_ROWS: { key: StringKey; value: (summary: TaxYearSummary) => number }[] = [
   { key: 'taxPaidByCheck', value: (summary) => summary.checkCents },
   { key: 'taxPaidByCash', value: (summary) => summary.cashCents },
   { key: 'taxOtherPayments', value: (summary) => summary.otherCents },
@@ -40,7 +40,7 @@ function monthName(year: number, month: number): string {
  * digits so formulas can add it up.
  */
 export function taxCsv(year: number, summary: TaxYearSummary): string {
-  const totals = TOTAL_ROWS.map(({ key, value }) => [bilingual(key), moneyCell(value(summary))])
+  const totals = TOTAL_ROWS.map(({ key, value }) => [csvCell(bilingual(key)), moneyCell(value(summary))])
   const monthRows = summary.months.map((line) => [
     csvCell(monthName(year, line.month)),
     moneyCell(line.earnedCents),
@@ -54,7 +54,7 @@ export function taxCsv(year: number, summary: TaxYearSummary): string {
 
   return (
     BOM +
-    [totals, [MONTH_HEADER.map(bilingual)], monthRows]
+    [totals, [MONTH_HEADER.map((key) => csvCell(bilingual(key)))], monthRows]
       .flat()
       .map((row) => row.join(','))
       .join('\r\n') +

@@ -1,3 +1,4 @@
+import { useRef } from 'react'
 import { Link } from 'wouter'
 import { paths } from '../../app/navigation.ts'
 import { useSettings } from '../../app/settings.ts'
@@ -8,6 +9,9 @@ import type { CheckResult, Reason } from '../../domain/paycheckCheck.ts'
 import { t, tf } from '../../lib/i18n.ts'
 import type { Locale } from '../../lib/locale.ts'
 import { card, secondaryButton } from '../../ui/styles.ts'
+import { backupFileName } from '../backup/backupFormat.ts'
+import { sharePicture } from '../share/shareCanvas.ts'
+import { statementPictureInput } from '../share/statementPicture.ts'
 import type { PeriodSummary } from '../payday/periodStore.ts'
 import { setCheckedDate } from './paycheckStore.ts'
 
@@ -89,9 +93,31 @@ export function CheckPanel({ summary }: Props) {
   const { locale } = useSettings()
   const { period, check, record } = summary
   const checkedDate = record?.checkedDate ?? null
+  const sharing = useRef(false)
 
   async function toggleChecked(): Promise<void> {
     await setCheckedDate(db, period.id, checkedDate === null ? todayIso() : null)
+  }
+
+  async function shareStatement(): Promise<void> {
+    if (sharing.current) return
+    sharing.current = true
+    try {
+      await sharePicture(
+        statementPictureInput({
+          period,
+          statement: summary.statement,
+          endRules: summary.endRules,
+          received: summary.received,
+          check: summary.check,
+          checkedDate,
+        }),
+        backupFileName('statement', 'png', todayIso()),
+        t(locale, 'shareStatement'),
+      )
+    } finally {
+      sharing.current = false
+    }
   }
 
   return (
@@ -102,24 +128,29 @@ export function CheckPanel({ summary }: Props) {
         {t(locale, 'recordWhatYouGot')}
       </Link>
 
-      {checkedDate === null ? (
-        <button type="button" onClick={() => void toggleChecked()} className={secondaryButton}>
-          {t(locale, 'markAsChecked')}
-        </button>
-      ) : (
-        <div className="flex items-center justify-between gap-3">
-          <p className="text-sm text-positive-text">
-            {tf(locale, 'checkedOn', { date: formatDayShort(checkedDate, locale) })}
-          </p>
-          <button
-            type="button"
-            onClick={() => void toggleChecked()}
-            className="min-h-11 rounded-control px-3 text-sm font-semibold text-brand-600 underline"
-          >
-            {t(locale, 'uncheck')}
+      <div className="grid grid-cols-2 items-center gap-2">
+        {checkedDate === null ? (
+          <button type="button" onClick={() => void toggleChecked()} className={secondaryButton}>
+            {t(locale, 'markAsChecked')}
           </button>
-        </div>
-      )}
+        ) : (
+          <div className="flex min-w-0 flex-col gap-1">
+            <p className="text-sm text-positive-text">
+              {tf(locale, 'checkedOn', { date: formatDayShort(checkedDate, locale) })}
+            </p>
+            <button
+              type="button"
+              onClick={() => void toggleChecked()}
+              className="min-h-11 self-start rounded-control px-3 text-sm font-semibold text-brand-600 underline"
+            >
+              {t(locale, 'uncheck')}
+            </button>
+          </div>
+        )}
+        <button type="button" onClick={() => void shareStatement()} className={secondaryButton}>
+          {t(locale, 'shareStatement')}
+        </button>
+      </div>
     </section>
   )
 }
