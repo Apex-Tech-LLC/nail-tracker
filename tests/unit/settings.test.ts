@@ -47,6 +47,15 @@ describe('resolveSettings', () => {
     expect(resolveSettings(saved, ['vi-VN'])).toMatchObject({ locale: 'en', defaultCommissionRateBp: 5000, weekStartDay: 1 })
   })
 
+  it.each(['light', 'dark'] as const)('keeps the saved theme %s', (theme) => {
+    expect(resolveSettings(JSON.stringify({ theme }), []).theme).toBe(theme)
+  })
+
+  it('reads any other theme as the phone choice', () => {
+    expect(resolveSettings(null, []).theme).toBe('system')
+    expect(resolveSettings(JSON.stringify({ theme: 'sepia' }), []).theme).toBe('system')
+  })
+
   it('uses the app number pad unless the person turned it off', () => {
     expect(resolveSettings(null, []).numberPad).toBe(true)
     expect(resolveSettings(JSON.stringify({ numberPad: false }), []).numberPad).toBe(false)

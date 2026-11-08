@@ -1,3 +1,4 @@
+import { mkdirSync } from 'node:fs'
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test, type Page } from '@playwright/test'
 import { addTurn, seedSettings, turnRow, weeklyPay } from './helpers.ts'
@@ -8,6 +9,12 @@ const NOON = new Date('2026-11-04T12:00:00-06:00')
 
 const LOCALES = ['en', 'vi'] as const
 type Locale = (typeof LOCALES)[number]
+
+const SCHEMES = ['light', 'dark'] as const
+type Scheme = (typeof SCHEMES)[number]
+
+// A person should be able to look at every dark screen without running a test.
+const SHOT_DIR = 'screenshots/dark'
 
 interface Copy {
   appName: string
@@ -100,12 +107,20 @@ async function noSidewaysScroll(page: Page) {
   expect(overflow).toBeLessThanOrEqual(0)
 }
 
+/** Keeps a full-page picture of a dark screen for a person to look at. */
+async function shoot(page: Page, scheme: Scheme, name: string) {
+  if (scheme !== 'dark') return
+  mkdirSync(SHOT_DIR, { recursive: true })
+  await page.screenshot({ path: `${SHOT_DIR}/${name}.png`, fullPage: true })
+}
+
 /** Waits for the page's one heading, then runs both screen checks. */
-async function expectScreen(page: Page, heading?: string) {
+async function expectScreen(page: Page, scheme: Scheme, name: string, heading?: string) {
   if (heading === undefined) await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
   else await expect(page.getByRole('heading', { level: 1, name: heading })).toBeVisible()
   await audit(page)
   await noSidewaysScroll(page)
+  await shoot(page, scheme, name)
 }
 
 /** Writes the language to storage and reloads, because the data helpers only speak English. */
@@ -157,181 +172,225 @@ async function smallTapTargets(page: Page) {
   )
 }
 
-for (const locale of LOCALES) {
-  const text = TEXT[locale]
+for (const scheme of SCHEMES) {
+  test.describe(scheme, () => {
+    test.use({ colorScheme: scheme })
 
-  test.describe(locale, () => {
-    test('today with data', async ({ page }) => {
-      await start(page, locale)
-      await page.goto('./')
-      await expectScreen(page, text.appName)
-    })
+    for (const locale of LOCALES) {
+      const text = TEXT[locale]
 
-    test('today empty', async ({ page }) => {
-      await start(page, locale, false)
-      await page.goto('./')
-      await expectScreen(page, text.appName)
-    })
+      test.describe(locale, () => {
+        test('today with data', async ({ page }) => {
+          await start(page, locale)
+          await page.goto('./')
+          await expectScreen(page, scheme, `${locale}-today-data`, text.appName)
+        })
 
-    test('add turn', async ({ page }) => {
-      await start(page, locale)
-      await page.goto('./#/add')
-      await expectScreen(page, text.addTurn)
-    })
+        test('today empty', async ({ page }) => {
+          await start(page, locale, false)
+          await page.goto('./')
+          await expectScreen(page, scheme, `${locale}-today-empty`, text.appName)
+        })
 
-    test('add turn, all options open', async ({ page }) => {
-      await start(page, locale)
-      await page.goto('./#/add')
-      await expect(page.getByRole('heading', { level: 1, name: text.addTurn })).toBeVisible()
-      await page.getByRole('button', { name: text.addService, exact: true }).click()
-      await page.getByRole('button', { name: text.moreOptions, exact: true }).click()
-      await audit(page)
-      await noSidewaysScroll(page)
-    })
+        test('add turn', async ({ page }) => {
+          await start(page, locale)
+          await page.goto('./#/add')
+          await expectScreen(page, scheme, `${locale}-add-turn`, text.addTurn)
+        })
 
-    test('edit turn', async ({ page }) => {
-      await start(page, locale)
-      await page.goto('./')
-      await turnRow(page, 1).click()
-      await expectScreen(page, text.editTurn)
-    })
+        test('add turn, all options open', async ({ page }) => {
+          await start(page, locale)
+          await page.goto('./#/add')
+          await expect(page.getByRole('heading', { level: 1, name: text.addTurn })).toBeVisible()
+          await page.getByRole('button', { name: text.addService, exact: true }).click()
+          await page.getByRole('button', { name: text.moreOptions, exact: true }).click()
+          await audit(page)
+          await noSidewaysScroll(page)
+          await shoot(page, scheme, `${locale}-add-turn-options`)
+        })
 
-    test('delete turn undo bar', async ({ page }) => {
-      await start(page, locale)
-      await page.goto('./')
-      await turnRow(page, 1).click()
-      await page.getByRole('button', { name: text.delete, exact: true }).click()
-      await expect(page.getByRole('status').filter({ hasText: text.turnDeleted })).toBeVisible()
-      await audit(page)
-      await noSidewaysScroll(page)
-    })
+        test('edit turn', async ({ page }) => {
+          await start(page, locale)
+          await page.goto('./')
+          await turnRow(page, 1).click()
+          await expectScreen(page, scheme, `${locale}-edit-turn`, text.editTurn)
+        })
 
-    test('history', async ({ page }) => {
-      await start(page, locale)
-      await page.goto('./#/history')
-      await expectScreen(page, text.history)
-    })
+        test('delete turn undo bar', async ({ page }) => {
+          await start(page, locale)
+          await page.goto('./')
+          await turnRow(page, 1).click()
+          await page.getByRole('button', { name: text.delete, exact: true }).click()
+          await expect(page.getByRole('status').filter({ hasText: text.turnDeleted })).toBeVisible()
+          await audit(page)
+          await noSidewaysScroll(page)
+          await shoot(page, scheme, `${locale}-delete-undo`)
+        })
 
-    test('reports', async ({ page }) => {
-      await start(page, locale)
-      await page.goto('./#/earnings')
-      await expectScreen(page, text.reports)
-    })
+        test('history', async ({ page }) => {
+          await start(page, locale)
+          await page.goto('./#/history')
+          await expectScreen(page, scheme, `${locale}-history`, text.history)
+        })
 
-    test('payday list', async ({ page }) => {
-      await start(page, locale)
-      await page.goto('./#/payday')
-      await expectScreen(page, text.payday)
-    })
+        test('reports', async ({ page }) => {
+          await start(page, locale)
+          await page.goto('./#/earnings')
+          await expectScreen(page, scheme, `${locale}-reports`, text.reports)
+        })
 
-    test('period', async ({ page }) => {
-      await start(page, locale)
-      await page.goto('./#/payday')
-      await page.getByRole('link', { name: text.period }).click()
-      // The heading is the localized date range, so any level-one heading will do.
-      await expectScreen(page)
-    })
+        test('payday list', async ({ page }) => {
+          await start(page, locale)
+          await page.goto('./#/payday')
+          await expectScreen(page, scheme, `${locale}-payday`, text.payday)
+        })
 
-    test('payment form', async ({ page }) => {
-      await start(page, locale)
-      await page.goto('./#/payday')
-      await page.getByRole('link', { name: text.period }).click()
-      await page.getByRole('link', { name: text.recordPayment, exact: true }).click()
-      await expect(page.getByRole('heading', { level: 1, name: text.recordPayment })).toBeVisible()
-      await page.getByLabel(locale === 'vi' ? 'Số tiền nhận được' : 'Amount received').first().fill('100')
-      await audit(page)
-      await noSidewaysScroll(page)
-    })
+        test('period', async ({ page }) => {
+          await start(page, locale)
+          await page.goto('./#/payday')
+          await page.getByRole('link', { name: text.period }).click()
+          // The heading is the localized date range, so any level-one heading will do.
+          await expectScreen(page, scheme, `${locale}-period`)
+        })
 
-    test('adjustment form', async ({ page }) => {
-      await start(page, locale)
-      await page.goto('./#/adjustment/new')
-      await expectScreen(page, text.newAdjustment)
-    })
+        test('payment form', async ({ page }) => {
+          await start(page, locale)
+          await page.goto('./#/payday')
+          await page.getByRole('link', { name: text.period }).click()
+          await page.getByRole('link', { name: text.recordPayment, exact: true }).click()
+          await expect(page.getByRole('heading', { level: 1, name: text.recordPayment })).toBeVisible()
+          await page.getByLabel(locale === 'vi' ? 'Số tiền nhận được' : 'Amount received').first().fill('100')
+          await audit(page)
+          await noSidewaysScroll(page)
+          await shoot(page, scheme, `${locale}-payment-form`)
+        })
 
-    test('settings', async ({ page }) => {
-      await start(page, locale)
-      await page.goto('./#/settings')
-      await expectScreen(page, text.settings)
-    })
+        test('adjustment form', async ({ page }) => {
+          await start(page, locale)
+          await page.goto('./#/adjustment/new')
+          await expectScreen(page, scheme, `${locale}-adjustment-form`, text.newAdjustment)
+        })
 
-    test('service presets', async ({ page }) => {
-      await start(page, locale)
-      await page.goto('./#/settings/services')
-      await expectScreen(page, text.servicePresets)
-    })
+        test('settings', async ({ page }) => {
+          await start(page, locale)
+          await page.goto('./#/settings')
+          await expectScreen(page, scheme, `${locale}-settings`, text.settings)
+        })
 
-    test('preset editor', async ({ page }) => {
-      await start(page, locale)
-      await page.goto('./#/settings/services')
-      await page.getByRole('button', { name: text.addPreset, exact: true }).click()
-      await expectScreen(page, text.addPreset)
-    })
+        test('service presets', async ({ page }) => {
+          await start(page, locale)
+          await page.goto('./#/settings/services')
+          await expectScreen(page, scheme, `${locale}-service-presets`, text.servicePresets)
+        })
 
-    test('tap targets', async ({ page }) => {
-      await start(page, locale, false)
+        test('preset editor', async ({ page }) => {
+          await start(page, locale)
+          await page.goto('./#/settings/services')
+          await page.getByRole('button', { name: text.addPreset, exact: true }).click()
+          await expectScreen(page, scheme, `${locale}-preset-editor`, text.addPreset)
+        })
 
-      await test.step('Add Turn', async () => {
-        await page.goto('./#/add')
-        await expect(page.getByRole('heading', { level: 1, name: text.addTurn })).toBeVisible()
-        // A second service row is what shows the remove-service button.
-        await page.getByRole('button', { name: text.addService, exact: true }).click()
-        await page.getByRole('button', { name: text.moreOptions, exact: true }).click()
-        expect(await smallTapTargets(page)).toEqual([])
+        test('tap targets', async ({ page }) => {
+          await start(page, locale, false)
+
+          await test.step('Add Turn', async () => {
+            await page.goto('./#/add')
+            await expect(page.getByRole('heading', { level: 1, name: text.addTurn })).toBeVisible()
+            // A second service row is what shows the remove-service button.
+            await page.getByRole('button', { name: text.addService, exact: true }).click()
+            await page.getByRole('button', { name: text.moreOptions, exact: true }).click()
+            expect(await smallTapTargets(page)).toEqual([])
+          })
+
+          await test.step('Today', async () => {
+            await page.goto('./')
+            await expect(page.getByRole('heading', { level: 1, name: text.appName })).toBeVisible()
+            expect(await smallTapTargets(page)).toEqual([])
+          })
+
+          await test.step('Settings', async () => {
+            await page.goto('./#/settings')
+            await expect(page.getByRole('heading', { level: 1, name: text.settings })).toBeVisible()
+            expect(await smallTapTargets(page)).toEqual([])
+          })
+
+          await test.step('Service presets', async () => {
+            await page.goto('./#/settings/services')
+            await expect(page.getByRole('heading', { level: 1, name: text.servicePresets })).toBeVisible()
+            expect(await smallTapTargets(page)).toEqual([])
+          })
+
+          await test.step('Preset editor', async () => {
+            await page.getByRole('button', { name: text.addPreset, exact: true }).click()
+            await expect(page.getByRole('heading', { level: 1, name: text.addPreset })).toBeVisible()
+            expect(await smallTapTargets(page)).toEqual([])
+          })
+        })
+
+        test('iPhone input zoom', async ({ page }) => {
+          await start(page, locale, false)
+          await page.goto('./#/add')
+          await page.getByRole('button', { name: text.moreOptions, exact: true }).click()
+          const sizes = await page.evaluate(() =>
+            [...document.querySelectorAll('input, select, textarea')].map((element) => parseFloat(getComputedStyle(element).fontSize)),
+          )
+          expect(Math.min(...sizes)).toBeGreaterThanOrEqual(16)
+        })
       })
 
-      await test.step('Today', async () => {
+      // No seedSettings: this is a first launch. Each step is audited on its own,
+      // because a failure must name the step.
+      test(`onboarding, all four steps (${locale})`, async ({ page }) => {
+        await page.clock.setFixedTime(NOON)
+        await page.addInitScript((value) => {
+          localStorage.setItem('nail-tracker.settings', JSON.stringify({ locale: value }))
+        }, locale)
         await page.goto('./')
-        await expect(page.getByRole('heading', { level: 1, name: text.appName })).toBeVisible()
-        expect(await smallTapTargets(page)).toEqual([])
+
+        for (const [index, heading] of text.onboarding.entries()) {
+          await expect(page.getByRole('heading', { level: 1, name: heading })).toBeVisible()
+          await audit(page)
+          await noSidewaysScroll(page)
+          await shoot(page, scheme, `${locale}-onboarding-${index + 1}`)
+          if (index < text.onboarding.length - 1) {
+            await page.getByRole('button', { name: text.next, exact: true }).click()
+          }
+        }
+      })
+    }
+
+    // Dark-only checks for the screens a person reaches in a hurry.
+    if (scheme === 'dark') {
+      test('number pad open', async ({ page }) => {
+        await start(page, 'en')
+        await page.goto('./#/add')
+        await page.getByLabel('Service amount').click()
+        await expect(page.getByTestId('number-pad')).toBeVisible()
+        await audit(page)
+        await noSidewaysScroll(page)
+        await shoot(page, scheme, 'en-number-pad')
       })
 
-      await test.step('Settings', async () => {
+      test('history calendar', async ({ page }) => {
+        await start(page, 'en')
+        await page.goto('./#/history')
+        await page.getByRole('button', { name: 'Calendar', exact: true }).click()
+        await expect(page.getByRole('button', { name: 'Previous month', exact: true })).toBeVisible()
+        await expectScreen(page, scheme, 'en-history-calendar', 'History')
+      })
+
+      test('taxes', async ({ page }) => {
+        await start(page, 'en')
+        await page.goto('./#/taxes/2026')
+        await expectScreen(page, scheme, 'en-taxes', 'Taxes and year summary')
+      })
+
+      test('settings with the appearance choice', async ({ page }) => {
+        await start(page, 'en')
         await page.goto('./#/settings')
-        await expect(page.getByRole('heading', { level: 1, name: text.settings })).toBeVisible()
-        expect(await smallTapTargets(page)).toEqual([])
+        await expect(page.getByRole('group', { name: 'Appearance', exact: true })).toBeVisible()
+        await expectScreen(page, scheme, 'en-settings-appearance', 'Settings')
       })
-
-      await test.step('Service presets', async () => {
-        await page.goto('./#/settings/services')
-        await expect(page.getByRole('heading', { level: 1, name: text.servicePresets })).toBeVisible()
-        expect(await smallTapTargets(page)).toEqual([])
-      })
-
-      await test.step('Preset editor', async () => {
-        await page.getByRole('button', { name: text.addPreset, exact: true }).click()
-        await expect(page.getByRole('heading', { level: 1, name: text.addPreset })).toBeVisible()
-        expect(await smallTapTargets(page)).toEqual([])
-      })
-    })
-
-    test('iPhone input zoom', async ({ page }) => {
-      await start(page, locale, false)
-      await page.goto('./#/add')
-      await page.getByRole('button', { name: text.moreOptions, exact: true }).click()
-      const sizes = await page.evaluate(() =>
-        [...document.querySelectorAll('input, select, textarea')].map((element) => parseFloat(getComputedStyle(element).fontSize)),
-      )
-      expect(Math.min(...sizes)).toBeGreaterThanOrEqual(16)
-    })
-  })
-
-  // No seedSettings: this is a first launch. Each step is audited on its own,
-  // because a failure must name the step.
-  test(`onboarding, all four steps (${locale})`, async ({ page }) => {
-    await page.clock.setFixedTime(NOON)
-    await page.addInitScript((value) => {
-      localStorage.setItem('nail-tracker.settings', JSON.stringify({ locale: value }))
-    }, locale)
-    await page.goto('./')
-
-    for (const [index, heading] of text.onboarding.entries()) {
-      await expect(page.getByRole('heading', { level: 1, name: heading })).toBeVisible()
-      await audit(page)
-      await noSidewaysScroll(page)
-      if (index < text.onboarding.length - 1) {
-        await page.getByRole('button', { name: text.next, exact: true }).click()
-      }
     }
   })
 }

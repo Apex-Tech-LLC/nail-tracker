@@ -207,6 +207,19 @@ describe('exportJson and importJson', () => {
     expect(await copy.workDays.toArray()).toEqual(await source.workDays.toArray())
   })
 
+  it('restores an older backup with no theme as the phone choice', async () => {
+    const source = openFresh()
+    await seedFull(source)
+    const old = JSON.parse(await exportJson(source, settings)) as Record<string, unknown>
+    delete (old.settings as Record<string, unknown>).theme
+
+    const copy = openFresh()
+    const result = await importJson(copy, JSON.stringify(old))
+
+    expect(result.settings).toMatchObject({ locale: 'vi', theme: 'system' })
+    expect(await copy.turns.count()).toBe(1)
+  })
+
   it('round-trips work days, including a day off', async () => {
     const source = openFresh()
     await source.workDays.put({
