@@ -12,6 +12,7 @@ import { PayRulesPage } from '../features/payRules/PayRulesPage.tsx'
 import { PresetsPage } from '../features/presets/PresetsPage.tsx'
 import { GoalsPage } from '../features/settings/GoalsPage.tsx'
 import { SettingsPage } from '../features/settings/SettingsPage.tsx'
+import { TaxesPage } from '../features/taxes/TaxesPage.tsx'
 import { TurnForm } from '../features/turns/TurnForm.tsx'
 import { t } from '../lib/i18n.ts'
 import { paths, useGoBack } from './navigation.ts'
@@ -55,6 +56,7 @@ export function Routes() {
       <Route path={paths.services}>{() => <PresetsPage onDone={goBack} />}</Route>
       <Route path={paths.payRules}>{() => <PayRulesPage onDone={goBack} />}</Route>
       <Route path={paths.goals}>{() => <GoalsPage onDone={goBack} />}</Route>
+      <Route path="/taxes" component={TaxesPage} />
       <Route path={paths.settings} component={SettingsPage} />
       <Route path={paths.onboarding} component={OnboardingPage} />
       <Route path={paths.add}>{() => <TurnForm onDone={goBack} />}</Route>

@@ -101,6 +101,19 @@
   animation: week-rise 400ms ease-out;
 }
 
+/* Printing a tax summary keeps the figures and drops the tabs, pickers and buttons. */
+@media print {
+  nav,
+  button,
+  .print-hide {
+    display: none !important;
+  }
+
+  main {
+    padding: 0 !important;
+  }
+}
+
 /* Motion is opt-in: users who ask for reduced motion get none. */
 @media (prefers-reduced-motion: reduce) {
   *,
