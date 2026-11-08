@@ -24,6 +24,7 @@ export const paths = {
   services: '/settings/services',
   payRules: '/settings/pay',
   goals: '/settings/goals',
+  taxes: (year: number) => `/taxes?year=${year}`,
   onboarding: '/onboarding',
 } as const
 

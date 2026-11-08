@@ -7,8 +7,8 @@ import { paths } from '../../app/navigation.ts'
 import type { PayPeriodType } from '../../app/settings.ts'
 import { updateSettings, useSettings } from '../../app/settings.ts'
 import { db } from '../../db/schema.ts'
-import { isIsoDate, todayIso, weekRange } from '../../domain/dates.ts'
-import { formatUsdShort } from '../../domain/money.ts'
+import { isIsoDate, parseIsoDate, todayIso, weekRange } from '../../domain/dates.ts'
+import { formatRate, formatUsdShort } from '../../domain/money.ts'
 import { rulesOn } from '../../domain/payRules.ts'
 import { t, tf } from '../../lib/i18n.ts'
 import type { Locale } from '../../lib/locale.ts'
@@ -49,11 +49,16 @@ export function SettingsPage() {
     payPeriodAnchorDate,
     weeklyGoalCents,
     monthlyGoalCents,
+    taxSetAsideBp,
   } = useSettings()
   const anchorId = useId()
   const numberPadHintId = useId()
   const rules = useLiveQuery(() => db.payRules.toArray())
   const summary = payRulesSummary(locale, rate, rulesOn(rules ?? [], todayIso()))
+  const taxSummary =
+    taxSetAsideBp === null
+      ? t(locale, 'taxNotSet')
+      : tf(locale, 'taxSetAsideSummary', { rate: formatRate(taxSetAsideBp) })
 
   // A weekly or biweekly schedule counts from the first day of a period, so
   // start it on the first day of the week the person is working in.
@@ -168,6 +173,14 @@ export function SettingsPage() {
       )}
 
       <TipHandlingFields />
+
+      <Link href={paths.taxes(parseIsoDate(todayIso()).year)} className={`${card} block`}>
+        <div className="flex items-center justify-between gap-2">
+          <span className="font-medium">{t(locale, 'taxes')}</span>
+          <IconChevronRight size={18} aria-hidden="true" className="flex-none text-text-secondary" />
+        </div>
+        <p className="mt-1 text-sm text-text-secondary">{taxSummary}</p>
+      </Link>
 
       <Link href={paths.services} className={secondaryButton + ' block text-center'}>
         {t(locale, 'manageServices')}
