@@ -38,14 +38,15 @@ import { dueReminder } from '../../domain/reminders.ts'
 import { nextTaxQuarter } from '../../domain/taxes.ts'
 import { numberTurns, sumTotals } from '../../domain/totals.ts'
 import { t, tf, type StringKey } from '../../lib/i18n.ts'
+import { endLoad, startLoad } from '../../lib/loadMark.ts'
 import { OfflineBadge } from '../../pwa/OfflineBadge.tsx'
 import { list, primaryButton, secondaryButton } from '../../ui/styles.ts'
 import { saveBackupFile } from '../backup/saveBackup.ts'
 import { durationText } from '../hours/hoursText.ts'
 import { HoursSheet } from '../hours/HoursSheet.tsx'
 import { loadWorkDays, setWorkHours } from '../history/workDays.ts'
-import { ensurePayPeriods, loadPeriodSummaries } from '../payday/periodStore.ts'
-import { loadRange, servicesByTurn } from '../turns/turnStore.ts'
+import { ensurePayPeriods, loadPeriodPresence, loadPeriodSummary } from '../payday/periodStore.ts'
+import { loadRange, loadTurnDates, servicesByTurn } from '../turns/turnStore.ts'
 import { TurnRow } from '../turns/TurnRow.tsx'
 
 const RECENT_LIMIT = 10
@@ -150,17 +151,38 @@ export function HomePage() {
   }, [payPeriodType, payPeriodAnchorDate, today])
 
   const data = useLiveQuery(async () => {
-    const [current, previousData, todayData, weekData, firstTurn, taxData, workDays] =
+    startLoad('load:home')
+    const [current, previousData, todayData, weekData, firstTurn, taxData, workDays, presence] =
       await Promise.all([
-      loadRange(db, span.start, span.end),
-      loadRange(db, previous.start, previous.end),
-      loadRange(db, today, today),
-      loadRange(db, weekLoadStart, week.end),
-      db.turns.orderBy('localWorkDate').first(),
-      loadRange(db, taxStart, taxEnd),
-      loadWorkDays(db, addDays(today, -1), today),
-    ])
-    return { current, previousData, todayData, weekData, firstTurn, taxData, workDays }
+        loadTurnDates(db, span.start, span.end),
+        loadTurnDates(db, previous.start, previous.end),
+        loadRange(db, today, today),
+        loadTurnDates(db, weekLoadStart, week.end),
+        db.turns.orderBy('localWorkDate').first(),
+        loadTurnDates(db, taxStart, taxEnd),
+        loadWorkDays(db, addDays(today, -1), today),
+        loadPeriodPresence(db),
+      ])
+    // Only the period being worked in needs its statement; the rest of the
+    // list only answers "has turns, was it checked".
+    const currentPresence = presence.find(
+      (item) => item.period.startDate <= today && today <= item.period.endDate,
+    )
+    const currentPayPeriod = currentPresence
+      ? await loadPeriodSummary(db, currentPresence.period.id)
+      : null
+    endLoad('load:home')
+    return {
+      current,
+      previousData,
+      todayData,
+      weekData,
+      firstTurn,
+      taxData,
+      workDays,
+      presence,
+      currentPayPeriod,
+    }
   }, [
     span.start,
     span.end,
@@ -173,9 +195,7 @@ export function HomePage() {
     taxEnd,
   ])
 
-  const summaries = useLiveQuery(() => loadPeriodSummaries(db))
-
-  if (data === undefined || summaries === undefined) return null
+  if (data === undefined) return null
 
   const reminder = dueReminder({
     today,
@@ -184,12 +204,12 @@ export function HomePage() {
     lastBackupDate,
     firstTurnDate: data.firstTurn?.localWorkDate ?? null,
     dismissed: dismissedReminders,
-    paycheckPeriods: summaries.map((summary) => ({
-      id: summary.period.id,
-      startDate: summary.period.startDate,
-      endDate: summary.period.endDate,
-      hasTurns: summary.statement.turns > 0,
-      checkedDate: summary.record?.checkedDate ?? null,
+    paycheckPeriods: data.presence.map((item) => ({
+      id: item.period.id,
+      startDate: item.period.startDate,
+      endDate: item.period.endDate,
+      hasTurns: item.statementTurns > 0,
+      checkedDate: item.checkedDate,
     })),
     taxSetAsideBp,
     taxDue:
@@ -240,9 +260,7 @@ export function HomePage() {
     ...days.map((day) => Math.max(day.earnedCents, day.lastWeekEarnedCents)),
   )
 
-  const currentPayPeriod = summaries.find(
-    (summary) => summary.period.startDate <= today && today <= summary.period.endDate,
-  )
+  const currentPayPeriod = data.currentPayPeriod
   // "Salon owes" is what the statement says the salon should pay, less what it
   // has already paid: a paid period owes nothing.
   const salonOwesCents = currentPayPeriod

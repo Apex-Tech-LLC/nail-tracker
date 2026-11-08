@@ -20,7 +20,7 @@ import {
 import { PAYMENT_METHOD_LABEL, PAY_STATE_COLOR, PAY_STATE_LABEL } from './payStateLabels.ts'
 import { CheckPanel } from '../paycheck/CheckPanel.tsx'
 import { loadPaymentsForPeriod } from './paymentStore.ts'
-import { deletePeriod, loadPeriodSummaries, setPeriodStatus } from './periodStore.ts'
+import { deletePeriod, loadPeriodSummary, setPeriodStatus } from './periodStore.ts'
 
 interface Props {
   periodId: string
@@ -32,10 +32,7 @@ export function PeriodPage({ periodId, onDone }: Props) {
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const [deleteBlocked, setDeleteBlocked] = useState(false)
 
-  const summary = useLiveQuery(async () => {
-    const all = await loadPeriodSummaries(db)
-    return all.find((item) => item.period.id === periodId) ?? null
-  }, [periodId])
+  const summary = useLiveQuery(() => loadPeriodSummary(db, periodId), [periodId])
 
   const payments = useLiveQuery(
     () => loadPaymentsForPeriod(db, periodId),
@@ -83,7 +80,7 @@ export function PeriodPage({ periodId, onDone }: Props) {
         >
           <IconX size={22} aria-hidden="true" />
         </button>
-        <h1 className="min-w-0 flex-1 truncate text-center font-medium">
+        <h1 className="min-w-0 flex-1 break-words text-center font-medium leading-tight">
           {formatRange(period.startDate, period.endDate, locale)}
         </h1>
         <span className="shrink-0 rounded-full border border-border-strong px-2 py-0.5 text-xs">

@@ -148,24 +148,49 @@ export async function restoreTurn(db: NailDb, removed: RemovedTurn): Promise<voi
   })
 }
 
+/** One indexed range read of turns and adjustments, for screens that never show service names. */
+export async function loadTurnDates(
+  db: NailDb,
+  start: IsoDate,
+  end: IsoDate,
+): Promise<{ turns: Turn[]; adjustments: Adjustment[] }> {
+  const [turns, adjustments] = await Promise.all([
+    db.turns.where('localWorkDate').between(start, end, true, true).toArray(),
+    db.adjustments.where('localWorkDate').between(start, end, true, true).toArray(),
+  ])
+  return { turns, adjustments }
+}
+
 export async function loadRange(
   db: NailDb,
   start: IsoDate,
   end: IsoDate,
 ): Promise<{ turns: Turn[]; services: TurnService[]; adjustments: Adjustment[] }> {
-  const [turns, adjustments] = await Promise.all([
-    db.turns.where('localWorkDate').between(start, end, true, true).toArray(),
-    db.adjustments.where('localWorkDate').between(start, end, true, true).toArray(),
-  ])
-  const services =
-    turns.length === 0
-      ? []
-      : await db.turnServices
-          .where('turnId')
-          .anyOf(turns.map((turn) => turn.id))
-          .toArray()
+  const { turns, adjustments } = await loadTurnDates(db, start, end)
+  const services = await loadTurnServices(
+    db,
+    turns.map((turn) => turn.id),
+  )
 
   return { turns, services, adjustments }
+}
+
+/**
+ * The service lines for these turns. One index lookup per turn id is quick for
+ * a day or a month; over a long range a single scan of the whole table is
+ * quicker, because tens of thousands of lookups add up.
+ */
+export async function loadTurnServices(
+  db: NailDb,
+  turnIds: readonly string[],
+): Promise<TurnService[]> {
+  if (turnIds.length === 0) return []
+  if (turnIds.length < 1000) {
+    return db.turnServices.where('turnId').anyOf([...turnIds]).toArray()
+  }
+
+  const wanted = new Set(turnIds)
+  return (await db.turnServices.toArray()).filter((service) => wanted.has(service.turnId))
 }
 
 /** A saved line's quick-pick key: its preset id, or the lower-cased name without one. */

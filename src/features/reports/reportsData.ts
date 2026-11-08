@@ -28,7 +28,7 @@ import {
 } from '../../domain/reports.ts'
 import { hoursPay, type HoursPay } from '../../domain/hours.ts'
 import { averages, sumTotals, type Totals } from '../../domain/totals.ts'
-import { loadRange } from '../turns/turnStore.ts'
+import { loadTurnServices } from '../turns/turnStore.ts'
 import { reportKindOf, type ReportChoice } from './reportsRange.ts'
 
 export interface TrendPoint {
@@ -102,13 +102,9 @@ function earnedIn(turns: readonly Turn[], adjustments: readonly Adjustment[], sp
   return sumTotals(spanTurns, spanAdjustments).earnedCents
 }
 
-/** Every span is read with its own indexed range query, so a long history never loads whole. */
-async function loadSpan(db: NailDb, span: Span) {
-  const [turns, adjustments] = await Promise.all([
-    db.turns.where('localWorkDate').between(span.start, span.end, true, true).toArray(),
-    db.adjustments.where('localWorkDate').between(span.start, span.end, true, true).toArray(),
-  ])
-  return { turns, adjustments }
+/** Every span is a slice of the one full read, so a long history is read once. */
+function inSpan<T extends { localWorkDate: IsoDate }>(items: readonly T[], span: Span): T[] {
+  return items.filter((item) => item.localWorkDate >= span.start && item.localWorkDate <= span.end)
 }
 
 export async function loadReport(db: NailDb, request: ReportRequest): Promise<ReportData> {
@@ -121,23 +117,34 @@ export async function loadReport(db: NailDb, request: ReportRequest): Promise<Re
   const trendStart = trend[0].start
   const trendEnd = trend[trend.length - 1].end
 
-  const [range, previous, lastYearFigures, trendFigures, allTurns, allAdjustments, allPayments, paymentsInRange, workDays] =
-    await Promise.all([
-      loadRange(db, span.start, span.end),
-      loadSpan(db, previousSpan),
-      loadSpan(db, lastYear),
-      loadSpan(db, { start: trendStart, end: trendEnd }),
-      // Records look at every turn ever saved. The same read serves the all-time balance.
-      db.turns.toArray(),
-      db.adjustments.toArray(),
-      db.payments.toArray(),
-      db.payments.where('paymentDate').between(span.start, span.end, true, true).toArray(),
-      db.workDays.where('date').between(span.start, span.end, true, true).toArray(),
-    ])
+  // Records and the all-time balance need every turn ever saved, so that is the
+  // one full read both use; the visible ranges are slices of it.
+  const [allTurns, allAdjustments, allPayments, workDays] = await Promise.all([
+    db.turns.toArray(),
+    db.adjustments.toArray(),
+    db.payments.toArray(),
+    db.workDays.where('date').between(span.start, span.end, true, true).toArray(),
+  ])
 
-  const totals = sumTotals(range.turns, range.adjustments)
-  const previousTotals = sumTotals(previous.turns, previous.adjustments)
-  const lastYearTotals = sumTotals(lastYearFigures.turns, lastYearFigures.adjustments)
+  const rangeTurns = inSpan(allTurns, span)
+  const rangeAdjustments = inSpan(allAdjustments, span)
+  const services = await loadTurnServices(
+    db,
+    rangeTurns.map((turn) => turn.id),
+  )
+  const previousTurns = inSpan(allTurns, previousSpan)
+  const previousAdjustments = inSpan(allAdjustments, previousSpan)
+  const lastYearTurns = inSpan(allTurns, lastYear)
+  const lastYearAdjustments = inSpan(allAdjustments, lastYear)
+  const trendTurns = inSpan(allTurns, { start: trendStart, end: trendEnd })
+  const trendAdjustments = inSpan(allAdjustments, { start: trendStart, end: trendEnd })
+  const paymentsInRange = allPayments.filter(
+    (payment) => payment.paymentDate >= span.start && payment.paymentDate <= span.end,
+  )
+
+  const totals = sumTotals(rangeTurns, rangeAdjustments)
+  const previousTotals = sumTotals(previousTurns, previousAdjustments)
+  const lastYearTotals = sumTotals(lastYearTurns, lastYearAdjustments)
   const allTotals = sumTotals(allTurns, allAdjustments)
 
   const bars: TrendPoint[] = trend.map((bucket) => ({
@@ -145,7 +152,7 @@ export async function loadReport(db: NailDb, request: ReportRequest): Promise<Re
     start: bucket.start,
     end: bucket.end,
     label: labelOf(bucket, locale),
-    earnedCents: earnedIn(trendFigures.turns, trendFigures.adjustments, bucket),
+    earnedCents: earnedIn(trendTurns, trendAdjustments, bucket),
   }))
 
   let currentBarIndex = trend.findIndex(
@@ -171,15 +178,15 @@ export async function loadReport(db: NailDb, request: ReportRequest): Promise<Re
       span: lastYear,
       totals: lastYearTotals,
       change: change(totals.earnedCents, lastYearTotals.earnedCents),
-      hasTurns: lastYearFigures.turns.length > 0,
+      hasTurns: lastYearTurns.length > 0,
     },
     bars,
     currentBarIndex,
-    serviceLines: byService(range.services),
-    weekdayLines: byWeekday(range.turns, range.adjustments, weekStart),
-    clientLines: clients(range.turns),
-    tips: tipsSummary(range.turns),
-    hours: hoursPay(range.turns, range.adjustments, workDays),
+    serviceLines: byService(services),
+    weekdayLines: byWeekday(rangeTurns, rangeAdjustments, weekStart),
+    clientLines: clients(rangeTurns),
+    tips: tipsSummary(rangeTurns),
+    hours: hoursPay(rangeTurns, rangeAdjustments, workDays),
     records: records(allTurns, allAdjustments, weekStart, today),
   }
 }

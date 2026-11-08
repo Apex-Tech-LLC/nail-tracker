@@ -22,6 +22,7 @@ import {
 } from '../../domain/dates.ts'
 import { formatUsd } from '../../domain/money.ts'
 import { t, tf, type StringKey } from '../../lib/i18n.ts'
+import { endLoad, startLoad } from '../../lib/loadMark.ts'
 import { Row } from '../../ui/Row.tsx'
 import {
   card,
@@ -204,17 +205,20 @@ export function ReportsPage() {
   const anchor = choice === 'custom' ? start : date
 
   const data = useLiveQuery(
-    () =>
-      invalidRange
-        ? null
-        : loadReport(db, {
-            choice,
-            span: { start, end },
-            anchor,
-            weekStart: weekStartDay,
-            today,
-            locale,
-          }),
+    async () => {
+      if (invalidRange) return null
+      startLoad('load:reports')
+      const report = await loadReport(db, {
+        choice,
+        span: { start, end },
+        anchor,
+        weekStart: weekStartDay,
+        today,
+        locale,
+      })
+      endLoad('load:reports')
+      return report
+    },
     [choice, start, end, anchor, weekStartDay, today, locale, invalidRange],
   )
 

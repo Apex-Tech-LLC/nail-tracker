@@ -355,8 +355,10 @@ export function TurnRow({ turn, services, number }: Props) {
               style={{ backgroundColor: serviceColor(markName) }}
             />
             <span className="min-w-0 flex-1">
-              <span className="block truncate text-[15px] font-semibold">{names}</span>
-              <span className="mt-px block truncate text-[13px] text-text-secondary">{subline}</span>
+              <span className="block truncate text-[15px] font-semibold" data-testid="truncate-ok">
+                {names}
+              </span>
+              <span className="mt-px block text-[13px] text-text-secondary">{subline}</span>
             </span>
           </Link>
 

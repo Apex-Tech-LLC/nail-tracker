@@ -18,6 +18,7 @@ import { formatUsdShort } from '../../domain/money.ts'
 import { suggestionForDay } from '../../domain/hours.ts'
 import { numberTurns, sumTotals } from '../../domain/totals.ts'
 import { t, tf, type StringKey } from '../../lib/i18n.ts'
+import { endLoad, startLoad } from '../../lib/loadMark.ts'
 import {
   chip,
   chipOff,
@@ -109,22 +110,20 @@ export function HistoryPage() {
   // result carries its range. Otherwise a tapped calendar day would flash
   // the whole month in the list.
   const rangeKey = `${queryStart}..${queryEnd}`
-  const loaded = useLiveQuery(
-    async () => ({
-      key: rangeKey,
-      data: invalidRange ? null : await loadRange(db, queryStart, queryEnd),
-    }),
-    [queryStart, queryEnd, invalidRange],
-  )
-  const loadedDays = useLiveQuery(
-    async () => ({ key: rangeKey, workDays: await loadWorkDays(db, queryStart, queryEnd) }),
-    [queryStart, queryEnd],
-  )
+  const loaded = useLiveQuery(async () => {
+    startLoad('load:history')
+    const [data, workDays] = await Promise.all([
+      invalidRange ? null : loadRange(db, queryStart, queryEnd),
+      loadWorkDays(db, queryStart, queryEnd),
+    ])
+    endLoad('load:history')
+    return { key: rangeKey, data, workDays }
+  }, [queryStart, queryEnd, invalidRange])
   // While a newer range loads, keep the page (and any focused date box) and
   // show no list, as for a rejected range.
   const data = loaded === undefined ? undefined : loaded.key === rangeKey ? loaded.data : null
   const workDays =
-    loadedDays === undefined ? undefined : loadedDays.key === rangeKey ? loadedDays.workDays : []
+    loaded === undefined ? undefined : loaded.key === rangeKey ? loaded.workDays : []
 
   // A null result is a rejected range: keep the page and its date inputs
   // on screen, just without a list or an empty message.
