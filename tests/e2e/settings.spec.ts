@@ -8,6 +8,10 @@ async function openSettings(page: Page): Promise<void> {
   await page.goto('./#/settings')
 }
 
+async function openPay(page: Page): Promise<void> {
+  await page.goto('./#/settings/pay')
+}
+
 function settingsGroup(page: Page, name: string): Locator {
   return page.getByRole('group', { name })
 }
@@ -33,7 +37,7 @@ test('the language choice survives a reload', async ({ page }) => {
 
 test('50% becomes the default commission', async ({ page }) => {
   await seedSettings(page)
-  await openSettings(page)
+  await openPay(page)
 
   await settingsGroup(page, 'Default commission').getByText('50%', { exact: true }).click()
   await page.goto('./#/add')
@@ -44,7 +48,7 @@ test('50% becomes the default commission', async ({ page }) => {
 
 test('a custom commission rate becomes the default', async ({ page }) => {
   await seedSettings(page)
-  await openSettings(page)
+  await openPay(page)
 
   await settingsGroup(page, 'Default commission').getByText('Custom', { exact: true }).click()
   await page.getByLabel('Custom commission %').fill('62.5')
@@ -56,7 +60,7 @@ test('a custom commission rate becomes the default', async ({ page }) => {
 
 test('a custom commission rate that cannot be read is refused', async ({ page }) => {
   await seedSettings(page)
-  await openSettings(page)
+  await openPay(page)
 
   await settingsGroup(page, 'Default commission').getByText('Custom', { exact: true }).click()
   await page.getByLabel('Custom commission %').fill('abc')
@@ -69,7 +73,7 @@ test('a custom commission rate that cannot be read is refused', async ({ page })
 test('changing the default leaves saved turns alone', async ({ page }) => {
   await seedSettings(page)
   await addTurn(page, { amount: '100' })
-  await openSettings(page)
+  await openPay(page)
 
   await settingsGroup(page, 'Default commission').getByText('50%', { exact: true }).click()
   await page.goto('./')
@@ -141,7 +145,7 @@ test('cash tips paid on payday start unchecked on a new turn', async ({ page }) 
 
 test('per-service rates move the rate box into each service line', async ({ page }) => {
   await seedSettings(page)
-  await openSettings(page)
+  await openPay(page)
 
   await page.getByLabel('Different commission for each service').check()
   await page.goto('./#/add')

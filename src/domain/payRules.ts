@@ -42,12 +42,9 @@ export function defaultPayRules(startDate: IsoDate = NO_RULES.startDate, now = 0
   }
 }
 
-/** The rules in force on `date`: the latest with startDate <= date; before the first, the earliest; none saved, NO_RULES. */
-export function rulesOn(
-  rules: readonly PayRules[],
-  date: IsoDate,
-): Omit<PayRules, 'id' | 'createdAt' | 'updatedAt'> {
-  if (rules.length === 0) return { ...NO_RULES }
+/** The saved rule in force on `date`: the latest with startDate <= date; before the first, the earliest. */
+export function ruleInForce(rules: readonly PayRules[], date: IsoDate): PayRules | null {
+  if (rules.length === 0) return null
 
   const ordered = [...rules].sort(
     (a, b) => a.startDate.localeCompare(b.startDate) || a.createdAt - b.createdAt,
@@ -57,6 +54,16 @@ export function rulesOn(
     if (rule.startDate > date) break
     chosen = rule
   }
+  return chosen
+}
+
+/** The rules in force on `date`: the latest with startDate <= date; before the first, the earliest; none saved, NO_RULES. */
+export function rulesOn(
+  rules: readonly PayRules[],
+  date: IsoDate,
+): Omit<PayRules, 'id' | 'createdAt' | 'updatedAt'> {
+  const chosen = ruleInForce(rules, date)
+  if (chosen === null) return { ...NO_RULES }
 
   return {
     startDate: chosen.startDate,
