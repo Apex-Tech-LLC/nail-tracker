@@ -1,0 +1,1431 @@
+// The voice reader: turns the words a technician said into draft turns that
+// the Check screen can show. English and Vietnamese, spoken or typed, with or
+// without accents. Everything the reader knows about words lives in the tables
+// at the top, so a new phrase is one more line there.
+// Plain TypeScript: no network, no database, no React.
+
+import { MAX_CENTS, formatUsdShort } from './money.ts'
+import { foldText } from './textFold.ts'
+
+export type ReaderLocale = 'en' | 'vi' | 'mixed'
+
+/** The part of a service preset the reader needs. */
+export interface ReaderPreset {
+  id: string
+  nameEn: string
+  nameVi: string
+  defaultPriceCents: number | null
+}
+
+export interface ReaderInput {
+  text: string
+  presets: readonly ReaderPreset[]
+  // Last price per preset id, for the "usual price" when the preset has none.
+  lastPrices?: ReadonlyMap<string, number>
+  // `mixed` text is read as Vietnamese.
+  locale: ReaderLocale
+}
+
+export type CheckCode =
+  | 'noPrice'
+  | 'noService'
+  | 'unclearService'
+  | 'shorthand'
+  | 'guessedWord'
+  | 'sharedTotal'
+  | 'badAmount'
+  | 'halfShorthand'
+  | 'decimalComma'
+  | 'currencyAssumed'
+  | 'countMismatch'
+  | 'repeatExpanded'
+  | 'inferredSplit'
+  | 'correction'
+  | 'tipNoAmount'
+  | 'paymentNotTip'
+  | 'appointment'
+  | 'requestConflict'
+  | 'priceChange'
+  | 'timeNotRead'
+  | 'backReference'
+
+/** A reason to look at a turn again. `text` is plain English for the next card to translate. */
+export interface DraftCheck {
+  code: CheckCode
+  text: string
+}
+
+export interface DraftService {
+  presetId: string
+  // The price as heard, or null when none was heard or it could not be read.
+  priceCents: number | null
+  // The preset's own price, else the last price used, else null.
+  usualPriceCents: number | null
+}
+
+export interface DraftTurn {
+  // This turn's own slice of the text.
+  heard: string
+  services: DraftService[]
+  cashTipCents: number
+  cardTipCents: number
+  request: boolean
+  checks: DraftCheck[]
+}
+
+export interface ReaderResult {
+  turns: DraftTurn[]
+  // Leftover words the reader could not place; a non-empty list needs a whole-text check.
+  notUnderstood: string[]
+}
+
+// ---------------------------------------------------------------------------
+// Vocabulary. Phrases are written without accents and in lower case; the
+// reader folds the spoken text the same way. Longest phrase wins.
+// ---------------------------------------------------------------------------
+
+interface ServiceWords {
+  // Clear names for this service.
+  names: string[]
+  // Short words that probably mean it: read, but marked `Check this`.
+  assumed?: string[]
+  // Speech-to-text slips seen or guessed: read, but marked `Check this`.
+  misheard?: string[]
+  // Phrases that are this service unless a price follows ("take off $5").
+  unlessPriceFollows?: string[]
+}
+
+// By seed preset id. Used only when the person still has a preset with that id.
+const SERVICE_WORDS: Record<string, ServiceWords> = {
+  manicure: {
+    names: ['manicure', 'regular manicure', 'basic manicure', 'mani', 'lam mong tay', 'tay thuong', 'lam mani', 'regular tay'],
+    assumed: ['tay'],
+    misheard: ['man a cure', 'many cure'],
+  },
+  pedicure: {
+    names: ['pedicure', 'regular pedicure', 'basic pedicure', 'pedi', 'lam mong chan', 'chan thuong', 'lam pedi', 'regular chan'],
+    assumed: ['chan'],
+    misheard: ['peddy cure', 'petty cure'],
+  },
+  'gel-manicure': {
+    names: [
+      'gel manicure',
+      'gel mani',
+      'gel polish manicure',
+      'gel on hands',
+      'son gel tay',
+      'lam gel tay',
+      'gel tay',
+      'mani gel',
+      'son gel manicure',
+    ],
+    assumed: ['son gel'],
+    misheard: ['jail manicure', 'son deo tay', 'gel many cure'],
+  },
+  'gel-pedicure': {
+    names: [
+      'gel pedicure',
+      'gel pedi',
+      'gel polish pedicure',
+      'gel on toes',
+      'son gel chan',
+      'lam gel chan',
+      'gel chan',
+      'pedi gel',
+    ],
+    misheard: ['jail pedicure', 'son deo chan', 'gel petty cure'],
+  },
+  'gel-x': {
+    names: ['gel x', 'gel x extensions', 'gel x tips', 'full set gel x', 'gel x full set', 'noi mong gel x', 'dap gel x', 'lam gel x'],
+    misheard: ['gel ex', 'jello ex', 'jox', 'gel ich', 'gel et'],
+  },
+  'acrylic-full-set': {
+    names: ['acrylic full set', 'full set acrylic', 'new acrylic set', 'full set bot', 'bo bot moi', 'acrylic bo moi'],
+    assumed: ['full set', 'dap bot'],
+  },
+  'acrylic-fill': {
+    names: ['acrylic fill', 'acrylic refill', 'dam bot', 'dap bot lai', 'fill bot', 'refill bot'],
+    assumed: ['fill', 'refill', 'fill in'],
+    misheard: ['acrylic feel', 'acrylic field'],
+  },
+  'dip-powder': {
+    names: ['dip powder', 'dipping powder', 'sns dip', 'dip', 'bot nhung', 'nhung bot', 'lam dip', 'dip bot', 'lam sns'],
+    assumed: ['sns'],
+    misheard: ['deep powder', 'dip power', 'bot nhun'],
+  },
+  'nail-art': {
+    names: ['nail art', 'nail design', 'design', 'designs', 've mong', 'trang tri mong', 'lam nail art'],
+    assumed: ['ve'],
+    misheard: ['nail heart'],
+  },
+  removal: {
+    names: ['removal', 'soak off', 'take off nails', 'thao mong', 'thao bot', 'thao gel', 'remove mong'],
+    misheard: ['soak of'],
+    unlessPriceFollows: ['take off'],
+  },
+}
+
+// Service words that name no preset on their own. The price after them is
+// kept out of the way and the turn is marked.
+const UNCLEAR_SERVICES = [
+  'gel',
+  'acrylic',
+  'bot',
+  'lam mong',
+  'shellac',
+  'biab',
+  'opi',
+  'dnd',
+  'hard gel',
+  'hard gel fill',
+  'hard gel refill',
+  'hard gel full set',
+  'builder gel',
+  'gel fill',
+  'gel refill',
+  'pink and white',
+]
+
+type Channel = 'cash' | 'card'
+
+type MarkerBody =
+  | { t: 'tip' | 'noTip' | 'request' | 'walkIn' | 'appointment' | 'join' | 'next' | 'same' | 'backRef' }
+  | { t: 'correct' | 'priceWord' | 'total' | 'pay' | 'each' }
+  | { t: 'channel'; channel: Channel; guessed: boolean }
+
+interface MarkerWords {
+  body: MarkerBody
+  phrases: string[]
+  // Match the spoken form including accents, for words that differ only by tone.
+  strict?: boolean
+  // Only in these locales; any when left out.
+  locales?: ReaderLocale[]
+}
+
+const MARKER_WORDS: MarkerWords[] = [
+  { body: { t: 'tip' }, phrases: ['tip', 'tips', 'gratuity', 'boa', 'tien tip', 'tien boa', 'tien bo'] },
+  { body: { t: 'tip' }, phrases: ['bo'], strict: true },
+  {
+    body: { t: 'noTip' },
+    phrases: ['no tip', 'no tips', 'zero tip', 'without tip', 'khong co tip', 'khong tip', 'khong co boa', 'khong boa'],
+  },
+  { body: { t: 'channel', channel: 'cash', guessed: false }, phrases: ['cash', 'tien mat'] },
+  { body: { t: 'channel', channel: 'card', guessed: false }, phrases: ['card', 'credit', 'debit'] },
+  { body: { t: 'channel', channel: 'card', guessed: false }, phrases: ['thẻ'], strict: true },
+  { body: { t: 'channel', channel: 'card', guessed: false }, phrases: ['the'], strict: true, locales: ['vi', 'mixed'] },
+  { body: { t: 'channel', channel: 'card', guessed: true }, phrases: ['cart'] },
+  { body: { t: 'channel', channel: 'card', guessed: true }, phrases: ['thể'], strict: true },
+  {
+    body: { t: 'request' },
+    phrases: [
+      'request',
+      'requested',
+      'request me',
+      'requested me',
+      'requested me by name',
+      'asked for me',
+      'ask for me',
+      'asked for me by name',
+      'khach goi ten',
+      'goi ten',
+      'khach quen',
+      'khach chi dinh',
+      'chi dinh',
+      'khach request',
+      'khach yeu cau',
+      'request em',
+    ],
+  },
+  {
+    body: { t: 'walkIn' },
+    phrases: [
+      'walk in',
+      'walkin',
+      'khach vang lai',
+      'vang lai',
+      'khach walk in',
+      'khach khong hen',
+      'no request',
+      'not request',
+      'not a request',
+      'not requested',
+      "didn't ask for me",
+      'did not ask for me',
+      "didn't request me",
+      'khong request',
+      'khong phai request',
+      'khong goi ten',
+      'khong phai khach goi ten',
+      'khong phai khach quen',
+      'khong chi dinh',
+    ],
+  },
+  { body: { t: 'appointment' }, phrases: ['appointment', 'by appointment', 'khach co hen', 'co hen'] },
+  { body: { t: 'join' }, phrases: ['and', 'with', 'plus', 'va', 'voi', 'them'] },
+  {
+    body: { t: 'next' },
+    phrases: [
+      'next',
+      'next customer',
+      'next client',
+      'next khach',
+      'then',
+      'another',
+      'another customer',
+      'another client',
+      'roi',
+      'roi next',
+      'tiep',
+      'khach tiep',
+      'khach tiep theo',
+      'khach nua',
+    ],
+  },
+  {
+    body: { t: 'backRef' },
+    phrases: ['first customer', 'first client', 'last customer', 'last client', 'khach dau', 'khach dau tien', 'khach cuoi', 'khach thu nhat'],
+  },
+  { body: { t: 'same' }, phrases: ['same customer', 'same client', 'same khach', 'cung mot khach', 'cung khach'] },
+  {
+    body: { t: 'correct' },
+    phrases: ['no i mean', 'i mean', 'make that', 'make it', 'sorry', 'actually', 'no', 'a khong', 'y la', 'sua thanh', 'sua lai', 'oops'],
+  },
+  { body: { t: 'priceWord' }, phrases: ['price'] },
+  { body: { t: 'priceWord' }, phrases: ['giá'], strict: true },
+  { body: { t: 'total' }, phrases: ['total', 'tong', 'tong cong'] },
+  { body: { t: 'pay' }, phrases: ['paid', 'pay', 'payment', 'paying'] },
+  { body: { t: 'pay' }, phrases: ['trả'], strict: true },
+  { body: { t: 'each' }, phrases: ['each', 'moi khach'] },
+]
+
+// Words and phrases that carry nothing for the reader, and are skipped quietly.
+const SKIPPED_PHRASES = ['let me see', 'de xem', 'chi oi', 'french included', 'in cash']
+
+const SKIPPED_WORDS = new Set(
+  [
+    // English
+    'um', 'uh', 'uhm', 'ah', 'hmm', 'okay', 'ok', 'well', 'please', 'let', 'me', 'see', 'she', 'he', 'her', 'they',
+    'i', 'the', 'a', 'an', 'of', 'for', 'on', 'in', 'at', 'by', 'is', 'was', 'to', 'it', 'that', 'this', 'customer',
+    'customers', 'client', 'clients', 'french', 'included', 'ish', 'ombre', 'chrome',
+    // Vietnamese
+    'da', 'o', 'nhe', 'nha', 'oi', 'chi', 'anh', 'em', 'toi', 'minh', 'ma', 'la', 'co', 'khach', 'cua', 'cho', 'bang',
+    'qua', 'tren', 'ay', 'nay', 'thi', 'tien', 'lam',
+    // Loose money and time words
+    'do', 'dollar', 'dollars', 'buck', 'bucks', 'usd', 'dong', 'pm', 'am', 'gio',
+  ].map(foldText),
+)
+
+// ---------------------------------------------------------------------------
+// Number words.
+// ---------------------------------------------------------------------------
+
+type Piece =
+  | { k: 'digit'; v: number; lang: 'en' | 'vi'; five: boolean }
+  | { k: 'unit'; v: number } // Vietnamese lăm, mốt, tư: a last digit after a tens digit
+  | { k: 'teen'; v: number } // English ten to nineteen
+  | { k: 'tens'; v: number } // English twenty to ninety
+  | { k: 'hundred' }
+  | { k: 'muoi'; role: 'ten' | 'tens' | 'either' } // mười (10), mươi (x10), or unaccented muoi
+  | { k: 'chuc' }
+  | { k: 'le' }
+  | { k: 'half' }
+
+const EN_DIGITS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine']
+const EN_TEENS = ['ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen']
+const EN_TENS = ['twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety']
+
+const EN_PIECES = new Map<string, Piece>([
+  ...EN_DIGITS.map((word, v): [string, Piece] => [word, { k: 'digit', v, lang: 'en', five: false }]),
+  ...EN_TEENS.map((word, i): [string, Piece] => [word, { k: 'teen', v: 10 + i }]),
+  ...EN_TENS.map((word, i): [string, Piece] => [word, { k: 'tens', v: 20 + i * 10 }]),
+  ['hundred', { k: 'hundred' }],
+])
+
+const viDigit = (v: number, five = false): Piece => ({ k: 'digit', v, lang: 'vi', five })
+
+// Spoken with accents: the tone decides the word (mười is 10, mươi is x10).
+const VI_STRICT = new Map<string, Piece>([
+  ['không', viDigit(0)],
+  ['một', viDigit(1)],
+  ['hai', viDigit(2)],
+  ['ba', viDigit(3)],
+  ['bốn', viDigit(4)],
+  ['năm', viDigit(5, true)],
+  ['sáu', viDigit(6)],
+  ['bảy', viDigit(7)],
+  ['bẩy', viDigit(7)],
+  ['tám', viDigit(8)],
+  ['chín', viDigit(9)],
+  ['lăm', { k: 'unit', v: 5 }],
+  ['mốt', { k: 'unit', v: 1 }],
+  ['tư', { k: 'unit', v: 4 }],
+  ['mười', { k: 'muoi', role: 'ten' }],
+  ['mươi', { k: 'muoi', role: 'tens' }],
+  ['chục', { k: 'chuc' }],
+  ['trăm', { k: 'hundred' }],
+  ['lẻ', { k: 'le' }],
+  ['linh', { k: 'le' }],
+  ['rưỡi', { k: 'half' }],
+])
+
+// Typed without accents: only for a word that has no accent on it at all.
+const VI_PLAIN = new Map<string, Piece>([
+  ['khong', viDigit(0)],
+  ['mot', viDigit(1)],
+  ['hai', viDigit(2)],
+  ['ba', viDigit(3)],
+  ['bon', viDigit(4)],
+  ['nam', viDigit(5, true)],
+  ['sau', viDigit(6)],
+  ['bay', viDigit(7)],
+  ['tam', viDigit(8)],
+  ['chin', viDigit(9)],
+  ['lam', { k: 'unit', v: 5 }],
+  ['tu', { k: 'unit', v: 4 }],
+  ['muoi', { k: 'muoi', role: 'either' }],
+  ['chuc', { k: 'chuc' }],
+  ['tram', { k: 'hundred' }],
+  ['le', { k: 'le' }],
+  ['linh', { k: 'le' }],
+  ['ruoi', { k: 'half' }],
+])
+
+const DOLLAR_UNITS = new Set(['do', 'dollar', 'dollars', 'buck', 'bucks', 'usd'])
+const DONG_UNITS = new Set(['dong'])
+const CENT_UNITS = new Set(['xu', 'cent', 'cents'])
+const FOREIGN_UNITS = new Set(['nghin', 'ngan', 'vnd'])
+const POINT_WORDS = new Set(['point', 'phay', 'cham'])
+const MINUS_WORDS = new Set(['minus', 'negative'])
+const TIME_UNITS = new Set(['gio', 'pm', 'am', 'oclock'])
+const TIME_AFTER = new Set(['chieu', 'sang', 'toi', 'trua'])
+const COUNT_NOUNS = new Set(['customer', 'customers', 'client', 'clients', 'job', 'jobs', 'turn', 'turns', 'khach', 'luot'])
+
+// ---------------------------------------------------------------------------
+// Text to tokens.
+// ---------------------------------------------------------------------------
+
+type TokenKind = 'word' | 'number' | 'comma' | 'colon' | 'stop' | 'symbol'
+
+interface Token {
+  kind: TokenKind
+  lo: string // lower case, accents kept
+  fo: string // lower case, accents dropped
+  start: number
+  end: number
+}
+
+// Numbers first (1,000 / 35,50 / 45.50), then words, then the marks that matter.
+const TOKEN_PATTERN = /(\d{1,3}(?:,\d{3})+(?!\d)|\d+(?:[.,]\d+)?)|([\p{L}\p{M}][\p{L}\p{M}']*)|([\n.!?;])|(,)|(:)|([$%])/gu
+
+function tokenize(text: string): Token[] {
+  const tokens: Token[] = []
+  for (const match of text.matchAll(TOKEN_PATTERN)) {
+    const [raw, num, word, stop, comma, colon] = match
+    const lo = raw.toLowerCase()
+    const kind: TokenKind = num ? 'number' : word ? 'word' : stop ? 'stop' : comma ? 'comma' : colon ? 'colon' : 'symbol'
+    tokens.push({ kind, lo, fo: foldText(raw), start: match.index, end: match.index + raw.length })
+  }
+  return tokens
+}
+
+function normalize(text: string): string {
+  return text.normalize('NFC').replace(/[’‘]/g, "'")
+}
+
+// ---------------------------------------------------------------------------
+// Amounts: digits and number words, in dollars and cents.
+// ---------------------------------------------------------------------------
+
+type MoneyNote = 'halfShorthand' | 'decimalComma' | 'currencyAssumed' | 'guessedFive'
+
+interface Money {
+  cents: number | null
+  // Why no amount could be taken, in plain English.
+  problem: string | null
+  notes: MoneyNote[]
+}
+
+interface Quantity {
+  whole: number
+  extraCents: number
+  end: number
+  notes: MoneyNote[]
+  ambiguous: boolean
+  tooManyDecimals: boolean
+}
+
+function pieceAt(tokens: readonly Token[], k: number): Piece | null {
+  const token = tokens[k]
+  if (!token || token.kind !== 'word') return null
+  const strict = VI_STRICT.get(token.lo)
+  if (strict) return strict
+  const english = EN_PIECES.get(token.fo)
+  if (english) return english
+  return token.lo === token.fo ? (VI_PLAIN.get(token.fo) ?? null) : null
+}
+
+const isWord = (tokens: readonly Token[], k: number, words: ReadonlySet<string>) => {
+  const token = tokens[k]
+  return token !== undefined && token.kind === 'word' && words.has(token.fo)
+}
+
+interface Part {
+  value: number
+  end: number
+  single?: boolean
+  chuc?: boolean
+  five?: boolean
+}
+
+function viUnitAt(tokens: readonly Token[], k: number): { v: number; five: boolean } | null {
+  const piece = pieceAt(tokens, k)
+  if (piece?.k === 'unit') return { v: piece.v, five: false }
+  if (piece?.k === 'digit' && piece.lang === 'vi' && piece.v >= 1) return { v: piece.v, five: piece.five }
+  return null
+}
+
+// 1 to 99: mười hai, bốn mươi lăm, năm chục, bốn lăm, hai mốt.
+function readViBelowHundred(tokens: readonly Token[], i: number): Part | null {
+  const first = pieceAt(tokens, i)
+  if (first?.k === 'muoi' && first.role !== 'tens') {
+    const unit = viUnitAt(tokens, i + 1)
+    return unit ? { value: 10 + unit.v, end: i + 2, five: unit.five } : { value: 10, end: i + 1 }
+  }
+  if (first?.k !== 'digit' || first.lang !== 'vi' || first.v === 0) return null
+
+  const next = pieceAt(tokens, i + 1)
+  // "mươi", or unaccented "muoi" right after a digit.
+  if (next?.k === 'muoi' && next.role !== 'ten') {
+    const unit = viUnitAt(tokens, i + 2)
+    return unit
+      ? { value: first.v * 10 + unit.v, end: i + 3, five: unit.five }
+      : { value: first.v * 10, end: i + 2 }
+  }
+  if (next?.k === 'chuc') return { value: first.v * 10, end: i + 2, chuc: true }
+  // Short form: a tens digit and a last digit, "bốn lăm", "bốn năm" (45).
+  const unit = first.v >= 2 ? viUnitAt(tokens, i + 1) : null
+  if (unit) return { value: first.v * 10 + unit.v, end: i + 2, five: unit.five }
+  return { value: first.v, end: i + 1, single: true }
+}
+
+function readViNumber(tokens: readonly Token[], i: number): Quantity | null {
+  const first = pieceAt(tokens, i)
+  if (first?.k === 'digit' && first.lang === 'vi' && first.v === 0) {
+    // "không" alone means no; it is a zero only before a dollar word.
+    return isWord(tokens, i + 1, DOLLAR_UNITS) ? quantity(0, i + 1) : null
+  }
+
+  let part: Part | null = null
+  const notes: MoneyNote[] = []
+  if (first?.k === 'digit' && first.lang === 'vi' && pieceAt(tokens, i + 1)?.k === 'hundred') {
+    let value = first.v * 100
+    let end = i + 2
+    const next = pieceAt(tokens, end)
+    if (next?.k === 'le') {
+      const digit = pieceAt(tokens, end + 1)
+      if (digit?.k === 'digit' && digit.lang === 'vi' && digit.v >= 1) {
+        value += digit.v
+        end += 2
+      } else end += 1
+    } else if (next?.k === 'half') {
+      value += 50
+      end += 1
+      notes.push('halfShorthand')
+    } else {
+      const rest = readViBelowHundred(tokens, end)
+      if (rest && !rest.single) {
+        value += rest.value
+        end = rest.end
+        if (rest.five) notes.push('guessedFive')
+      }
+    }
+    part = { value, end }
+  } else {
+    part = readViBelowHundred(tokens, i)
+    if (part?.five) notes.push('guessedFive')
+    // "ba chục rưỡi" is 35: a half of the next unit up.
+    if (part?.chuc && pieceAt(tokens, part.end)?.k === 'half') {
+      part = { value: part.value + 5, end: part.end + 1 }
+      notes.push('halfShorthand')
+    }
+  }
+  if (!part) return null
+
+  const result = quantity(part.value, part.end)
+  result.notes = notes
+  return extendIfAmbiguous(tokens, result, (piece) => piece.k === 'digit' ? piece.lang === 'vi' && piece.v >= 1 : piece.k === 'unit' || piece.k === 'muoi')
+}
+
+function readEnBelowHundred(tokens: readonly Token[], i: number): { value: number; end: number } | null {
+  const piece = pieceAt(tokens, i)
+  if (piece?.k === 'tens') {
+    const next = pieceAt(tokens, i + 1)
+    if (next?.k === 'digit' && next.lang === 'en' && next.v >= 1) return { value: piece.v + next.v, end: i + 2 }
+    return { value: piece.v, end: i + 1 }
+  }
+  if (piece?.k === 'teen') return { value: piece.v, end: i + 1 }
+  if (piece?.k === 'digit' && piece.lang === 'en') return { value: piece.v, end: i + 1 }
+  return null
+}
+
+function readEnNumber(tokens: readonly Token[], i: number): Quantity | null {
+  const lead = readEnBelowHundred(tokens, i)
+  if (!lead) return null
+
+  let { value, end } = lead
+  if (lead.value >= 1 && lead.value <= 9 && pieceAt(tokens, end)?.k === 'hundred') {
+    value *= 100
+    end += 1
+    const skipAnd = tokens[end]?.fo === 'and' && readEnBelowHundred(tokens, end + 1) !== null
+    const rest = readEnBelowHundred(tokens, skipAnd ? end + 1 : end)
+    if (rest) {
+      value += rest.value
+      end = rest.end
+    }
+  }
+  // "four five", "forty five fifty": digits that do not form one number.
+  return extendIfAmbiguous(tokens, quantity(value, end), (piece) =>
+    piece.k === 'tens' || piece.k === 'teen' || (piece.k === 'digit' && piece.lang === 'en' && piece.v >= 1),
+  )
+}
+
+function quantity(whole: number, end: number): Quantity {
+  return { whole, extraCents: 0, end, notes: [], ambiguous: false, tooManyDecimals: false }
+}
+
+function extendIfAmbiguous(tokens: readonly Token[], result: Quantity, isNumberWord: (piece: Piece) => boolean): Quantity {
+  let end = result.end
+  for (let piece = pieceAt(tokens, end); piece && isNumberWord(piece); piece = pieceAt(tokens, end)) end += 1
+  if (end === result.end) return result
+  return { ...result, end, ambiguous: true }
+}
+
+function readLiteral(raw: string, end: number): Quantity {
+  if (/^\d{1,3}(,\d{3})+$/.test(raw)) return quantity(Number(raw.replace(/,/g, '')), end)
+
+  const match = /^(\d+)([.,])(\d+)$/.exec(raw)
+  if (!match) return quantity(Number(raw), end)
+
+  const result = quantity(Number(match[1]), end)
+  const fraction = match[3]
+  if (fraction.length > 2) result.tooManyDecimals = true
+  else result.extraCents = Number(fraction.padEnd(2, '0'))
+  if (match[2] === ',') result.notes.push('decimalComma')
+  return result
+}
+
+function readQuantity(tokens: readonly Token[], i: number): Quantity | null {
+  const token = tokens[i]
+  if (!token) return null
+  if (token.kind === 'number') return readLiteral(token.lo, i + 1)
+  if (token.kind !== 'word') return null
+  return readEnNumber(tokens, i) ?? readViNumber(tokens, i)
+}
+
+function readDigitWords(tokens: readonly Token[], i: number): { digits: string; end: number } {
+  let digits = ''
+  let end = i
+  for (;;) {
+    const token = tokens[end]
+    const piece = pieceAt(tokens, end)
+    if (token?.kind === 'number' && /^\d+$/.test(token.lo)) digits += token.lo
+    else if (piece?.k === 'digit') digits += String(piece.v)
+    else break
+    end += 1
+  }
+  return { digits, end }
+}
+
+interface MoneyRead {
+  money: Money
+  end: number
+}
+
+// "45", "$45.50", "forty five dollars and five cents", "bốn mươi lăm đô rưỡi".
+function readMoney(tokens: readonly Token[], i: number): MoneyRead | null {
+  let k = i
+  const negative = isWord(tokens, k, MINUS_WORDS) || tokens[k]?.lo === 'âm'
+  if (negative) k += 1
+  if (tokens[k]?.lo === '$') k += 1
+
+  const lead = readQuantity(tokens, k)
+  if (!lead) return null
+
+  const notes = [...lead.notes]
+  let problem: string | null = null
+  if (negative) problem = 'a negative amount'
+  else if (lead.tooManyDecimals) problem = 'more than two decimal places'
+  else if (lead.ambiguous) problem = 'digits that could mean more than one amount'
+
+  let cents = lead.whole * 100 + lead.extraCents
+  let end = lead.end
+
+  if (tokens[end]?.fo === 'and' && tokens[end + 1]?.fo === 'a' && tokens[end + 2]?.fo === 'half') {
+    cents += 50
+    end += 3
+  }
+  if (isWord(tokens, end, POINT_WORDS)) {
+    const { digits, end: tailEnd } = readDigitWords(tokens, end + 1)
+    if (digits !== '') {
+      if (digits.length > 2) problem ??= 'more than two decimal places'
+      else cents += Number(digits.padEnd(2, '0'))
+      end = tailEnd
+    }
+  }
+
+  const at = tokens[end]
+  if (at?.lo === '%' || at?.fo === 'percent' || (at?.fo === 'phan' && tokens[end + 1]?.fo === 'tram')) {
+    problem ??= 'a percentage'
+    end += at.lo === '%' || at.fo === 'percent' ? 1 : 2
+  } else if (isWord(tokens, end, FOREIGN_UNITS)) {
+    problem ??= 'not US dollars'
+    end += isWord(tokens, end + 1, DONG_UNITS) ? 2 : 1
+  } else if (isWord(tokens, end, CENT_UNITS)) {
+    cents = lead.whole + lead.extraCents
+    end += 1
+  } else if (isWord(tokens, end, DOLLAR_UNITS) || isWord(tokens, end, DONG_UNITS)) {
+    if (isWord(tokens, end, DONG_UNITS)) notes.push('currencyAssumed')
+    end += 1
+    // A half dollar, or a second amount in cents: "đô rưỡi", "dollars and five cents".
+    if (pieceAt(tokens, end)?.k === 'half') {
+      cents += 50
+      end += 1
+    } else {
+      const skipAnd = tokens[end]?.fo === 'and'
+      const extra = readQuantity(tokens, skipAnd ? end + 1 : end)
+      if (extra && extra.whole < 100 && !extra.ambiguous && isWord(tokens, extra.end, CENT_UNITS)) {
+        cents += extra.whole
+        end = extra.end + 1
+      }
+    }
+  } else if (pieceAt(tokens, end)?.k === 'half') {
+    problem ??= 'half of an unclear unit'
+    end += 1
+  } else if (isWord(tokens, end, new Set(['ish']))) {
+    problem ??= 'an approximate amount'
+    end += 1
+  }
+
+  if (problem === null && cents > MAX_CENTS) problem = 'an amount that is too large'
+  return { money: { cents: problem === null ? cents : null, problem, notes }, end }
+}
+
+/** A time of day: "at 2", "at 2 PM", "lúc hai giờ chiều", "hai giờ". */
+function readTime(tokens: readonly Token[], i: number): number | null {
+  const token = tokens[i]
+  if (!token || token.kind !== 'word') return null
+  const marked = token.fo === 'at' || token.fo === 'luc'
+  const lead = readQuantity(tokens, marked ? i + 1 : i)
+  if (!lead || lead.ambiguous || lead.extraCents > 0 || lead.whole > 24) return null
+
+  let end = lead.end
+  if (!marked && !isWord(tokens, end, TIME_UNITS)) return null
+  while (isWord(tokens, end, TIME_UNITS) || isWord(tokens, end, TIME_AFTER)) end += 1
+  return end
+}
+
+// ---------------------------------------------------------------------------
+// Words to atoms.
+// ---------------------------------------------------------------------------
+
+interface Span {
+  start: number
+  end: number
+}
+
+type AtomBody =
+  | MarkerBody
+  | { t: 'service'; presetId: string; assumed: boolean; guessed: boolean }
+  | { t: 'unclear' }
+  | { t: 'money'; money: Money }
+  | { t: 'time' }
+  | { t: 'reduce' }
+  | { t: 'count'; n: number; noun: string }
+  | { t: 'comma' | 'colon' | 'stop' | 'unknown' }
+
+type Atom = Span & AtomBody
+
+interface LexEntry {
+  // Null: a phrase to skip.
+  body: AtomBody | null
+  // A price straight after it makes this a price change instead.
+  unlessPriceFollows?: boolean
+}
+
+interface Lexicon {
+  folded: Map<string, LexEntry>
+  strict: Map<string, LexEntry>
+  maxWords: number
+}
+
+function buildLexicon(presets: readonly ReaderPreset[], locale: ReaderLocale): Lexicon {
+  const lexicon: Lexicon = { folded: new Map(), strict: new Map(), maxWords: 1 }
+
+  const add = (phrase: string, entry: LexEntry, strict = false) => {
+    const tokens = tokenize(normalize(phrase)).filter((token) => token.kind === 'word' || token.kind === 'number')
+    if (tokens.length === 0) return
+    const key = tokens.map((token) => (strict ? token.lo : token.fo)).join(' ')
+    ;(strict ? lexicon.strict : lexicon.folded).set(key, entry)
+    lexicon.maxWords = Math.max(lexicon.maxWords, tokens.length)
+  }
+
+  for (const phrase of UNCLEAR_SERVICES) add(phrase, { body: { t: 'unclear' } })
+  for (const phrase of SKIPPED_PHRASES) add(phrase, { body: null })
+  for (const marker of MARKER_WORDS) {
+    if (marker.locales && !marker.locales.includes(locale)) continue
+    for (const phrase of marker.phrases) add(phrase, { body: marker.body }, marker.strict)
+  }
+
+  const known = new Set(presets.map((preset) => preset.id))
+  for (const [presetId, words] of Object.entries(SERVICE_WORDS)) {
+    if (!known.has(presetId)) continue
+    for (const phrase of words.names) add(phrase, { body: { t: 'service', presetId, assumed: false, guessed: false } })
+    for (const phrase of words.assumed ?? []) add(phrase, { body: { t: 'service', presetId, assumed: true, guessed: false } })
+    for (const phrase of words.misheard ?? []) add(phrase, { body: { t: 'service', presetId, assumed: false, guessed: true } })
+    for (const phrase of words.unlessPriceFollows ?? []) {
+      add(phrase, { body: { t: 'service', presetId, assumed: false, guessed: false }, unlessPriceFollows: true })
+    }
+  }
+
+  // The person's own names win over everything above: "Nail Art / Design",
+  // "Bột nhúng (Dip)" give two names each.
+  for (const preset of presets) {
+    for (const name of [preset.nameEn, preset.nameVi]) {
+      for (const part of name.split(/[/()]/)) {
+        if (part.trim().length >= 2) add(part, { body: { t: 'service', presetId: preset.id, assumed: false, guessed: false } })
+      }
+    }
+  }
+
+  return lexicon
+}
+
+function lookup(tokens: readonly Token[], i: number, lexicon: Lexicon): { entry: LexEntry; length: number } | null {
+  for (let length = Math.min(lexicon.maxWords, tokens.length - i); length >= 1; length--) {
+    const words = tokens.slice(i, i + length)
+    if (words.some((token) => token.kind !== 'word' && token.kind !== 'number')) continue
+
+    const strict = lexicon.strict.get(words.map((token) => token.lo).join(' '))
+    if (strict) return { entry: strict, length }
+    const folded = lexicon.folded.get(words.map((token) => token.fo).join(' '))
+    if (folded) return { entry: folded, length }
+  }
+  return null
+}
+
+// "Three jobs:", "Hai khách,": a count that opens a sentence.
+function readCount(tokens: readonly Token[], i: number): { atom: AtomBody; end: number } | null {
+  const lead = readQuantity(tokens, i)
+  if (!lead || lead.ambiguous || lead.extraCents > 0 || lead.whole < 1 || lead.whole > 20) return null
+
+  const noun = tokens[lead.end]
+  if (!noun || noun.kind !== 'word' || !COUNT_NOUNS.has(noun.fo)) return null
+  const after = tokens[lead.end + 1]
+  if (after && after.kind !== 'comma' && after.kind !== 'colon' && after.kind !== 'stop') return null
+  return { atom: { t: 'count', n: lead.whole, noun: noun.fo }, end: lead.end + 1 }
+}
+
+function scan(tokens: readonly Token[], lexicon: Lexicon): Atom[] {
+  const atoms: Atom[] = []
+  const push = (body: AtomBody, from: number, to: number) => {
+    // "Bột nhúng dip": two names for one service in a row are one mention.
+    const last = atoms.at(-1)
+    if (last?.t === 'service' && body.t === 'service' && last.presetId === body.presetId && last.end === tokens[from - 1]?.end) {
+      last.end = tokens[to - 1].end
+      return
+    }
+    atoms.push({ ...body, start: tokens[from].start, end: tokens[to - 1].end })
+  }
+
+  let i = 0
+  while (i < tokens.length) {
+    const token = tokens[i]
+    if (token.kind === 'comma' || token.kind === 'colon' || token.kind === 'stop') {
+      push({ t: token.kind }, i, i + 1)
+      i += 1
+      continue
+    }
+    if (token.kind === 'symbol' && token.lo !== '$') {
+      i += 1
+      continue
+    }
+
+    if (i === 0 || tokens[i - 1].kind === 'stop') {
+      const count = readCount(tokens, i)
+      if (count) {
+        push(count.atom, i, count.end)
+        i = count.end
+        continue
+      }
+    }
+
+    const timeEnd = readTime(tokens, i)
+    if (timeEnd !== null) {
+      push({ t: 'time' }, i, timeEnd)
+      i = timeEnd
+      continue
+    }
+
+    const hit = lookup(tokens, i, lexicon)
+    const money = readMoney(tokens, i)
+    if (money && (!hit || money.end - i > hit.length)) {
+      push({ t: 'money', money: money.money }, i, money.end)
+      i = money.end
+    } else if (hit) {
+      if (hit.entry.unlessPriceFollows && readMoney(tokens, i + hit.length)) push({ t: 'reduce' }, i, i + hit.length)
+      else if (hit.entry.body) push(hit.entry.body, i, i + hit.length)
+      i += hit.length
+    } else {
+      if (token.kind === 'word' && !SKIPPED_WORDS.has(token.fo)) push({ t: 'unknown' }, i, i + 1)
+      i += 1
+    }
+  }
+
+  return atoms
+}
+
+// ---------------------------------------------------------------------------
+// Atoms to draft turns.
+// ---------------------------------------------------------------------------
+
+interface Entry {
+  // A clear service, or words for one the reader could not name.
+  kind: 'service' | 'unclear'
+  presetId: string
+  heard: string
+  priceCents: number | null
+  priced: boolean
+  // Priced together with the services before it ("60 total").
+  shared: boolean
+  // Came after "and" / "với" / "và".
+  joined: boolean
+}
+
+interface Draft {
+  entries: Entry[]
+  loose: Atom[]
+  cash: number
+  card: number
+  lastTip: Channel | null
+  tipSeen: boolean
+  tipWithoutAmount: boolean
+  noTip: boolean
+  sawRequest: boolean
+  sawWalkIn: boolean
+  // Pointed back at an earlier client ("first customer was 30").
+  backRef: boolean
+  checks: DraftCheck[]
+  start: number
+  end: number
+  // A correction was said and has not yet changed anything.
+  correcting: boolean
+  lastField: 'price' | 'tip' | null
+  nextIsPrice: boolean
+  nextIsTotal: boolean
+  nextIsReduction: boolean
+  joinPending: boolean
+  // Said "each" after a count: how many copies of this turn to make.
+  copies: number
+  // Started without a separator being heard.
+  inferred: boolean
+}
+
+interface Context {
+  text: string
+  presets: ReadonlyMap<string, ReaderPreset>
+  lastPrices: ReadonlyMap<string, number> | undefined
+}
+
+function newDraft(): Draft {
+  return {
+    entries: [],
+    loose: [],
+    cash: 0,
+    card: 0,
+    lastTip: null,
+    tipSeen: false,
+    tipWithoutAmount: false,
+    noTip: false,
+    sawRequest: false,
+    sawWalkIn: false,
+    backRef: false,
+    checks: [],
+    start: -1,
+    end: -1,
+    correcting: false,
+    lastField: null,
+    nextIsPrice: false,
+    nextIsTotal: false,
+    nextIsReduction: false,
+    joinPending: false,
+    copies: 1,
+    inferred: false,
+  }
+}
+
+const NOT_CONTENT = new Set<AtomBody['t']>(['comma', 'colon', 'stop', 'next', 'count', 'each', 'unknown'])
+
+const heardOf = (ctx: Context, atom: Span) => ctx.text.slice(atom.start, atom.end)
+const nameOf = (ctx: Context, presetId: string) => ctx.presets.get(presetId)?.nameEn ?? presetId
+const channelWord = (channel: Channel) => (channel === 'cash' ? 'cash' : 'card')
+
+function check(draft: Draft, code: CheckCode, text: string) {
+  draft.checks.push({ code, text })
+}
+
+function noteChecks(draft: Draft, ctx: Context, atom: Atom & { t: 'money' }) {
+  const heard = heardOf(ctx, atom)
+  const as = atom.money.cents === null ? '' : ` as ${formatUsdShort(atom.money.cents)}`
+  for (const note of atom.money.notes) {
+    if (note === 'halfShorthand') check(draft, 'halfShorthand', `Read "${heard}"${as}, half of a larger unit; confirm the amount.`)
+    else if (note === 'decimalComma') check(draft, 'decimalComma', `Read the comma in "${heard}" as a decimal point${as}; confirm the amount.`)
+    else if (note === 'currencyAssumed') check(draft, 'currencyAssumed', `Read "${heard}" as US dollars${as}; confirm the currency.`)
+    else check(draft, 'guessedWord', `Read "${heard}"${as}, taking the last digit as five; confirm the amount.`)
+  }
+  if (atom.money.problem) {
+    check(draft, 'badAmount', `Could not read "${heard}" (${atom.money.problem}); enter the amount.`)
+  }
+}
+
+function addEntry(draft: Draft, ctx: Context, atom: Atom & ({ t: 'service' } | { t: 'unclear' })) {
+  const heard = heardOf(ctx, atom)
+  const entry: Entry = {
+    kind: atom.t,
+    presetId: atom.t === 'service' ? atom.presetId : '',
+    heard,
+    priceCents: null,
+    priced: false,
+    shared: false,
+    joined: draft.joinPending,
+  }
+  draft.joinPending = false
+
+  if (atom.t === 'service') {
+    const name = nameOf(ctx, atom.presetId)
+    if (atom.assumed) check(draft, 'shorthand', `Assumed ${name} from "${heard}"; confirm the service.`)
+    if (atom.guessed) check(draft, 'guessedWord', `Possible dictation error: "${heard}" matched to ${name}.`)
+  }
+
+  const previous = draft.entries.at(-1)
+  if (draft.correcting && previous && draft.lastField !== 'tip') {
+    draft.entries.pop()
+    draft.correcting = false
+    const old = previous.priceCents === null ? '' : ` at ${formatUsdShort(previous.priceCents)}`
+    check(draft, 'correction', `Replaced ${previous.heard}${old} with ${heard}.`)
+  }
+  draft.entries.push(entry)
+  draft.lastField = 'price'
+}
+
+function setPrice(draft: Draft, ctx: Context, entry: Entry, atom: Atom & { t: 'money' }) {
+  entry.priced = true
+  entry.priceCents = atom.money.cents
+  draft.lastField = 'price'
+  noteChecks(draft, ctx, atom)
+}
+
+function addTip(draft: Draft, ctx: Context, channel: Channel, atom: Atom & { t: 'money' }, replace: boolean) {
+  draft.tipSeen = true
+  draft.lastField = 'tip'
+  draft.lastTip = channel
+  noteChecks(draft, ctx, atom)
+  if (atom.money.cents === null) return
+
+  const key = channel === 'cash' ? 'cash' : 'card'
+  const old = draft[key]
+  draft[key] = replace ? atom.money.cents : old + atom.money.cents
+  if (replace) {
+    draft.correcting = false
+    check(draft, 'correction', `Corrected the ${channelWord(channel)} tip from ${formatUsdShort(old)} to ${formatUsdShort(atom.money.cents)}.`)
+  }
+}
+
+function noteGuessedChannel(draft: Draft, ctx: Context, atom: Atom & { t: 'channel' }) {
+  if (atom.guessed) check(draft, 'guessedWord', `Possible dictation error: "${heardOf(ctx, atom)}" matched to ${channelWord(atom.channel)}.`)
+}
+
+function onMoney(draft: Draft, ctx: Context, atoms: readonly Atom[], i: number): number {
+  const atom = atoms[i] as Atom & { t: 'money' }
+
+  if (draft.nextIsReduction) {
+    draft.nextIsReduction = false
+    check(draft, 'priceChange', `"${heardOf(ctx, atom)}" looks like a price change; the price was left as heard.`)
+    return i
+  }
+
+  // "10 tip", "10 cash tip", "8 on card": the amount comes before its word.
+  const before = atoms[i - 1]
+  const afterService = before?.t === 'service' || before?.t === 'unclear' || before?.t === 'priceWord'
+  let j = i + 1
+  const lead = atoms[j]?.t === 'channel' ? (atoms[j] as Atom & { t: 'channel' }) : null
+  if (lead) j += 1
+  const word = atoms[j]
+  const tipWord = word?.t === 'tip'
+  if (!draft.correcting && !afterService && (tipWord || (lead && draft.entries.length > 0))) {
+    let channel = lead?.channel ?? null
+    if (lead) noteGuessedChannel(draft, ctx, lead)
+    if (tipWord) {
+      j += 1
+      const trailing = atoms[j]
+      if (!channel && trailing?.t === 'channel') {
+        channel = trailing.channel
+        noteGuessedChannel(draft, ctx, trailing)
+        j += 1
+      }
+    }
+    addTip(draft, ctx, channel ?? 'cash', atom, false)
+    return j - 1
+  }
+
+  if (draft.correcting) {
+    onCorrectedMoney(draft, ctx, atom)
+    return i
+  }
+
+  const last = draft.entries.at(-1)
+  if (atoms[i + 1]?.t === 'total' || draft.nextIsTotal) {
+    draft.nextIsTotal = false
+    const open = draft.entries.filter((entry) => !entry.priced)
+    if (open.length > 0) return shareTotal(draft, ctx, open, atom, atoms[i + 1]?.t === 'total' ? i + 1 : i)
+  }
+  if (last && !last.priced) {
+    const earlier = draft.entries.at(-2)
+    if (last.joined && earlier && !earlier.priced) shareTotal(draft, ctx, [earlier, last], atom, i)
+    else setPrice(draft, ctx, last, atom)
+    return i
+  }
+  draft.loose.push(atom)
+  return i
+}
+
+function shareTotal(draft: Draft, ctx: Context, entries: Entry[], atom: Atom & { t: 'money' }, at: number): number {
+  for (const entry of entries) {
+    entry.priced = true
+    entry.shared = true
+  }
+  const total = atom.money.cents === null ? 'one price' : formatUsdShort(atom.money.cents)
+  check(draft, 'sharedTotal', `${total} was said for ${entries.map((entry) => entry.heard).join(' and ')} together; split it between them.`)
+  noteChecks(draft, ctx, atom)
+  return at
+}
+
+function onCorrectedMoney(draft: Draft, ctx: Context, atom: Atom & { t: 'money' }) {
+  const target = draft.nextIsPrice ? 'price' : (draft.lastField ?? (draft.entries.length > 0 ? 'price' : 'tip'))
+  draft.nextIsPrice = false
+  draft.correcting = false
+
+  if (target === 'tip') {
+    const channel = draft.lastTip ?? 'cash'
+    addTip(draft, ctx, channel, atom, true)
+    return
+  }
+  const entry = draft.entries.at(-1)
+  if (!entry) {
+    draft.loose.push(atom)
+    return
+  }
+  const old = entry.priceCents === null ? 'none' : formatUsdShort(entry.priceCents)
+  setPrice(draft, ctx, entry, atom)
+  check(draft, 'correction', `Corrected the price from ${old} to ${atom.money.cents === null ? 'an unreadable amount' : formatUsdShort(atom.money.cents)}.`)
+}
+
+function onTip(draft: Draft, ctx: Context, atoms: readonly Atom[], i: number): number {
+  draft.tipSeen = true
+  let channel: Channel | null = null
+  const before = atoms[i - 1]
+  if (before?.t === 'channel') {
+    channel = before.channel
+    noteGuessedChannel(draft, ctx, before)
+  }
+
+  let j = i + 1
+  while (atoms[j]?.t === 'channel') {
+    const word = atoms[j] as Atom & { t: 'channel' }
+    channel ??= word.channel
+    noteGuessedChannel(draft, ctx, word)
+    j += 1
+  }
+  const amount = atoms[j]
+  if (amount?.t !== 'money') {
+    if (!draft.correcting) draft.tipWithoutAmount = true
+    return i
+  }
+
+  j += 1
+  const trailing = atoms[j]
+  if (!channel && trailing?.t === 'channel') {
+    channel = trailing.channel
+    noteGuessedChannel(draft, ctx, trailing)
+    j += 1
+  }
+  addTip(draft, ctx, channel ?? 'cash', amount, draft.correcting)
+  return j - 1
+}
+
+function run(draft: Draft, ctx: Context, atoms: readonly Atom[]) {
+  for (let i = 0; i < atoms.length; i++) {
+    const atom = atoms[i]
+    if (!NOT_CONTENT.has(atom.t)) {
+      if (draft.start < 0) draft.start = atom.start
+      draft.end = atom.end
+    }
+
+    switch (atom.t) {
+      case 'service':
+      case 'unclear':
+        addEntry(draft, ctx, atom)
+        break
+      case 'money':
+        i = onMoney(draft, ctx, atoms, i)
+        break
+      case 'tip':
+        i = onTip(draft, ctx, atoms, i)
+        break
+      case 'noTip':
+        draft.noTip = true
+        if (draft.correcting) {
+          const old = draft.cash + draft.card
+          draft.cash = 0
+          draft.card = 0
+          draft.correcting = false
+          check(draft, 'correction', `Corrected the tip from ${formatUsdShort(old)} to no tip.`)
+        }
+        break
+      case 'channel':
+        noteGuessedChannel(draft, ctx, atom)
+        if (draft.correcting && draft.lastTip && draft.lastTip !== atom.channel) {
+          const from = draft.lastTip
+          draft[atom.channel] += draft[from]
+          draft[from] = 0
+          draft.lastTip = atom.channel
+          draft.correcting = false
+          check(draft, 'correction', `Moved the tip from ${channelWord(from)} to ${channelWord(atom.channel)}.`)
+        }
+        break
+      case 'request':
+        if (draft.correcting) {
+          draft.sawWalkIn = false
+          draft.correcting = false
+          check(draft, 'correction', 'Changed the client from walk-in to request.')
+        }
+        draft.sawRequest = true
+        break
+      case 'walkIn':
+        if (draft.correcting) {
+          draft.sawRequest = false
+          draft.correcting = false
+          check(draft, 'correction', 'Changed the client from request to walk-in.')
+        }
+        draft.sawWalkIn = true
+        break
+      case 'appointment':
+        check(draft, 'appointment', 'An appointment does not mean the client asked for you by name.')
+        break
+      case 'time':
+        check(draft, 'timeNotRead', `A time was said ("${heardOf(ctx, atom)}") but times are not read yet; set it on the turn.`)
+        break
+      case 'pay': {
+        // "paid 35 on card": how the client paid, not a tip.
+        let j = i + 1
+        if (atoms[j]?.t === 'money') j += 1
+        if (atoms[j]?.t === 'channel') j += 1
+        check(draft, 'paymentNotTip', 'How the client paid is not a tip; no tip was taken from it.')
+        i = j - 1
+        break
+      }
+      case 'backRef':
+        draft.backRef = true
+        break
+      case 'join':
+      case 'next':
+        draft.joinPending = true
+        break
+      case 'correct':
+        draft.correcting = true
+        break
+      case 'priceWord':
+        draft.nextIsPrice = true
+        break
+      case 'total':
+        draft.nextIsTotal = true
+        break
+      case 'reduce':
+        draft.nextIsReduction = true
+        break
+      default:
+        break
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Splitting into turns.
+// ---------------------------------------------------------------------------
+
+const LINKS = new Set<AtomBody['t']>(['join', 'correct', 'priceWord', 'total', 'pay', 'reduce'])
+
+// A new service right after a priced one, with nothing joining them.
+function startsNewTurn(current: readonly Atom[]): boolean {
+  const lastService = current.findLastIndex((atom) => atom.t === 'service' || atom.t === 'unclear')
+  if (lastService < 0) return false
+  const lastMoney = current.findLastIndex((atom, k) => k > lastService && atom.t === 'money')
+  if (lastMoney < 0) return false
+  return !current.slice(lastMoney + 1).some((atom) => LINKS.has(atom.t))
+}
+
+interface Segment {
+  atoms: Atom[]
+  // Said "next" (or similar): never a continuation of the turn before.
+  fresh: boolean
+  inferred: boolean
+}
+
+function segmentsOf(sentence: readonly Atom[]): Segment[] {
+  const same = sentence.some((atom) => atom.t === 'same')
+  const segments: Segment[] = [{ atoms: [], fresh: false, inferred: false }]
+  for (const atom of sentence) {
+    const current = segments[segments.length - 1]
+    if (atom.t === 'next' && !same) {
+      segments.push({ atoms: [], fresh: true, inferred: false })
+    } else if ((atom.t === 'service' || atom.t === 'unclear') && !same && startsNewTurn(current.atoms)) {
+      segments.push({ atoms: [atom], fresh: true, inferred: true })
+    } else current.atoms.push(atom)
+  }
+  return segments
+}
+
+function finish(draft: Draft, ctx: Context, leftovers: string[]): DraftTurn {
+  const checks = [...draft.checks]
+  const services: DraftService[] = []
+
+  for (const entry of draft.entries) {
+    if (entry.kind === 'unclear') {
+      const price = entry.priceCents === null ? '' : `; its price ${formatUsdShort(entry.priceCents)} was not used`
+      checks.push({ code: 'unclearService', text: `Could not tell which service "${entry.heard}" is${price}; pick the service.` })
+      continue
+    }
+    const preset = ctx.presets.get(entry.presetId)
+    const usual = preset?.defaultPriceCents ?? ctx.lastPrices?.get(entry.presetId) ?? null
+    services.push({ presetId: entry.presetId, priceCents: entry.priceCents, usualPriceCents: usual })
+
+    if (!entry.priced) {
+      const name = nameOf(ctx, entry.presetId)
+      const text = usual === null ? `No price heard for ${name}; enter one.` : `No price heard for ${name}; your usual is ${formatUsdShort(usual)}.`
+      checks.push({ code: 'noPrice', text })
+    }
+  }
+
+  if (draft.entries.length === 0) {
+    const first = draft.loose[0]
+    const price = first?.t === 'money' ? first.money.cents : null
+    const text = price === null ? 'No service heard; choose one.' : `No service heard for the ${formatUsdShort(price)} said; choose a service.`
+    checks.push({ code: 'noService', text })
+  }
+  for (const extra of draft.loose.slice(draft.entries.length === 0 ? 1 : 0)) leftovers.push(heardOf(ctx, extra))
+
+  if (draft.tipWithoutAmount) checks.push({ code: 'tipNoAmount', text: 'A tip was mentioned without an amount; enter the tip.' })
+  if (draft.sawRequest && draft.sawWalkIn) {
+    checks.push({ code: 'requestConflict', text: 'Both request and walk-in were said; choose one.' })
+  }
+  if (draft.inferred) {
+    checks.push({ code: 'inferredSplit', text: 'No separator was heard before this turn; confirm it is a new client.' })
+  }
+
+  return {
+    heard: ctx.text.slice(draft.start, draft.end).trim(),
+    services,
+    cashTipCents: draft.cash,
+    cardTipCents: draft.card,
+    request: draft.sawRequest && !draft.sawWalkIn,
+    checks,
+  }
+}
+
+function hasWork(draft: Draft) {
+  return draft.entries.length > 0 || draft.loose.length > 0
+}
+
+function hasFollowUp(draft: Draft) {
+  return draft.tipSeen || draft.noTip || draft.sawRequest || draft.sawWalkIn || draft.checks.length > 0
+}
+
+export function readVoice(input: ReaderInput): ReaderResult {
+  const text = normalize(input.text)
+  const locale: ReaderLocale = input.locale === 'mixed' ? 'vi' : input.locale
+  const ctx: Context = {
+    text,
+    presets: new Map(input.presets.map((preset) => [preset.id, preset])),
+    lastPrices: input.lastPrices,
+  }
+
+  const atoms = scan(tokenize(text), buildLexicon(input.presets, locale))
+  const notUnderstood: string[] = []
+  for (let i = 0; i < atoms.length; i++) {
+    if (atoms[i].t !== 'unknown') continue
+    let last = i
+    while (atoms[last + 1]?.t === 'unknown') last += 1
+    notUnderstood.push(text.slice(atoms[i].start, atoms[last].end))
+    i = last
+  }
+
+  const sentences: Atom[][] = [[]]
+  for (const atom of atoms) {
+    if (atom.t === 'stop') sentences.push([])
+    else sentences[sentences.length - 1].push(atom)
+  }
+
+  const drafts: Draft[] = []
+  let declared: { n: number; noun: string } | null = null
+  for (const sentence of sentences) {
+    let rest = sentence
+    let copies = 1
+    const count = rest[0]
+    if (count?.t === 'count') {
+      rest = rest.slice(1)
+      while (rest[0]?.t === 'colon' || rest[0]?.t === 'comma') rest = rest.slice(1)
+      if (rest[0]?.t === 'each') {
+        copies = count.n
+        rest = rest.slice(1)
+      } else declared ??= { n: count.n, noun: count.noun }
+    }
+
+    for (const segment of segmentsOf(rest)) {
+      const probe = newDraft()
+      run(probe, ctx, segment.atoms)
+      const previous = drafts.at(-1)
+      if (probe.backRef && previous && probe.entries.length === 0) {
+        const said = segment.atoms.map((atom) => heardOf(ctx, atom)).join(' ')
+        previous.checks.push({
+          code: 'backReference',
+          text: `"${said}" points back at an earlier client; nothing was changed, so fix it by hand.`,
+        })
+        continue
+      }
+      if (!segment.fresh && previous && !hasWork(probe) && hasFollowUp(probe)) {
+        run(previous, ctx, segment.atoms)
+      } else if (hasWork(probe) || hasFollowUp(probe)) {
+        const draft = newDraft()
+        draft.inferred = segment.inferred
+        draft.copies = copies
+        run(draft, ctx, segment.atoms)
+        drafts.push(draft)
+      }
+    }
+  }
+
+  const turns = drafts.flatMap((draft) => {
+    const turn = finish(draft, ctx, notUnderstood)
+    if (draft.copies === 1) return [turn]
+    turn.checks.push({ code: 'repeatExpanded', text: `Repeated this turn for each of the ${draft.copies} clients; confirm them.` })
+    return Array.from({ length: draft.copies }, () => structuredClone(turn))
+  })
+
+  if (declared && declared.n !== turns.length) {
+    const noun = (n: number) => (n === 1 ? 'client' : 'clients')
+    const text = `Count mismatch: you said ${declared.n} ${noun(declared.n)}, but ${turns.length} ${noun(turns.length)} were found.`
+    if (turns.length > 0) turns[0].checks.push({ code: 'countMismatch', text })
+    else notUnderstood.push(text)
+  }
+
+  return { turns, notUnderstood }
+}
