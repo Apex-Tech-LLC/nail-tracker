@@ -51,6 +51,12 @@ opens the pull request, waits for checks, merges, updates this file. Product: `d
 | V19 | Guarantee and tiers in pay rules and the statement | ✅ |
 | V20 | Speed with 20,000 turns; Vietnamese check of all new words at 375 pixels | ✅ |
 
+## Release 2.5: look and Home
+
+| Task | What | Status |
+|---|---|---|
+| V21 | Light and dark mode: Same as phone, Light, Dark; share pictures and printing stay light | 🔄 |
+
 Briefs for 2.3 and 2.4 are written when the release before them is merged, so they match the code as it is then.
 
 Build order for 2.4: V19 beside V15, then V18 beside V17, then V16 (it shares the V11 paycheck result and the V17 year
