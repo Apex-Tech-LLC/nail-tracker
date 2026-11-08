@@ -272,10 +272,13 @@ function TurnFormFields({ presets, existing, quick, copy, onDone, onClose }: Fie
             : lineFromService(service, presets),
         )
       : [
-          newLine(
-            initialPreset?.id ?? 'other',
-            initialPreset?.defaultCommissionRateBp ?? defaultCommissionRateBp,
-          ),
+          {
+            ...newLine(
+              initialPreset?.id ?? 'other',
+              initialPreset?.defaultCommissionRateBp ?? defaultCommissionRateBp,
+            ),
+            guess: true,
+          },
         ],
   )
   const [cashText, setCashText] = useState(
@@ -504,7 +507,19 @@ function TurnFormFields({ presets, existing, quick, copy, onDone, onClose }: Fie
 
   function toggleService(choice: string) {
     const matching = lines.filter((line) => line.choice === choice)
-    if (matching.length > 0) {
+    const only = lines.length === 1 ? lines[0] : undefined
+    const guess =
+      only?.guess &&
+      only.amount.trim() === '' &&
+      only.customName.trim() === '' &&
+      !(showPerLine && only.rateTouched)
+        ? only
+        : undefined
+    if (guess && guess.choice !== choice) {
+      // The starting service was only a guess: the chip tapped takes its place.
+      setLines([lineForChoice(choice)])
+      forgetLines([guess.key])
+    } else if (matching.length > 0) {
       setLines((previous) => previous.filter((line) => line.choice !== choice))
       forgetLines(matching.map((line) => line.key))
     } else {
@@ -714,7 +729,10 @@ function TurnFormFields({ presets, existing, quick, copy, onDone, onClose }: Fie
     const choice = lastSavedChoice.current
     const preset = presets.find((item) => item.id === choice)
     setLines([
-      newLine(choice, preset?.defaultCommissionRateBp ?? defaultCommissionRateBp),
+      {
+        ...newLine(choice, preset?.defaultCommissionRateBp ?? defaultCommissionRateBp),
+        guess: true,
+      },
     ])
     setCashText('')
     setCardText('')

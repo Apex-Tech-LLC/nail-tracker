@@ -17,6 +17,9 @@ export interface LineState {
   // What the saved line was, so editing a tip does not rewrite a saved name.
   originalChoice: string
   originalName: string
+  // A new turn starts on the last service used. Until a price is typed, that
+  // is only a guess, and the first chip tapped replaces it.
+  guess?: boolean
 }
 
 export interface LineErrors {

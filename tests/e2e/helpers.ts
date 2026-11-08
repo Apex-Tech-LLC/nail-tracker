@@ -134,6 +134,13 @@ export async function selectServices(page: Page, names: readonly string[]): Prom
     const chip = serviceChip(page, name)
     if ((await chip.getAttribute('aria-pressed')) !== 'true') await chip.click()
   }
+
+  // On a new turn the first chip tapped replaces the starting service, which
+  // may have been a wanted one: then start over from no services.
+  const pressed = picker.locator('button[aria-pressed="true"]')
+  if ((await pressed.count()) === names.length) return
+  while ((await pressed.count()) > 0) await pressed.first().click()
+  for (const name of names) await serviceChip(page, name).click()
 }
 
 interface TurnOptions {
