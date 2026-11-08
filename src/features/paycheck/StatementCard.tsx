@@ -225,8 +225,8 @@ function StatementRow({
     <div className={`flex items-baseline justify-between gap-3 py-1 ${indent ? 'pl-4' : ''}`}>
       <span className={`min-w-0 ${strong ? '' : 'text-text-secondary'}`}>{label}</span>
       <span
-        className={`shrink-0 tabular-nums${strong ? ' font-semibold' : ''}${
-          large ? ' text-lg font-bold' : ''
+        className={`shrink-0 tabular-nums${
+          large ? ' text-lg font-bold' : strong ? ' font-semibold' : ''
         }`}
       >
         {value}
