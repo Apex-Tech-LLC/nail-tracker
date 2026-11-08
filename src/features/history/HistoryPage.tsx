@@ -15,6 +15,7 @@ import {
   type IsoDate,
 } from '../../domain/dates.ts'
 import { formatUsdShort } from '../../domain/money.ts'
+import { suggestionForDay } from '../../domain/hours.ts'
 import { numberTurns, sumTotals } from '../../domain/totals.ts'
 import { t, tf, type StringKey } from '../../lib/i18n.ts'
 import {
@@ -28,6 +29,8 @@ import {
   secondaryButton,
 } from '../../ui/styles.ts'
 import { AdjustmentRow } from '../adjustments/AdjustmentRow.tsx'
+import { dayHoursText } from '../hours/hoursText.ts'
+import { HoursSheet } from '../hours/HoursSheet.tsx'
 import { loadRange, servicesByTurn } from '../turns/turnStore.ts'
 import { TurnRow } from '../turns/TurnRow.tsx'
 import { CalendarView } from './CalendarView.tsx'
@@ -69,7 +72,7 @@ const VIEW_KEYS = {
 } as const satisfies Record<View, StringKey>
 
 export function HistoryPage() {
-  const { locale, weekStartDay } = useSettings()
+  const { locale, weekStartDay, hoursOn } = useSettings()
   const today = useToday()
   const [, navigate] = useLocation()
   // Home's week bottles open History on one day: /history?day=2026-11-04.
@@ -84,6 +87,7 @@ export function HistoryPage() {
   const [filters, setFilters] = useState<Filters>(NO_FILTERS)
   const [filterOpen, setFilterOpen] = useState(false)
   const [menuDay, setMenuDay] = useState<IsoDate | null>(null)
+  const [hoursDay, setHoursDay] = useState<IsoDate | null>(null)
   const id = useId()
 
   function setView(next: View) {
@@ -190,6 +194,22 @@ export function HistoryPage() {
   const monthGroups = data ? groupByDay(data.turns, data.adjustments) : []
   const earnedByDate = new Map(monthGroups.map((group) => [group.date, group.earnedCents]))
   const offDates = dayOffDates(workDays ?? [])
+  const hoursTextByDate = new Map<IsoDate, string>()
+  for (const day of workDays ?? []) {
+    if (day.startTime !== null && day.endTime !== null) {
+      hoursTextByDate.set(day.date, dayHoursText(locale, day.startTime, day.endTime))
+    }
+  }
+
+  const hoursDayWork = hoursDay === null ? null : ((workDays ?? []).find((day) => day.date === hoursDay) ?? null)
+  const hoursSuggestion =
+    hoursDay !== null &&
+    (hoursDayWork === null || (hoursDayWork.startTime === null && hoursDayWork.endTime === null))
+      ? suggestionForDay(
+          (data?.turns ?? []).filter((turn) => turn.localWorkDate === hoursDay),
+          hoursDay,
+        )
+      : null
 
   const rangeError = invalidRange ? t(locale, 'errorRange') : undefined
 
@@ -396,6 +416,11 @@ export function HistoryPage() {
                       <IconDots size={20} aria-hidden="true" />
                     </button>
                   </div>
+                  {hoursTextByDate.get(group.date) !== undefined && (
+                    <p className="mb-1 px-1 text-sm text-text-secondary">
+                      {t(locale, 'hoursTitle')} {hoursTextByDate.get(group.date)}
+                    </p>
+                  )}
                   <div className={list}>
                     {group.turns.map((turn) => (
                       <TurnRow
@@ -428,7 +453,24 @@ export function HistoryPage() {
         <DayOffSheet
           date={menuDay}
           dayOff={offDates.has(menuDay)}
+          hoursOn={hoursOn}
+          hoursText={hoursTextByDate.get(menuDay) ?? null}
+          onEditHours={() => {
+            const day = menuDay
+            setMenuDay(null)
+            setHoursDay(day)
+          }}
           onClose={() => setMenuDay(null)}
+        />
+      )}
+
+      {hoursDay !== null && (
+        <HoursSheet
+          date={hoursDay}
+          startTime={hoursDayWork?.startTime ?? null}
+          endTime={hoursDayWork?.endTime ?? null}
+          suggestion={hoursSuggestion}
+          onClose={() => setHoursDay(null)}
         />
       )}
     </>

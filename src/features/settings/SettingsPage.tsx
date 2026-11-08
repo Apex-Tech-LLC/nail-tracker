@@ -1,6 +1,6 @@
 import { IconAlertTriangle, IconChevronRight, IconShieldCheck } from '@tabler/icons-react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { useId } from 'react'
+import { useId, useState } from 'react'
 import { Link } from 'wouter'
 import { PageHeader } from '../../app/PageHeader.tsx'
 import { paths } from '../../app/navigation.ts'
@@ -8,11 +8,12 @@ import type { PayPeriodType } from '../../app/settings.ts'
 import { updateSettings, useSettings } from '../../app/settings.ts'
 import { db } from '../../db/schema.ts'
 import { isIsoDate, parseIsoDate, todayIso, weekRange } from '../../domain/dates.ts'
-import { formatRate, formatUsdShort } from '../../domain/money.ts'
+import { centsToInput, formatRate, formatUsdShort, parseCents } from '../../domain/money.ts'
 import { rulesOn } from '../../domain/payRules.ts'
 import { t, tf } from '../../lib/i18n.ts'
 import type { Locale } from '../../lib/locale.ts'
 import { usePersistState } from '../../pwa/persistStorage.ts'
+import { MoneyField } from '../../ui/MoneyField.tsx'
 import { Row } from '../../ui/Row.tsx'
 import { TileGroup } from '../../ui/TileGroup.tsx'
 import { card, field, label, secondaryButton } from '../../ui/styles.ts'
@@ -50,9 +51,14 @@ export function SettingsPage() {
     weeklyGoalCents,
     monthlyGoalCents,
     taxSetAsideBp,
+    hoursOn,
+    minimumWageCents,
   } = useSettings()
   const anchorId = useId()
   const numberPadHintId = useId()
+  const [wageText, setWageText] = useState(() =>
+    minimumWageCents === null ? '' : centsToInput(minimumWageCents),
+  )
   const rules = useLiveQuery(() => db.payRules.toArray())
   const summary = payRulesSummary(locale, rate, rulesOn(rules ?? [], todayIso()))
   const taxSummary =
@@ -72,6 +78,16 @@ export function SettingsPage() {
       return
     }
     updateSettings({ payPeriodType: type })
+  }
+
+  function changeWage(value: string) {
+    setWageText(value)
+    if (value.trim() === '') {
+      updateSettings({ minimumWageCents: null })
+      return
+    }
+    const cents = parseCents(value)
+    if (cents !== null) updateSettings({ minimumWageCents: cents })
   }
 
   return (
@@ -181,6 +197,30 @@ export function SettingsPage() {
         </div>
         <p className="mt-1 text-sm text-text-secondary">{taxSummary}</p>
       </Link>
+      <section className={`${card} flex flex-col gap-3`}>
+        <h2 className="font-medium">{t(locale, 'hoursTitle')}</h2>
+        <div>
+          <label className="flex items-center gap-3 py-2">
+            <input
+              type="checkbox"
+              className="size-5"
+              checked={hoursOn}
+              onChange={(event) => updateSettings({ hoursOn: event.target.checked })}
+            />
+            <span>{t(locale, 'hoursOn')}</span>
+          </label>
+          {hoursOn && (
+            <>
+              <MoneyField
+                label={t(locale, 'minimumWage')}
+                value={wageText}
+                onChange={changeWage}
+              />
+              <p className="mt-1 text-sm text-text-secondary">{t(locale, 'minimumWageHint')}</p>
+            </>
+          )}
+        </div>
+      </section>
 
       <Link href={paths.services} className={secondaryButton + ' block text-center'}>
         {t(locale, 'manageServices')}
