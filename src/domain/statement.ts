@@ -1,6 +1,6 @@
 import type { IsoDate } from './dates.ts'
 import { roundDiv } from './money.ts'
-import { rulesOn, type FeeWhen, type PayRules, type SupplyFee } from './payRules.ts'
+import { rulesOn, tierShare, type FeeWhen, type PayRules, type SupplyFee } from './payRules.ts'
 import { adjustmentAffectsPayout, type AdjustmentFigures, type TurnFigures } from './totals.ts'
 
 export interface StatementService {
@@ -18,13 +18,16 @@ export interface Statement {
   supplyFeeCents: number
   supplyFeeWhen: FeeWhen | null
   shareRateBp: number | null // the one rate when every service used the same rate, else null
+  tierRates: number[] | null // the level rates when tiers are on, else null
   shareBaseCents: number // what the rate was applied to (services total minus a before-split fee)
   shareCents: number // your share after the supply fee
   cardTipsCents: number
   cardTipsHeldCents: number
   cardTipFeeCents: number
   adjustmentsCents: number // only those that change pay (adjustmentAffectsPayout)
-  guaranteeTopUpCents: number // always 0 until release 2.4
+  guaranteeCents: number // the guarantee reached for the period, 0 when off or below its minimum days
+  guaranteeDays: number // days worked that count toward the guarantee (days off do not)
+  guaranteeTopUpCents: number
   salonPaysCents: number
   checkCents: number | null
   cashCents: number | null
@@ -52,6 +55,7 @@ function feeWhen(fee: SupplyFee): FeeWhen | null {
 
 interface DayLine {
   servicesTotalCents: number
+  baseCents: number
   shareCents: number
   cardTipsCents: number
 }
@@ -59,10 +63,27 @@ interface DayLine {
 function dayLine(days: Map<IsoDate, DayLine>, date: IsoDate): DayLine {
   let line = days.get(date)
   if (!line) {
-    line = { servicesTotalCents: 0, shareCents: 0, cardTipsCents: 0 }
+    line = { servicesTotalCents: 0, baseCents: 0, shareCents: 0, cardTipsCents: 0 }
     days.set(date, line)
   }
   return line
+}
+
+/** Splits the tier share by each day's base, giving the last working day the rounding rest. */
+function shareAcrossDays(days: Map<IsoDate, DayLine>, shareCents: number, baseCents: number): void {
+  const lines = [...days.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .filter(([, line]) => line.baseCents > 0)
+  let allocated = 0
+  lines.forEach(([, line], index) => {
+    if (index === lines.length - 1) {
+      line.shareCents = shareCents - allocated
+      return
+    }
+    const part = baseCents === 0 ? 0 : roundDiv(line.baseCents * shareCents, baseCents)
+    line.shareCents = part
+    allocated += part
+  })
 }
 
 export function buildStatement(input: {
@@ -71,14 +92,16 @@ export function buildStatement(input: {
   adjustments: readonly AdjustmentFigures[]
   rules: readonly PayRules[]
   periodEnd: IsoDate
+  daysOff: ReadonlySet<IsoDate>
 }): Statement {
-  const { services, turns, adjustments, rules, periodEnd } = input
+  const { services, turns, adjustments, rules, periodEnd, daysOff } = input
   const endRules = rulesOn(rules, periodEnd)
   const days = new Map<IsoDate, DayLine>()
 
   let servicesTotalCents = 0
   let supplyFeeCents = 0
   let beforeSplitFeeCents = 0
+  let afterSplitFeeCents = 0
   let shareCents = 0
   let shareRateBp: number | null = null
   let sameRate = true
@@ -93,20 +116,35 @@ export function buildStatement(input: {
     const serviceRules = rulesOn(rules, service.localWorkDate)
     const fee = Math.min(feeForService(serviceRules.supplyFee, service.priceCents), service.priceCents)
     supplyFeeCents += fee
-
-    let share: number
-    if (feeWhen(serviceRules.supplyFee) === 'beforeSplit') {
-      beforeSplitFeeCents += fee
-      share = roundDiv((service.priceCents - fee) * service.commissionRateBp, 10_000)
-    } else {
-      // The split already happened, so the saved commission is the starting point.
-      share = Math.max(0, service.commissionCents - fee)
-    }
-    shareCents += share
+    const beforeSplit = feeWhen(serviceRules.supplyFee) === 'beforeSplit'
+    if (beforeSplit) beforeSplitFeeCents += fee
+    else afterSplitFeeCents += fee
 
     const line = dayLine(days, service.localWorkDate)
     line.servicesTotalCents += service.priceCents
-    line.shareCents += share
+    // The tier table works on sales with only a before-split fee taken off.
+    line.baseCents += service.priceCents - (beforeSplit ? fee : 0)
+
+    if (endRules.tiers === null) {
+      let share: number
+      if (beforeSplit) {
+        share = roundDiv((service.priceCents - fee) * service.commissionRateBp, 10_000)
+      } else {
+        // The split already happened, so the saved commission is the starting point.
+        share = Math.max(0, service.commissionCents - fee)
+      }
+      shareCents += share
+      line.shareCents += share
+    }
+  }
+
+  let tierRates: number[] | null = null
+  if (endRules.tiers !== null) {
+    const tierBaseCents = servicesTotalCents - beforeSplitFeeCents
+    shareCents = Math.max(0, tierShare(tierBaseCents, endRules.tiers) - afterSplitFeeCents)
+    shareRateBp = null
+    tierRates = endRules.tiers.levels.map((level) => level.rateBp)
+    shareAcrossDays(days, shareCents, tierBaseCents)
   }
 
   let cardTipsCents = 0
@@ -146,7 +184,14 @@ export function buildStatement(input: {
     else adjustmentsOutsidePay += adjustment.amountCents
   }
 
-  const guaranteeTopUpCents = 0
+  const guaranteeDays = [...workedDays].filter((date) => !daysOff.has(date)).length
+  const guarantee = endRules.guarantee
+  let guaranteeCents = 0
+  if (guarantee.kind !== 'none' && (guarantee.minDays === null || guaranteeDays >= guarantee.minDays)) {
+    guaranteeCents =
+      guarantee.kind === 'perDay' ? guarantee.cents * guaranteeDays : guarantee.cents
+  }
+  const guaranteeTopUpCents = Math.max(0, guaranteeCents - shareCents)
   const salonPaysCents =
     shareCents +
     guaranteeTopUpCents +
@@ -179,13 +224,16 @@ export function buildStatement(input: {
     servicesTotalCents,
     supplyFeeCents,
     supplyFeeWhen: feeWhen(endRules.supplyFee),
-    shareRateBp: sameRate ? shareRateBp : null,
+    shareRateBp: endRules.tiers === null && sameRate ? shareRateBp : null,
+    tierRates,
     shareBaseCents,
     shareCents,
     cardTipsCents,
     cardTipsHeldCents,
     cardTipFeeCents,
     adjustmentsCents,
+    guaranteeCents,
+    guaranteeDays,
     guaranteeTopUpCents,
     salonPaysCents,
     checkCents,
@@ -195,6 +243,11 @@ export function buildStatement(input: {
     earnedTotalCents,
     byDay: [...days.entries()]
       .sort(([a], [b]) => a.localeCompare(b))
-      .map(([date, line]) => ({ date, ...line })),
+      .map(([date, line]) => ({
+        date,
+        servicesTotalCents: line.servicesTotalCents,
+        shareCents: line.shareCents,
+        cardTipsCents: line.cardTipsCents,
+      })),
   }
 }

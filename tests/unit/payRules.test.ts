@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { defaultPayRules, NO_RULES, ruleInForce, rulesOn, type PayRules } from '../../src/domain/payRules.ts'
+import {
+  defaultPayRules,
+  NO_RULES,
+  ruleInForce,
+  rulesOn,
+  tierShare,
+  type PayRules,
+  type Tiers,
+} from '../../src/domain/payRules.ts'
 
 function rule(overrides: Partial<PayRules> = {}): PayRules {
   return {
@@ -74,6 +82,50 @@ describe('defaultPayRules', () => {
       cardTipFeeBp: 0,
       checkBp: null,
       cardTipsPaidIn: 'split',
+      guarantee: { kind: 'none' },
+      tiers: null,
     })
+  })
+})
+
+const TIERS: Tiers = {
+  mode: 'eachPart',
+  levels: [
+    { fromCents: 0, rateBp: 5000 },
+    { fromCents: 50_000, rateBp: 5500 },
+    { fromCents: 100_000, rateBp: 6500 },
+  ],
+}
+
+describe('tierShare', () => {
+  it('gives each part its own rate: $1,200 is $655', () => {
+    expect(tierShare(120_000, TIERS)).toBe(65_500)
+  })
+
+  it('gives the whole amount the highest rate reached: $1,200 is $780', () => {
+    expect(tierShare(120_000, { ...TIERS, mode: 'wholeAtTop' })).toBe(78_000)
+  })
+
+  it('keeps $500.00 in the lower level in both modes', () => {
+    expect(tierShare(50_000, TIERS)).toBe(25_000)
+    expect(tierShare(50_000, { ...TIERS, mode: 'wholeAtTop' })).toBe(25_000)
+  })
+
+  it('rounds each part half up before adding them', () => {
+    const tiers: Tiers = {
+      mode: 'eachPart',
+      levels: [
+        { fromCents: 0, rateBp: 5000 },
+        { fromCents: 1, rateBp: 5000 },
+        { fromCents: 2, rateBp: 5000 },
+      ],
+    }
+
+    // Three one-cent parts at 50% are 0.5 each: rounded separately that is $0.03.
+    expect(tierShare(3, tiers)).toBe(3)
+  })
+
+  it('is zero for no sales', () => {
+    expect(tierShare(0, TIERS)).toBe(0)
   })
 })

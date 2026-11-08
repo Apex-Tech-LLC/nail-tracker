@@ -15,6 +15,7 @@ import { rulesOn, type PayRules } from '../../domain/payRules.ts'
 import { payState, type PayStateName } from '../../domain/payday.ts'
 import { buildStatement, type Statement } from '../../domain/statement.ts'
 import { sumTotals, type Totals } from '../../domain/totals.ts'
+import { dayOffDates, loadWorkDays } from '../history/workDays.ts'
 import { loadRange } from '../turns/turnStore.ts'
 import { stubFromRecord } from '../paycheck/paycheckStore.ts'
 
@@ -159,7 +160,10 @@ export async function loadPeriodSummaries(db: NailDb): Promise<PeriodSummary[]> 
 
   return Promise.all(
     periods.map(async (period) => {
-      const range = await loadRange(db, period.startDate, period.endDate)
+      const [range, workDays] = await Promise.all([
+        loadRange(db, period.startDate, period.endDate),
+        loadWorkDays(db, period.startDate, period.endDate),
+      ])
       const totals = sumTotals(range.turns, range.adjustments)
       const workDateByTurn = new Map(
         range.turns.map((turn): [string, IsoDate] => [turn.id, turn.localWorkDate]),
@@ -175,6 +179,7 @@ export async function loadPeriodSummaries(db: NailDb): Promise<PeriodSummary[]> 
         adjustments: range.adjustments,
         rules,
         periodEnd: period.endDate,
+        daysOff: dayOffDates(workDays),
       })
       const paidCents = paidByPeriod.get(period.id) ?? 0
       const { outstandingCents, state } = payState(statement.salonPaysCents, paidCents)

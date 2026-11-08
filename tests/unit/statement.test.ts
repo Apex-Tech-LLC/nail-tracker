@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { defaultPayRules, type PayRules } from '../../src/domain/payRules.ts'
+import type { IsoDate } from '../../src/domain/dates.ts'
+import { roundDiv } from '../../src/domain/money.ts'
+import { defaultPayRules, type PayRules, type Tiers } from '../../src/domain/payRules.ts'
 import { buildStatement, type StatementService } from '../../src/domain/statement.ts'
 import { sumTotals, type AdjustmentFigures, type TurnFigures } from '../../src/domain/totals.ts'
 
@@ -78,6 +80,7 @@ describe('buildStatement, the section 5.5 example', () => {
       adjustments: [],
       rules: SPEC_RULES(),
       periodEnd: '2026-11-07',
+      daysOff: new Set(),
     })
 
     expect(statement).toMatchObject({
@@ -114,6 +117,7 @@ describe('buildStatement, the section 5.5 example', () => {
         checkBp: 5000,
       }),
       periodEnd: '2026-11-07',
+      daysOff: new Set(),
     })
 
     expect(statement.shareBaseCents).toBe(250_000)
@@ -135,6 +139,7 @@ describe('buildStatement, the section 5.5 example', () => {
       adjustments: [],
       rules: rules({ supplyFee: { kind: 'percent', bp: 300, when: 'beforeSplit' } }),
       periodEnd: '2026-11-07',
+      daysOff: new Set(),
     })
     const after = buildStatement({
       services,
@@ -142,6 +147,7 @@ describe('buildStatement, the section 5.5 example', () => {
       adjustments: [],
       rules: rules({ supplyFee: { kind: 'percent', bp: 300, when: 'afterSplit' } }),
       periodEnd: '2026-11-07',
+      daysOff: new Set(),
     })
 
     expect(before.supplyFeeCents).toBe(900)
@@ -181,6 +187,7 @@ describe('buildStatement, the section 5.5 example', () => {
       adjustments: [],
       rules: changingRules,
       periodEnd: '2026-11-07',
+      daysOff: new Set(),
     })
 
     expect(statement.supplyFeeCents).toBe(1_600)
@@ -197,6 +204,7 @@ describe('buildStatement, the section 5.5 example', () => {
       adjustments: [],
       rules: rules({ checkBp: 5000 }),
       periodEnd: '2026-11-07',
+      daysOff: new Set(),
     })
 
     expect(statement.salonPaysCents).toBe(183_401)
@@ -216,6 +224,7 @@ describe('buildStatement, the section 5.5 example', () => {
         cardTipsPaidIn: 'check',
       }),
       periodEnd: '2026-11-07',
+      daysOff: new Set(),
     })
 
     expect(statement.checkCents).toBe(111_100)
@@ -233,6 +242,7 @@ describe('buildStatement, the section 5.5 example', () => {
       adjustments: [],
       rules: rules({ supplyFee: { kind: 'perService', cents: 200, when: 'beforeSplit' } }),
       periodEnd: '2026-11-07',
+      daysOff: new Set(),
     })
 
     expect(statement.supplyFeeCents).toBe(200)
@@ -251,6 +261,7 @@ describe('buildStatement, the section 5.5 example', () => {
       adjustments,
       rules: rules(),
       periodEnd: '2026-11-07',
+      daysOff: new Set(),
     })
 
     expect(statement.adjustmentsCents).toBe(1_000)
@@ -265,6 +276,7 @@ describe('buildStatement, the section 5.5 example', () => {
       adjustments: [],
       rules: SPEC_RULES(),
       periodEnd: '2026-11-07',
+      daysOff: new Set(),
     })
 
     expect(statement.byDay.map((day) => day.date)).toEqual(DAYS.slice(0, 6).concat(DAYS[6]))
@@ -307,6 +319,7 @@ describe('buildStatement and sumTotals, with no fees and no split', () => {
       adjustments,
       rules: [defaultPayRules()],
       periodEnd: '2026-11-07',
+      daysOff: new Set(),
     })
     const totals = sumTotals(turns, adjustments)
 
@@ -316,5 +329,176 @@ describe('buildStatement and sumTotals, with no fees and no split', () => {
     expect(statement.shareCents).toBe(totals.commissionCents)
     expect(statement.checkCents).toBeNull()
     expect(statement.cashCents).toBeNull()
+  })
+})
+
+const TIERS: Tiers = {
+  mode: 'eachPart',
+  levels: [
+    { fromCents: 0, rateBp: 5000 },
+    { fromCents: 50_000, rateBp: 5500 },
+    { fromCents: 100_000, rateBp: 6500 },
+  ],
+}
+
+function sale(priceCents: number, date: IsoDate, rateBp = 10_000): StatementService {
+  return {
+    localWorkDate: date,
+    priceCents,
+    commissionRateBp: rateBp,
+    commissionCents: roundDiv(priceCents * rateBp, 10_000),
+  }
+}
+
+function workingDay(date: IsoDate): TurnFigures {
+  return turnFigures({ localWorkDate: date })
+}
+
+describe('buildStatement with tiers', () => {
+  it('uses each part at its own rate: $1,200 of sales is a $655 share', () => {
+    const statement = buildStatement({
+      services: [sale(50_000, DAYS[0]), sale(70_000, DAYS[1])],
+      turns: [workingDay(DAYS[0]), workingDay(DAYS[1])],
+      adjustments: [],
+      rules: rules({ tiers: TIERS }),
+      periodEnd: '2026-11-07',
+      daysOff: new Set(),
+    })
+
+    expect(statement.shareBaseCents).toBe(120_000)
+    expect(statement.shareCents).toBe(65_500)
+    expect(statement.shareRateBp).toBeNull()
+    expect(statement.tierRates).toEqual([5000, 5500, 6500])
+    expect(statement.byDay.map((day) => day.shareCents)).toEqual([27_292, 38_208])
+  })
+
+  it('uses the whole amount at the highest rate reached: $1,200 is $780', () => {
+    const statement = buildStatement({
+      services: [sale(120_000, DAYS[0])],
+      turns: [workingDay(DAYS[0])],
+      adjustments: [],
+      rules: rules({ tiers: { ...TIERS, mode: 'wholeAtTop' } }),
+      periodEnd: '2026-11-07',
+      daysOff: new Set(),
+    })
+
+    expect(statement.shareCents).toBe(78_000)
+  })
+
+  it('keeps $500.00 in the lower level', () => {
+    for (const mode of ['eachPart', 'wholeAtTop'] as const) {
+      const statement = buildStatement({
+        services: [sale(50_000, DAYS[0])],
+        turns: [workingDay(DAYS[0])],
+        adjustments: [],
+        rules: rules({ tiers: { ...TIERS, mode } }),
+        periodEnd: '2026-11-07',
+        daysOff: new Set(),
+      })
+
+      expect(statement.shareCents).toBe(25_000)
+    }
+  })
+
+  it('splits the share across days so the day lines add up exactly', () => {
+    const services = [sale(10_001, DAYS[0]), sale(20_002, DAYS[1]), sale(30_003, DAYS[2])]
+    const statement = buildStatement({
+      services,
+      turns: [workingDay(DAYS[0]), workingDay(DAYS[1]), workingDay(DAYS[2])],
+      adjustments: [],
+      rules: rules({ tiers: TIERS }),
+      periodEnd: '2026-11-07',
+      daysOff: new Set(),
+    })
+
+    const byDayTotal = statement.byDay.reduce((sum, day) => sum + day.shareCents, 0)
+    expect(byDayTotal).toBe(statement.shareCents)
+  })
+})
+
+describe('buildStatement with a guarantee', () => {
+  it('says not needed when the share is already $1,446', () => {
+    const statement = buildStatement({
+      services: [sale(144_600, DAYS[0])],
+      turns: DAYS.slice(0, 6).map(workingDay),
+      adjustments: [],
+      rules: rules({ guarantee: { kind: 'perDay', cents: 15_000, minDays: null } }),
+      periodEnd: '2026-11-07',
+      daysOff: new Set(),
+    })
+
+    expect(statement.shareCents).toBe(144_600)
+    expect(statement.guaranteeCents).toBe(90_000)
+    expect(statement.guaranteeDays).toBe(6)
+    expect(statement.guaranteeTopUpCents).toBe(0)
+    expect(statement.salonPaysCents).toBe(144_600)
+  })
+
+  it('tops a $760 share up to $900', () => {
+    const statement = buildStatement({
+      services: [sale(76_000, DAYS[0])],
+      turns: DAYS.slice(0, 6).map(workingDay),
+      adjustments: [],
+      rules: rules({ guarantee: { kind: 'perDay', cents: 15_000, minDays: null } }),
+      periodEnd: '2026-11-07',
+      daysOff: new Set(),
+    })
+
+    expect(statement.guaranteeCents).toBe(90_000)
+    expect(statement.guaranteeTopUpCents).toBe(14_000)
+    expect(statement.salonPaysCents).toBe(90_000)
+  })
+
+  it('counts a per pay period guarantee as one amount', () => {
+    const statement = buildStatement({
+      services: [sale(76_000, DAYS[0])],
+      turns: DAYS.slice(0, 6).map(workingDay),
+      adjustments: [],
+      rules: rules({ guarantee: { kind: 'perPeriod', cents: 90_000, minDays: null } }),
+      periodEnd: '2026-11-07',
+      daysOff: new Set(),
+    })
+
+    expect(statement.guaranteeCents).toBe(90_000)
+    expect(statement.guaranteeTopUpCents).toBe(14_000)
+  })
+
+  it('leaves out a day off, counts a day with only a zero-priced turn', () => {
+    const turns = [
+      turnFigures({ localWorkDate: DAYS[0], turnCount: 1 }),
+      workingDay(DAYS[1]),
+      workingDay(DAYS[2]),
+      workingDay(DAYS[3]),
+      workingDay(DAYS[4]),
+      workingDay(DAYS[5]),
+    ]
+
+    const statement = buildStatement({
+      services: [],
+      turns,
+      adjustments: [],
+      rules: rules({ guarantee: { kind: 'perDay', cents: 15_000, minDays: null } }),
+      periodEnd: '2026-11-07',
+      daysOff: new Set([DAYS[5]]),
+    })
+
+    expect(statement.guaranteeDays).toBe(5)
+    expect(statement.guaranteeCents).toBe(75_000)
+    expect(statement.guaranteeTopUpCents).toBe(75_000)
+  })
+
+  it('pays nothing when fewer than the minimum days were worked', () => {
+    const statement = buildStatement({
+      services: [],
+      turns: DAYS.slice(0, 4).map(workingDay),
+      adjustments: [],
+      rules: rules({ guarantee: { kind: 'perDay', cents: 15_000, minDays: 5 } }),
+      periodEnd: '2026-11-07',
+      daysOff: new Set(),
+    })
+
+    expect(statement.guaranteeDays).toBe(4)
+    expect(statement.guaranteeCents).toBe(0)
+    expect(statement.guaranteeTopUpCents).toBe(0)
   })
 })

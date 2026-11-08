@@ -66,6 +66,7 @@ export function sampleStatement(
     adjustments: [],
     rules: exampleRules(values, date),
     periodEnd: date,
+    daysOff: new Set(),
   })
 }
 
@@ -90,5 +91,6 @@ export function specStatement(
     adjustments: [],
     rules: exampleRules(values, date),
     periodEnd: date,
+    daysOff: new Set(),
   })
 }

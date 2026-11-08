@@ -1,4 +1,5 @@
 import type { IsoDate } from './dates.ts'
+import { roundDiv } from './money.ts'
 
 export type FeeWhen = 'beforeSplit' | 'afterSplit'
 export type SupplyFee =
@@ -61,6 +62,34 @@ export function defaultPayRules(startDate: IsoDate = NO_RULES.startDate, now = 0
     createdAt: now,
     updatedAt: now,
   }
+}
+
+/**
+ * The share a tier table gives on `baseCents`. The first level starts at zero,
+ * a base exactly on a boundary stays in the lower level, and each part is
+ * rounded half up before the parts are added.
+ */
+export function tierShare(baseCents: number, tiers: Tiers): number {
+  if (baseCents <= 0) return 0
+  const levels = tiers.levels
+
+  if (tiers.mode === 'wholeAtTop') {
+    let rateBp = levels[0].rateBp
+    for (const level of levels) {
+      if (level.fromCents < baseCents) rateBp = level.rateBp
+      else break
+    }
+    return roundDiv(baseCents * rateBp, 10_000)
+  }
+
+  let share = 0
+  for (let index = 0; index < levels.length; index += 1) {
+    const from = levels[index].fromCents
+    const to = index + 1 < levels.length ? levels[index + 1].fromCents : Number.POSITIVE_INFINITY
+    const part = Math.min(baseCents, to) - from
+    if (part > 0) share += roundDiv(part * levels[index].rateBp, 10_000)
+  }
+  return share
 }
 
 /** The saved rule in force on `date`: the latest with startDate <= date; before the first, the earliest. */
