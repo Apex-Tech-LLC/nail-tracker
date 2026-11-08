@@ -1,3 +1,4 @@
+import { IconDots } from '@tabler/icons-react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useId, useState } from 'react'
 import { Link, useLocation, useSearch } from 'wouter'
@@ -30,6 +31,7 @@ import { AdjustmentRow } from '../adjustments/AdjustmentRow.tsx'
 import { loadRange, servicesByTurn } from '../turns/turnStore.ts'
 import { TurnRow } from '../turns/TurnRow.tsx'
 import { CalendarView } from './CalendarView.tsx'
+import { DayOffSheet } from './DayOffSheet.tsx'
 import { groupByDay, matchesSearch, rangeFor, type RangeChoice } from './historyRange.ts'
 import { dayOffDates, loadWorkDays } from './workDays.ts'
 
@@ -64,6 +66,7 @@ export function HistoryPage() {
   const [customStart, setCustomStart] = useState<IsoDate>(openedDay ?? today)
   const [customEnd, setCustomEnd] = useState<IsoDate>(openedDay ?? today)
   const [search, setSearch] = useState('')
+  const [menuDay, setMenuDay] = useState<IsoDate | null>(null)
   const id = useId()
 
   function setView(next: View) {
@@ -165,7 +168,7 @@ export function HistoryPage() {
           onPrevious={() => setMonthAnchor(monthShift(monthAnchor, -1))}
           onNext={() => setMonthAnchor(monthShift(monthAnchor, 1))}
           onPick={openDay}
-          onMenu={() => {}}
+          onMenu={setMenuDay}
         />
       ) : (
         <>
@@ -258,11 +261,26 @@ export function HistoryPage() {
               )
               return (
                 <section key={group.date}>
-                  <div className="mt-[18px] mb-[7px] flex items-center justify-between gap-3 px-1 text-sm font-bold">
+                  <div className="mt-[18px] mb-[7px] flex items-center justify-between gap-2 px-1 text-sm font-bold">
                     <h2 className="min-w-0 flex-1">{formatDayLong(group.date, locale)}</h2>
+                    {offDates.has(group.date) && (
+                      <span className="shrink-0 rounded-full bg-surface-subtle px-2 py-0.5 text-[11px] font-bold text-text-secondary">
+                        {t(locale, 'dayOff')}
+                      </span>
+                    )}
                     <p className="shrink-0 font-semibold text-text-secondary">
                       {countText} · {formatUsdShort(group.earnedCents)}
                     </p>
+                    <button
+                      type="button"
+                      aria-label={tf(locale, 'dayActionsFor', {
+                        day: formatDayLong(group.date, locale),
+                      })}
+                      onClick={() => setMenuDay(group.date)}
+                      className="-mr-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-control text-text-secondary"
+                    >
+                      <IconDots size={20} aria-hidden="true" />
+                    </button>
                   </div>
                   <div className={list}>
                     {group.turns.map((turn) => (
@@ -279,8 +297,16 @@ export function HistoryPage() {
                   </div>
                 </section>
               )
-            })}
+            }          )}
         </>
+      )}
+
+      {menuDay !== null && (
+        <DayOffSheet
+          date={menuDay}
+          dayOff={offDates.has(menuDay)}
+          onClose={() => setMenuDay(null)}
+        />
       )}
     </>
   )
