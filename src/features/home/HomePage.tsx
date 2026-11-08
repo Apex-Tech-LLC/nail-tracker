@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link } from 'wouter'
 import { LanguageButton } from '../../app/PageHeader.tsx'
 import { paths } from '../../app/navigation.ts'
-import { updateSettings, useSettings } from '../../app/settings.ts'
+import { getSettings, updateSettings, useSettings } from '../../app/settings.ts'
 import { useToday } from '../../app/useToday.ts'
 import { db } from '../../db/schema.ts'
 import {
@@ -23,9 +23,11 @@ import {
   formatRange,
   formatWeekdayLong,
   formatWeekdayShort,
+  monthRange,
   weekRange,
   type IsoDate,
 } from '../../domain/dates.ts'
+import { goalMessageKey, goalProgress, type GoalKind } from '../../domain/goals.ts'
 import { formatUsd, formatUsdShort } from '../../domain/money.ts'
 import { dueReminder } from '../../domain/reminders.ts'
 import { numberTurns, sumTotals } from '../../domain/totals.ts'
@@ -102,6 +104,8 @@ export function HomePage() {
     backupReminderDays,
     lastBackupDate,
     dismissedReminders,
+    weeklyGoalCents,
+    monthlyGoalCents,
   } = useSettings()
   const today = useToday()
   const backupBusy = useRef(false)
@@ -336,6 +340,15 @@ export function HomePage() {
         >
           {comparisonText}
         </p>
+        {period !== 'today' && (
+          <GoalBar
+            kind={period}
+            earnedCents={totals.earnedCents}
+            goalCents={period === 'week' ? weeklyGoalCents : monthlyGoalCents}
+            periodStart={period === 'week' ? week.start : monthRange(today).start}
+            today={today}
+          />
+        )}
       </section>
 
       <ul
@@ -478,6 +491,105 @@ export function HomePage() {
 /** What a day's glass measures: this week's fill, or last week's when the day is still ahead. */
 function bottleCents(day: WeekDay): number {
   return day.isFuture ? day.lastWeekEarnedCents : day.earnedCents
+}
+
+/**
+ * The slim goal bar under the hero. A met goal says so once per period: the
+ * key is written in dismissedReminders the first time it is shown, so leaving
+ * Home and coming back does not repeat it.
+ */
+function GoalBar({
+  kind,
+  earnedCents,
+  goalCents,
+  periodStart,
+  today,
+}: {
+  kind: GoalKind
+  earnedCents: number
+  goalCents: number | null
+  periodStart: IsoDate
+  today: IsoDate
+}) {
+  const { locale, dismissedReminders } = useSettings()
+  const [messageHidden, setMessageHidden] = useState(false)
+  // What was already dismissed when the bar appeared, held still for this visit.
+  const [dismissedAtMount] = useState(dismissedReminders)
+
+  const progress = goalCents === null ? null : goalProgress(earnedCents, goalCents)
+  const messageKey =
+    goalCents !== null && earnedCents >= goalCents ? goalMessageKey(kind, periodStart) : null
+  const showMessage =
+    messageKey !== null && dismissedAtMount[messageKey] === undefined && !messageHidden
+
+  useEffect(() => {
+    if (!showMessage || messageKey === null) return
+    updateSettings({
+      dismissedReminders: { ...getSettings().dismissedReminders, [messageKey]: today },
+    })
+  }, [showMessage, messageKey, today])
+
+  if (goalCents === null || progress === null) {
+    return (
+      <Link
+        href={paths.goals}
+        className="mt-3 inline-block text-sm font-semibold text-brand-600 underline"
+      >
+        {t(locale, 'setAGoal')}
+      </Link>
+    )
+  }
+
+  const met = earnedCents >= goalCents
+  return (
+    <div className="mt-3">
+      <Link
+        href={paths.goals}
+        data-testid="goal-progress"
+        data-fill={progress.fillPercent}
+        className="block rounded-control focus-visible:outline-2 focus-visible:outline-brand-600"
+      >
+        <span className="block h-2 overflow-hidden rounded-full bg-surface-subtle">
+          <span
+            data-testid="goal-fill"
+            className="block h-full rounded-full bg-brand-600"
+            style={{ width: `${progress.fillPercent}%` }}
+          />
+        </span>
+        <span
+          data-testid="goal-progress-text"
+          className="mt-1.5 block text-sm text-text-secondary"
+        >
+          {met
+            ? tf(locale, 'goalReached', {
+                earned: formatUsdShort(earnedCents),
+                goal: formatUsdShort(goalCents),
+              })
+            : tf(locale, 'goalProgress', {
+                earned: formatUsdShort(earnedCents),
+                goal: formatUsdShort(goalCents),
+                toGo: formatUsdShort(progress.toGoCents),
+              })}
+        </span>
+      </Link>
+
+      {showMessage && (
+        <div className="mt-2 flex items-start gap-2 rounded-control bg-positive-bg p-2">
+          <p className="min-w-0 flex-1 text-sm text-positive-text">
+            {t(locale, kind === 'week' ? 'goalHitWeek' : 'goalHitMonth')}
+          </p>
+          <button
+            type="button"
+            aria-label={t(locale, 'dismiss')}
+            onClick={() => setMessageHidden(true)}
+            className="-mr-1 -mt-1 flex size-9 flex-none items-center justify-center text-positive-text"
+          >
+            <IconX size={16} aria-hidden="true" />
+          </button>
+        </div>
+      )}
+    </div>
+  )
 }
 
 function Stat({ value, label, edge }: { value: string; label: string; edge: boolean }) {
