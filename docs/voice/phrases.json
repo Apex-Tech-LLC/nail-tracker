@@ -1,0 +1,6657 @@
+[
+  {
+    "id": "en-001",
+    "locale": "en",
+    "text": "Manicure 25.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "manicure",
+            "priceCents": 2500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "en-002",
+    "locale": "en",
+    "text": "Regular manicure 25.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "manicure",
+            "priceCents": 2500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "en-003",
+    "locale": "en",
+    "text": "Basic manicure 25.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "manicure",
+            "priceCents": 2500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "en-004",
+    "locale": "en",
+    "text": "Mani 25.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "manicure",
+            "priceCents": 2500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "en-005",
+    "locale": "en",
+    "text": "Pedicure 35.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "pedicure",
+            "priceCents": 3500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "en-006",
+    "locale": "en",
+    "text": "Regular pedicure 35.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "pedicure",
+            "priceCents": 3500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "en-007",
+    "locale": "en",
+    "text": "Basic pedicure 35.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "pedicure",
+            "priceCents": 3500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "en-008",
+    "locale": "en",
+    "text": "Pedi 35.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "pedicure",
+            "priceCents": 3500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "en-009",
+    "locale": "en",
+    "text": "Gel manicure 45.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-manicure",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "en-010",
+    "locale": "en",
+    "text": "Gel mani 45.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-manicure",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "en-011",
+    "locale": "en",
+    "text": "Gel polish manicure 45.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-manicure",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "en-012",
+    "locale": "en",
+    "text": "Gel on hands 45.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-manicure",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "en-013",
+    "locale": "en",
+    "text": "Gel pedicure 50.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-pedicure",
+            "priceCents": 5000
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "en-014",
+    "locale": "en",
+    "text": "Gel pedi 50.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-pedicure",
+            "priceCents": 5000
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "en-015",
+    "locale": "en",
+    "text": "Gel polish pedicure 50.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-pedicure",
+            "priceCents": 5000
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "en-016",
+    "locale": "en",
+    "text": "Gel on toes 50.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-pedicure",
+            "priceCents": 5000
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "en-017",
+    "locale": "en",
+    "text": "Gel-X 65.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-x",
+            "priceCents": 6500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "en-018",
+    "locale": "en",
+    "text": "gel x 65.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-x",
+            "priceCents": 6500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "en-019",
+    "locale": "en",
+    "text": "Gel-X extensions 65.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-x",
+            "priceCents": 6500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "en-020",
+    "locale": "en",
+    "text": "Full set Gel-X 65.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-x",
+            "priceCents": 6500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "en-021",
+    "locale": "en",
+    "text": "Acrylic full set 60.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "acrylic-full-set",
+            "priceCents": 6000
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "en-022",
+    "locale": "en",
+    "text": "Full set acrylic 60.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "acrylic-full-set",
+            "priceCents": 6000
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "en-023",
+    "locale": "en",
+    "text": "New acrylic set 60.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "acrylic-full-set",
+            "priceCents": 6000
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "en-024",
+    "locale": "en",
+    "text": "Full set 60.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "acrylic-full-set",
+            "priceCents": 6000
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Assumed acrylic full set from shorthand; confirm the service."
+    ]
+  },
+  {
+    "id": "en-025",
+    "locale": "en",
+    "text": "Acrylic fill 45.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "acrylic-fill",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "en-026",
+    "locale": "en",
+    "text": "Acrylic refill 45.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "acrylic-fill",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "en-027",
+    "locale": "en",
+    "text": "Fill 45.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "acrylic-fill",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Assumed acrylic fill from shorthand; confirm the service."
+    ]
+  },
+  {
+    "id": "en-028",
+    "locale": "en",
+    "text": "Refill 45.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "acrylic-fill",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Assumed acrylic fill from shorthand; confirm the service."
+    ]
+  },
+  {
+    "id": "en-029",
+    "locale": "en",
+    "text": "Dip powder 45.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "dip-powder",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "en-030",
+    "locale": "en",
+    "text": "Dip 45.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "dip-powder",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "en-031",
+    "locale": "en",
+    "text": "Dipping powder 45.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "dip-powder",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "en-032",
+    "locale": "en",
+    "text": "SNS dip 45.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "dip-powder",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "en-033",
+    "locale": "en",
+    "text": "Nail art 10.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "nail-art",
+            "priceCents": 1000
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "en-034",
+    "locale": "en",
+    "text": "Nail design 10.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "nail-art",
+            "priceCents": 1000
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "en-035",
+    "locale": "en",
+    "text": "Design 10.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "nail-art",
+            "priceCents": 1000
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "en-036",
+    "locale": "en",
+    "text": "Designs 10.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "nail-art",
+            "priceCents": 1000
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "en-037",
+    "locale": "en",
+    "text": "Removal 15.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "removal",
+            "priceCents": 1500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "en-038",
+    "locale": "en",
+    "text": "Soak off 15.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "removal",
+            "priceCents": 1500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "en-039",
+    "locale": "en",
+    "text": "Take off nails 15.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "removal",
+            "priceCents": 1500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "en-040",
+    "locale": "en",
+    "text": "Soak-off 15.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "removal",
+            "priceCents": 1500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "en-041",
+    "locale": "en",
+    "text": "Gel manicure 45, 10 tip cash.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-manicure",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 1000,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "en-042",
+    "locale": "en",
+    "text": "Pedicure 35, tip 8 on card.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "pedicure",
+            "priceCents": 3500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 800,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "en-043",
+    "locale": "en",
+    "text": "Manicure 25, tip five.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "manicure",
+            "priceCents": 2500
+          }
+        ],
+        "cashTipCents": 500,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "en-044",
+    "locale": "en",
+    "text": "Gel-X 65, cash tip 5 and card tip 7.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-x",
+            "priceCents": 6500
+          }
+        ],
+        "cashTipCents": 500,
+        "cardTipCents": 700,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "en-045",
+    "locale": "en",
+    "text": "Dip powder 45, no tip.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "dip-powder",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "en-046",
+    "locale": "en",
+    "text": "Acrylic fill 45, she asked for me.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "acrylic-fill",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": true
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "en-047",
+    "locale": "en",
+    "text": "Pedicure 35, walk-in, 8 on card.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "pedicure",
+            "priceCents": 3500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 800,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "en-048",
+    "locale": "en",
+    "text": "Manicure 25, not a request.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "manicure",
+            "priceCents": 2500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "en-049",
+    "locale": "en",
+    "text": "Gel manicure 45, requested me, tip ten cash.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-manicure",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 1000,
+        "cardTipCents": 0,
+        "request": true
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "en-050",
+    "locale": "en",
+    "text": "Gel pedicure 50, appointment, tip 5.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-pedicure",
+            "priceCents": 5000
+          }
+        ],
+        "cashTipCents": 500,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Appointment does not establish a request."
+    ]
+  },
+  {
+    "id": "en-051",
+    "locale": "en",
+    "text": "Gel manicure $45.50, tip $10.25 cash.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-manicure",
+            "priceCents": 4550
+          }
+        ],
+        "cashTipCents": 1025,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "en-052",
+    "locale": "en",
+    "text": "Pedicure thirty five dollars and five cents, tip two dollars and one cent.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "pedicure",
+            "priceCents": 3505
+          }
+        ],
+        "cashTipCents": 201,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "en-053",
+    "locale": "en",
+    "text": "Gel-X sixty five dollars, tip eight dollars on card.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-x",
+            "priceCents": 6500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 800,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "en-054",
+    "locale": "en",
+    "text": "Manicure twenty five point zero five dollars.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "manicure",
+            "priceCents": 2505
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "en-055",
+    "locale": "en",
+    "text": "Acrylic full set one hundred and five dollars.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "acrylic-full-set",
+            "priceCents": 10500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "en-056",
+    "locale": "en",
+    "text": "Dip powder forty five and a half dollars.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "dip-powder",
+            "priceCents": 4550
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "en-057",
+    "locale": "en",
+    "text": "Removal 0, no tip.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "removal",
+            "priceCents": 0
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "en-058",
+    "locale": "en",
+    "text": "Nail art seven dollars and fifty cents.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "nail-art",
+            "priceCents": 750
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "en-059",
+    "locale": "en",
+    "text": "Gel pedicure 50.01, tip 0.99 on card.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-pedicure",
+            "priceCents": 5001
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 99,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "en-060",
+    "locale": "en",
+    "text": "Manicure 25, tip fifty cents cash.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "manicure",
+            "priceCents": 2500
+          }
+        ],
+        "cashTipCents": 50,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "en-061",
+    "locale": "en",
+    "text": "Pedicure.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "pedicure",
+            "priceCents": null
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: No price heard; use the configured usual price if available."
+    ]
+  },
+  {
+    "id": "en-062",
+    "locale": "en",
+    "text": "Gel manicure, tip ten cash.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-manicure",
+            "priceCents": null
+          }
+        ],
+        "cashTipCents": 1000,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: No price heard; use the configured usual price if available."
+    ]
+  },
+  {
+    "id": "en-063",
+    "locale": "en",
+    "text": "45 dollars, 10 tip cash.",
+    "turns": [
+      {
+        "services": [],
+        "cashTipCents": 1000,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: No service heard; choose a service before using any price."
+    ],
+    "note": "Unresolved service price: 4500 cents; preserve the source text."
+  },
+  {
+    "id": "en-064",
+    "locale": "en",
+    "text": "Tip 8 on card.",
+    "turns": [
+      {
+        "services": [],
+        "cashTipCents": 0,
+        "cardTipCents": 800,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: No service heard; choose a service before using any price."
+    ]
+  },
+  {
+    "id": "en-065",
+    "locale": "en",
+    "text": "Acrylic 50.",
+    "turns": [
+      {
+        "services": [],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Acrylic does not distinguish a full set from a fill; price 5000 cents is unresolved."
+    ]
+  },
+  {
+    "id": "en-066",
+    "locale": "en",
+    "text": "Gel 45.",
+    "turns": [
+      {
+        "services": [],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Gel does not identify hands, feet or extensions; price 4500 cents is unresolved."
+    ]
+  },
+  {
+    "id": "en-067",
+    "locale": "en",
+    "text": "Gel manicure and pedicure, tip 10.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-manicure",
+            "priceCents": null
+          },
+          {
+            "presetId": "pedicure",
+            "priceCents": null
+          }
+        ],
+        "cashTipCents": 1000,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: No prices heard for gel manicure and pedicure; use configured usual prices if available."
+    ]
+  },
+  {
+    "id": "en-068",
+    "locale": "en",
+    "text": "Shellac 45.",
+    "turns": [
+      {
+        "services": [],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Shellac alone does not identify a preset; price 4500 cents is unresolved."
+    ]
+  },
+  {
+    "id": "en-069",
+    "locale": "en",
+    "text": "Um, okay, let me see.",
+    "turns": [],
+    "check": [],
+    "note": "Filler only; no customer or service evidence."
+  },
+  {
+    "id": "en-070",
+    "locale": "en",
+    "text": "Nail art, request.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "nail-art",
+            "priceCents": null
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": true
+      }
+    ],
+    "check": [
+      "Turn 1: No price heard; use the configured usual price if available."
+    ]
+  },
+  {
+    "id": "en-071",
+    "locale": "en",
+    "text": "Manicure 25 and pedicure 35, tip 12 cash.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "manicure",
+            "priceCents": 2500
+          },
+          {
+            "presetId": "pedicure",
+            "priceCents": 3500
+          }
+        ],
+        "cashTipCents": 1200,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "en-072",
+    "locale": "en",
+    "text": "Gel manicure 45 with removal 10, tip 8 on card.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-manicure",
+            "priceCents": 4500
+          },
+          {
+            "presetId": "removal",
+            "priceCents": 1000
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 800,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "en-073",
+    "locale": "en",
+    "text": "Acrylic full set 60 plus nail art 15.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "acrylic-full-set",
+            "priceCents": 6000
+          },
+          {
+            "presetId": "nail-art",
+            "priceCents": 1500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "en-074",
+    "locale": "en",
+    "text": "Gel-X 65 and nail art 10 and removal 15, request.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-x",
+            "priceCents": 6500
+          },
+          {
+            "presetId": "nail-art",
+            "priceCents": 1000
+          },
+          {
+            "presetId": "removal",
+            "priceCents": 1500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": true
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "en-075",
+    "locale": "en",
+    "text": "Same customer: manicure 25, then pedicure 35.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "manicure",
+            "priceCents": 2500
+          },
+          {
+            "presetId": "pedicure",
+            "priceCents": 3500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "en-076",
+    "locale": "en",
+    "text": "Manicure and pedicure, 60 total.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "manicure",
+            "priceCents": null
+          },
+          {
+            "presetId": "pedicure",
+            "priceCents": null
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Combined price 6000 cents needs allocation between manicure and pedicure."
+    ]
+  },
+  {
+    "id": "en-077",
+    "locale": "en",
+    "text": "Gel manicure 45 and pedicure.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-manicure",
+            "priceCents": 4500
+          },
+          {
+            "presetId": "pedicure",
+            "priceCents": null
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: No price heard for pedicure; use the configured usual price if available."
+    ]
+  },
+  {
+    "id": "en-078",
+    "locale": "en",
+    "text": "Removal 10 with dip powder 45, tip 10.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "removal",
+            "priceCents": 1000
+          },
+          {
+            "presetId": "dip-powder",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 1000,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "en-079",
+    "locale": "en",
+    "text": "Gel manicure 45 and regular pedicure 35.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-manicure",
+            "priceCents": 4500
+          },
+          {
+            "presetId": "pedicure",
+            "priceCents": 3500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "en-080",
+    "locale": "en",
+    "text": "Manicure 25 and gel pedicure 50.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "manicure",
+            "priceCents": 2500
+          },
+          {
+            "presetId": "gel-pedicure",
+            "priceCents": 5000
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "en-081",
+    "locale": "en",
+    "text": "Gel manicure 45, 10 tip cash. Pedicure 35.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-manicure",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 1000,
+        "cardTipCents": 0,
+        "request": false
+      },
+      {
+        "services": [
+          {
+            "presetId": "pedicure",
+            "priceCents": 3500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "en-082",
+    "locale": "en",
+    "text": "Manicure 25\nGel-X 65\nDip powder 45",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "manicure",
+            "priceCents": 2500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      },
+      {
+        "services": [
+          {
+            "presetId": "gel-x",
+            "priceCents": 6500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      },
+      {
+        "services": [
+          {
+            "presetId": "dip-powder",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "en-083",
+    "locale": "en",
+    "text": "Pedicure 35 next gel manicure 45 then acrylic fill 50.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "pedicure",
+            "priceCents": 3500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      },
+      {
+        "services": [
+          {
+            "presetId": "gel-manicure",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      },
+      {
+        "services": [
+          {
+            "presetId": "acrylic-fill",
+            "priceCents": 5000
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "en-084",
+    "locale": "en",
+    "text": "Three jobs: gel manicure 45. Pedicure 35. Acrylic fill 50, 8 tip on card, she asked for me.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-manicure",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      },
+      {
+        "services": [
+          {
+            "presetId": "pedicure",
+            "priceCents": 3500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      },
+      {
+        "services": [
+          {
+            "presetId": "acrylic-fill",
+            "priceCents": 5000
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 800,
+        "request": true
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "en-085",
+    "locale": "en",
+    "text": "Two customers: manicure 25 and pedicure 35. Gel-X 65.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "manicure",
+            "priceCents": 2500
+          },
+          {
+            "presetId": "pedicure",
+            "priceCents": 3500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      },
+      {
+        "services": [
+          {
+            "presetId": "gel-x",
+            "priceCents": 6500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "en-086",
+    "locale": "en",
+    "text": "Three customers: manicure 25. Pedicure 35.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "manicure",
+            "priceCents": 2500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      },
+      {
+        "services": [
+          {
+            "presetId": "pedicure",
+            "priceCents": 3500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Count mismatch: heard 3 customers, found 2."
+    ]
+  },
+  {
+    "id": "en-087",
+    "locale": "en",
+    "text": "One customer: manicure 25. Pedicure 35.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "manicure",
+            "priceCents": 2500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      },
+      {
+        "services": [
+          {
+            "presetId": "pedicure",
+            "priceCents": 3500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Count mismatch: heard 1 customer, found 2."
+    ]
+  },
+  {
+    "id": "en-088",
+    "locale": "en",
+    "text": "Pedicure 35. Tip 10 cash. Asked for me.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "pedicure",
+            "priceCents": 3500
+          }
+        ],
+        "cashTipCents": 1000,
+        "cardTipCents": 0,
+        "request": true
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "en-089",
+    "locale": "en",
+    "text": "Another customer, dip powder 45. Another customer, removal 15.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "dip-powder",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      },
+      {
+        "services": [
+          {
+            "presetId": "removal",
+            "priceCents": 1500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "en-090",
+    "locale": "en",
+    "text": "Two customers, each pedicure 35, no tips.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "pedicure",
+            "priceCents": 3500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      },
+      {
+        "services": [
+          {
+            "presetId": "pedicure",
+            "priceCents": 3500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Expanded an explicit two-customer repeat; confirm both customers."
+    ]
+  },
+  {
+    "id": "en-091",
+    "locale": "en",
+    "text": "Gel manicure 45, no, I mean 50.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-manicure",
+            "priceCents": 5000
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Corrected service price from 4500 to 5000 cents."
+    ]
+  },
+  {
+    "id": "en-092",
+    "locale": "en",
+    "text": "Pedicure 35, tip 5, no, tip 10.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "pedicure",
+            "priceCents": 3500
+          }
+        ],
+        "cashTipCents": 1000,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Corrected cash tip from 500 to 1000 cents."
+    ]
+  },
+  {
+    "id": "en-093",
+    "locale": "en",
+    "text": "Gel-X 65, tip 10 cash, no, on card.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-x",
+            "priceCents": 6500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 1000,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Corrected tip channel from cash to card."
+    ]
+  },
+  {
+    "id": "en-094",
+    "locale": "en",
+    "text": "Manicure 25, request, no, walk-in.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "manicure",
+            "priceCents": 2500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Corrected request to walk-in."
+    ]
+  },
+  {
+    "id": "en-095",
+    "locale": "en",
+    "text": "Pedicure 35, walk-in, actually she asked for me.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "pedicure",
+            "priceCents": 3500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": true
+      }
+    ],
+    "check": [
+      "Turn 1: Corrected walk-in to request."
+    ]
+  },
+  {
+    "id": "en-096",
+    "locale": "en",
+    "text": "Manicure 25, no, gel manicure 45.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-manicure",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Replaced manicure at 2500 cents with gel manicure at 4500 cents."
+    ]
+  },
+  {
+    "id": "en-097",
+    "locale": "en",
+    "text": "Acrylic fill 45, make that 47.50, tip 5 cash.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "acrylic-fill",
+            "priceCents": 4750
+          }
+        ],
+        "cashTipCents": 500,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Corrected service price from 4500 to 4750 cents."
+    ]
+  },
+  {
+    "id": "en-098",
+    "locale": "en",
+    "text": "Gel manicure 45, tip 10, sorry, price 50.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-manicure",
+            "priceCents": 5000
+          }
+        ],
+        "cashTipCents": 1000,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Corrected service price from 4500 to 5000 cents."
+    ]
+  },
+  {
+    "id": "en-099",
+    "locale": "en",
+    "text": "Pedicure 35, tip 5, actually no tip.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "pedicure",
+            "priceCents": 3500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Corrected cash tip from 500 to 0 cents."
+    ]
+  },
+  {
+    "id": "en-100",
+    "locale": "en",
+    "text": "Manicure 25. Pedicure 35. First customer was 30, not 25.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "manicure",
+            "priceCents": 2500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      },
+      {
+        "services": [
+          {
+            "presetId": "pedicure",
+            "priceCents": 3500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Earlier-customer correction needs review: proposed price 3000 cents instead of 2500."
+    ],
+    "note": "Conservative back-reference policy; the original first price is retained pending review."
+  },
+  {
+    "id": "en-101",
+    "locale": "en",
+    "text": "Jello ex 65, tip 10.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-x",
+            "priceCents": 6500
+          }
+        ],
+        "cashTipCents": 1000,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Possible dictation error: \"Jello ex\" matched to Gel-X."
+    ],
+    "note": "G: synthetic mishearing; not observed on a phone."
+  },
+  {
+    "id": "en-102",
+    "locale": "en",
+    "text": "JOX 70.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-x",
+            "priceCents": 7000
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Possible dictation error: \"JOX\" matched to Gel-X."
+    ],
+    "note": "G: synthetic mishearing; not observed on a phone."
+  },
+  {
+    "id": "en-103",
+    "locale": "en",
+    "text": "Gel ex 65.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-x",
+            "priceCents": 6500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Possible dictation error: \"Gel ex\" matched to Gel-X."
+    ],
+    "note": "G: synthetic mishearing; not observed on a phone."
+  },
+  {
+    "id": "en-104",
+    "locale": "en",
+    "text": "Deep powder 45.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "dip-powder",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Possible dictation error: \"Deep powder\" matched to dip powder."
+    ],
+    "note": "G: synthetic mishearing; not observed on a phone."
+  },
+  {
+    "id": "en-105",
+    "locale": "en",
+    "text": "Dip power 45.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "dip-powder",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Possible dictation error: \"Dip power\" matched to dip powder."
+    ],
+    "note": "G: synthetic mishearing; not observed on a phone."
+  },
+  {
+    "id": "en-106",
+    "locale": "en",
+    "text": "Acrylic feel 45.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "acrylic-fill",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Possible dictation error: \"Acrylic feel\" matched to acrylic fill."
+    ],
+    "note": "G: synthetic mishearing; not observed on a phone."
+  },
+  {
+    "id": "en-107",
+    "locale": "en",
+    "text": "Jail manicure 45.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-manicure",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Possible dictation error: \"Jail manicure\" matched to gel manicure."
+    ],
+    "note": "G: synthetic mishearing; not observed on a phone."
+  },
+  {
+    "id": "en-108",
+    "locale": "en",
+    "text": "Peddy cure 35.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "pedicure",
+            "priceCents": 3500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Possible dictation error: \"Peddy cure\" matched to pedicure."
+    ],
+    "note": "G: synthetic mishearing; not observed on a phone."
+  },
+  {
+    "id": "en-109",
+    "locale": "en",
+    "text": "Nail heart 10.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "nail-art",
+            "priceCents": 1000
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Possible dictation error: \"Nail heart\" matched to nail art."
+    ],
+    "note": "G: synthetic mishearing; not observed on a phone."
+  },
+  {
+    "id": "en-110",
+    "locale": "en",
+    "text": "Soak of 15.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "removal",
+            "priceCents": 1500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Possible dictation error: \"Soak of\" matched to soak off."
+    ],
+    "note": "G: synthetic mishearing; not observed on a phone."
+  },
+  {
+    "id": "en-111",
+    "locale": "en",
+    "text": "Pedicure 35, paid 35 on card, tip 5 cash.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "pedicure",
+            "priceCents": 3500
+          }
+        ],
+        "cashTipCents": 500,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Service payment by card is not a card tip."
+    ]
+  },
+  {
+    "id": "en-112",
+    "locale": "en",
+    "text": "Gel-X tips 65, no tip.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-x",
+            "priceCents": 6500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [],
+    "note": "Plastic extension tips are not gratuity."
+  },
+  {
+    "id": "en-113",
+    "locale": "en",
+    "text": "Gel manicure forty five fifty.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-manicure",
+            "priceCents": null
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Ambiguous amount \"forty five fifty\"; confirm the service price."
+    ]
+  },
+  {
+    "id": "en-114",
+    "locale": "en",
+    "text": "Pedicure 35.555.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "pedicure",
+            "priceCents": null
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: More than two decimal places in \"35.555\"; confirm the service price."
+    ]
+  },
+  {
+    "id": "en-115",
+    "locale": "en",
+    "text": "Removal minus five dollars.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "removal",
+            "priceCents": null
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Negative service price is unsupported; confirm the price."
+    ]
+  },
+  {
+    "id": "en-116",
+    "locale": "en",
+    "text": "Manicure 25, tip ten percent.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "manicure",
+            "priceCents": 2500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Percentage tip is unsupported; enter a money amount."
+    ]
+  },
+  {
+    "id": "en-117",
+    "locale": "en",
+    "text": "At 2 PM, gel manicure 45, tip 8.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-manicure",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 800,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Time \"2 PM\" is not asserted by this fixture; preserve it for time handling."
+    ]
+  },
+  {
+    "id": "en-118",
+    "locale": "en",
+    "text": "Gel manicure 45 pedicure 35.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-manicure",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      },
+      {
+        "services": [
+          {
+            "presetId": "pedicure",
+            "priceCents": 3500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 2: Inferred a new customer without a separator; confirm the split."
+    ]
+  },
+  {
+    "id": "en-119",
+    "locale": "en",
+    "text": "Manicure 25, tip.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "manicure",
+            "priceCents": 2500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Tip mentioned without an amount; confirm the tip."
+    ]
+  },
+  {
+    "id": "en-120",
+    "locale": "en",
+    "text": "Pedicure 35, request, walk-in.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "pedicure",
+            "priceCents": 3500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Conflicting request and walk-in without a correction; choose one."
+    ]
+  },
+  {
+    "id": "en-121",
+    "locale": "en",
+    "text": "Manicure four five dollars.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "manicure",
+            "priceCents": null
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Ambiguous digit sequence \"four five\"; confirm the service price."
+    ]
+  },
+  {
+    "id": "en-122",
+    "locale": "en",
+    "text": "Pedicure 35, tip twenty cents.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "pedicure",
+            "priceCents": 3500
+          }
+        ],
+        "cashTipCents": 20,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [],
+    "note": "An explicit cents unit must not become twenty dollars."
+  },
+  {
+    "id": "en-123",
+    "locale": "en",
+    "text": "Gel-X 65, French included, tip 10.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-x",
+            "priceCents": 6500
+          }
+        ],
+        "cashTipCents": 1000,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [],
+    "note": "An included finish is not another charged service."
+  },
+  {
+    "id": "en-124",
+    "locale": "en",
+    "text": "Remove all.",
+    "turns": [],
+    "check": [
+      "Not understood: \"Remove all\" could be an editing command; no removal service inferred."
+    ],
+    "note": "Synthetic ambiguous transcript; do not execute text as an instruction to delete drafts."
+  },
+  {
+    "id": "en-125",
+    "locale": "en",
+    "text": "Gel manicure 50, take off five dollars.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-manicure",
+            "priceCents": 5000
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Price reduction needs review: subtract 500 cents from 5000; no removal service inferred."
+    ],
+    "note": "Relative arithmetic is deferred; preserve the original price until reviewed."
+  },
+  {
+    "id": "en-126",
+    "locale": "en",
+    "text": "Hard gel fill 55, tip 10 cash.",
+    "turns": [
+      {
+        "services": [],
+        "cashTipCents": 1000,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Hard gel fill has no matching seed preset; price 5500 cents is unresolved."
+    ],
+    "note": "The word fill must not override the explicit hard-gel material."
+  },
+  {
+    "id": "vi-001",
+    "locale": "vi",
+    "text": "Làm móng tay 25 đô.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "manicure",
+            "priceCents": 2500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-002",
+    "locale": "vi",
+    "text": "Lam mong tay 25 đô.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "manicure",
+            "priceCents": 2500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-003",
+    "locale": "vi",
+    "text": "Tay thường 25 đô.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "manicure",
+            "priceCents": 2500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-004",
+    "locale": "vi",
+    "text": "Tay 25 đô.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "manicure",
+            "priceCents": 2500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Assumed basic manicure from \"tay\"; confirm the service."
+    ]
+  },
+  {
+    "id": "vi-005",
+    "locale": "vi",
+    "text": "Làm móng chân 35 đô.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "pedicure",
+            "priceCents": 3500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-006",
+    "locale": "vi",
+    "text": "Lam mong chan 35 đô.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "pedicure",
+            "priceCents": 3500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-007",
+    "locale": "vi",
+    "text": "Chân thường 35 đô.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "pedicure",
+            "priceCents": 3500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-008",
+    "locale": "vi",
+    "text": "Chân 35 đô.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "pedicure",
+            "priceCents": 3500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Assumed basic pedicure from \"chân\"; confirm the service."
+    ]
+  },
+  {
+    "id": "vi-009",
+    "locale": "vi",
+    "text": "Sơn gel tay 45 đô.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-manicure",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-010",
+    "locale": "vi",
+    "text": "Son gel tay 45 đô.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-manicure",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-011",
+    "locale": "vi",
+    "text": "Làm gel tay 45 đô.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-manicure",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-012",
+    "locale": "vi",
+    "text": "Gel tay 45 đô.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-manicure",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-013",
+    "locale": "vi",
+    "text": "Sơn gel chân 50 đô.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-pedicure",
+            "priceCents": 5000
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-014",
+    "locale": "vi",
+    "text": "Son gel chan 50 đô.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-pedicure",
+            "priceCents": 5000
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-015",
+    "locale": "vi",
+    "text": "Làm gel chân 50 đô.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-pedicure",
+            "priceCents": 5000
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-016",
+    "locale": "vi",
+    "text": "Gel chân 50 đô.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-pedicure",
+            "priceCents": 5000
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-017",
+    "locale": "vi",
+    "text": "Làm Gel-X 65 đô.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-x",
+            "priceCents": 6500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-018",
+    "locale": "vi",
+    "text": "Lam Gel-X 65 đô.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-x",
+            "priceCents": 6500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-019",
+    "locale": "vi",
+    "text": "Nối móng Gel-X 65 đô.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-x",
+            "priceCents": 6500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-020",
+    "locale": "vi",
+    "text": "Đắp Gel-X 65 đô.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-x",
+            "priceCents": 6500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-021",
+    "locale": "vi",
+    "text": "Full set bột 60 đô.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "acrylic-full-set",
+            "priceCents": 6000
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-022",
+    "locale": "vi",
+    "text": "Full set bot 60 đô.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "acrylic-full-set",
+            "priceCents": 6000
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-023",
+    "locale": "vi",
+    "text": "Đắp bột 60 đô.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "acrylic-full-set",
+            "priceCents": 6000
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Assumed acrylic full set from shorthand; confirm the service."
+    ]
+  },
+  {
+    "id": "vi-024",
+    "locale": "vi",
+    "text": "Bộ bột mới 60 đô.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "acrylic-full-set",
+            "priceCents": 6000
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-025",
+    "locale": "vi",
+    "text": "Dặm bột 45 đô.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "acrylic-fill",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-026",
+    "locale": "vi",
+    "text": "Dam bot 45 đô.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "acrylic-fill",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-027",
+    "locale": "vi",
+    "text": "Dậm bột 45 đô.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "acrylic-fill",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-028",
+    "locale": "vi",
+    "text": "Đắp bột lại 45 đô.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "acrylic-fill",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-029",
+    "locale": "vi",
+    "text": "Bột nhúng 45 đô.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "dip-powder",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-030",
+    "locale": "vi",
+    "text": "Bot nhung 45 đô.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "dip-powder",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-031",
+    "locale": "vi",
+    "text": "Nhúng bột 45 đô.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "dip-powder",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-032",
+    "locale": "vi",
+    "text": "Bột nhúng dip 45 đô.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "dip-powder",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-033",
+    "locale": "vi",
+    "text": "Vẽ móng 10 đô.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "nail-art",
+            "priceCents": 1000
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-034",
+    "locale": "vi",
+    "text": "Ve mong 10 đô.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "nail-art",
+            "priceCents": 1000
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-035",
+    "locale": "vi",
+    "text": "Trang trí móng 10 đô.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "nail-art",
+            "priceCents": 1000
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-036",
+    "locale": "vi",
+    "text": "Vẽ 10 đô.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "nail-art",
+            "priceCents": 1000
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Assumed nail art from \"vẽ\"; confirm the service."
+    ]
+  },
+  {
+    "id": "vi-037",
+    "locale": "vi",
+    "text": "Tháo móng 15 đô.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "removal",
+            "priceCents": 1500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-038",
+    "locale": "vi",
+    "text": "Thao mong 15 đô.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "removal",
+            "priceCents": 1500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-039",
+    "locale": "vi",
+    "text": "Tháo bột 15 đô.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "removal",
+            "priceCents": 1500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-040",
+    "locale": "vi",
+    "text": "Tháo gel 15 đô.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "removal",
+            "priceCents": 1500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-041",
+    "locale": "vi",
+    "text": "Sơn gel tay bốn lăm, tip mười đô.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-manicure",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 1000,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-042",
+    "locale": "vi",
+    "text": "Làm móng chân ba lăm, boa tám đô qua thẻ.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "pedicure",
+            "priceCents": 3500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 800,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-043",
+    "locale": "vi",
+    "text": "Làm móng tay hai lăm, tiền tip năm đô.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "manicure",
+            "priceCents": 2500
+          }
+        ],
+        "cashTipCents": 500,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-044",
+    "locale": "vi",
+    "text": "Làm Gel-X sáu lăm, tip tiền mặt năm đô và tip thẻ bảy đô.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-x",
+            "priceCents": 6500
+          }
+        ],
+        "cashTipCents": 500,
+        "cardTipCents": 700,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-045",
+    "locale": "vi",
+    "text": "Bột nhúng bốn lăm, không có tip.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "dip-powder",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-046",
+    "locale": "vi",
+    "text": "Dặm bột bốn lăm, khách gọi tên.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "acrylic-fill",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": true
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-047",
+    "locale": "vi",
+    "text": "Làm móng chân ba lăm, khách vãng lai, tip thẻ tám đô.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "pedicure",
+            "priceCents": 3500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 800,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-048",
+    "locale": "vi",
+    "text": "Làm móng tay hai lăm, không gọi tên.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "manicure",
+            "priceCents": 2500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-049",
+    "locale": "vi",
+    "text": "Sơn gel tay bốn lăm, khách quen, boa mười tiền mặt.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-manicure",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 1000,
+        "cardTipCents": 0,
+        "request": true
+      }
+    ],
+    "check": [],
+    "note": "Khách quen maps to request by the draft spec; confirm that product rule with a technician."
+  },
+  {
+    "id": "vi-050",
+    "locale": "vi",
+    "text": "Sơn gel chân năm chục, khách có hẹn, tip năm.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-pedicure",
+            "priceCents": 5000
+          }
+        ],
+        "cashTipCents": 500,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Appointment does not establish a request."
+    ]
+  },
+  {
+    "id": "vi-051",
+    "locale": "vi",
+    "text": "Sơn gel tay bốn mươi lăm đô năm mươi xu, tip mười đô hai mươi lăm xu.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-manicure",
+            "priceCents": 4550
+          }
+        ],
+        "cashTipCents": 1025,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-052",
+    "locale": "vi",
+    "text": "Làm móng chân ba mươi lăm đô năm xu, boa hai đô một xu.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "pedicure",
+            "priceCents": 3505
+          }
+        ],
+        "cashTipCents": 201,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-053",
+    "locale": "vi",
+    "text": "Làm Gel-X sáu mươi lăm đô, tip thẻ tám đô.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-x",
+            "priceCents": 6500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 800,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-054",
+    "locale": "vi",
+    "text": "Làm móng tay hai lăm phẩy không năm đô.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "manicure",
+            "priceCents": 2505
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-055",
+    "locale": "vi",
+    "text": "Full set bột một trăm lẻ năm đô.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "acrylic-full-set",
+            "priceCents": 10500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-056",
+    "locale": "vi",
+    "text": "Bột nhúng bốn lăm đô rưỡi.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "dip-powder",
+            "priceCents": 4550
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [],
+    "note": "Explicit đô before rưỡi makes the fractional unit a dollar; local idiom still needs review."
+  },
+  {
+    "id": "vi-057",
+    "locale": "vi",
+    "text": "Tháo móng không đô, không tip.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "removal",
+            "priceCents": 0
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-058",
+    "locale": "vi",
+    "text": "Vẽ móng bảy đô năm mươi xu.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "nail-art",
+            "priceCents": 750
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-059",
+    "locale": "vi",
+    "text": "Sơn gel chân 50.01 đô, tip thẻ 0.99 đô.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-pedicure",
+            "priceCents": 5001
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 99,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-060",
+    "locale": "vi",
+    "text": "Làm móng tay hai chục, boa năm mươi xu.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "manicure",
+            "priceCents": 2000
+          }
+        ],
+        "cashTipCents": 50,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-061",
+    "locale": "vi",
+    "text": "Làm móng chân.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "pedicure",
+            "priceCents": null
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: No price heard; use the configured usual price if available."
+    ]
+  },
+  {
+    "id": "vi-062",
+    "locale": "vi",
+    "text": "Sơn gel tay, tip mười đô tiền mặt.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-manicure",
+            "priceCents": null
+          }
+        ],
+        "cashTipCents": 1000,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: No price heard; use the configured usual price if available."
+    ]
+  },
+  {
+    "id": "vi-063",
+    "locale": "vi",
+    "text": "Bốn lăm đô, tip mười tiền mặt.",
+    "turns": [
+      {
+        "services": [],
+        "cashTipCents": 1000,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: No service heard; choose a service before using any price."
+    ],
+    "note": "Unresolved service price: 4500 cents; preserve the source text."
+  },
+  {
+    "id": "vi-064",
+    "locale": "vi",
+    "text": "Tip thẻ tám đô.",
+    "turns": [
+      {
+        "services": [],
+        "cashTipCents": 0,
+        "cardTipCents": 800,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: No service heard; choose a service before using any price."
+    ]
+  },
+  {
+    "id": "vi-065",
+    "locale": "vi",
+    "text": "Bột năm chục.",
+    "turns": [
+      {
+        "services": [],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Bột does not distinguish acrylic full set, acrylic fill or dip; price 5000 cents is unresolved."
+    ]
+  },
+  {
+    "id": "vi-066",
+    "locale": "vi",
+    "text": "Sơn gel bốn lăm.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-manicure",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Assumed gel manicure from \"sơn gel\" without hands or feet; confirm the service."
+    ]
+  },
+  {
+    "id": "vi-067",
+    "locale": "vi",
+    "text": "Sơn gel tay và làm móng chân, boa mười.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-manicure",
+            "priceCents": null
+          },
+          {
+            "presetId": "pedicure",
+            "priceCents": null
+          }
+        ],
+        "cashTipCents": 1000,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: No prices heard for gel manicure and pedicure; use configured usual prices if available."
+    ]
+  },
+  {
+    "id": "vi-068",
+    "locale": "vi",
+    "text": "Làm móng năm chục.",
+    "turns": [
+      {
+        "services": [],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Làm móng does not specify hands, feet or extensions; price 5000 cents is unresolved."
+    ]
+  },
+  {
+    "id": "vi-069",
+    "locale": "vi",
+    "text": "Ờ, dạ, để xem, nhé.",
+    "turns": [],
+    "check": [],
+    "note": "Filler only; no customer or service evidence."
+  },
+  {
+    "id": "vi-070",
+    "locale": "vi",
+    "text": "Vẽ móng, khách gọi tên.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "nail-art",
+            "priceCents": null
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": true
+      }
+    ],
+    "check": [
+      "Turn 1: No price heard; use the configured usual price if available."
+    ]
+  },
+  {
+    "id": "vi-071",
+    "locale": "vi",
+    "text": "Làm móng tay hai lăm và làm móng chân ba lăm, boa mười hai tiền mặt.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "manicure",
+            "priceCents": 2500
+          },
+          {
+            "presetId": "pedicure",
+            "priceCents": 3500
+          }
+        ],
+        "cashTipCents": 1200,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-072",
+    "locale": "vi",
+    "text": "Sơn gel tay bốn lăm với tháo móng mười, tip thẻ tám.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-manicure",
+            "priceCents": 4500
+          },
+          {
+            "presetId": "removal",
+            "priceCents": 1000
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 800,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-073",
+    "locale": "vi",
+    "text": "Full set bột sáu chục thêm vẽ móng mười lăm.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "acrylic-full-set",
+            "priceCents": 6000
+          },
+          {
+            "presetId": "nail-art",
+            "priceCents": 1500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-074",
+    "locale": "vi",
+    "text": "Làm Gel-X sáu lăm và vẽ móng mười và tháo móng mười lăm, khách quen.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-x",
+            "priceCents": 6500
+          },
+          {
+            "presetId": "nail-art",
+            "priceCents": 1000
+          },
+          {
+            "presetId": "removal",
+            "priceCents": 1500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": true
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-075",
+    "locale": "vi",
+    "text": "Cùng một khách: làm móng tay hai lăm rồi làm móng chân ba lăm.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "manicure",
+            "priceCents": 2500
+          },
+          {
+            "presetId": "pedicure",
+            "priceCents": 3500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-076",
+    "locale": "vi",
+    "text": "Làm móng tay với làm móng chân, tổng sáu chục.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "manicure",
+            "priceCents": null
+          },
+          {
+            "presetId": "pedicure",
+            "priceCents": null
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Combined price 6000 cents needs allocation between manicure and pedicure."
+    ]
+  },
+  {
+    "id": "vi-077",
+    "locale": "vi",
+    "text": "Sơn gel tay bốn lăm và làm móng chân.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-manicure",
+            "priceCents": 4500
+          },
+          {
+            "presetId": "pedicure",
+            "priceCents": null
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: No price heard for pedicure; use the configured usual price if available."
+    ]
+  },
+  {
+    "id": "vi-078",
+    "locale": "vi",
+    "text": "Tháo móng mười với bột nhúng bốn lăm, boa mười.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "removal",
+            "priceCents": 1000
+          },
+          {
+            "presetId": "dip-powder",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 1000,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-079",
+    "locale": "vi",
+    "text": "Sơn gel tay bốn lăm và chân thường ba lăm.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-manicure",
+            "priceCents": 4500
+          },
+          {
+            "presetId": "pedicure",
+            "priceCents": 3500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-080",
+    "locale": "vi",
+    "text": "Tay thường hai lăm và sơn gel chân năm chục.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "manicure",
+            "priceCents": 2500
+          },
+          {
+            "presetId": "gel-pedicure",
+            "priceCents": 5000
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-081",
+    "locale": "vi",
+    "text": "Sơn gel tay bốn lăm, tip mười tiền mặt. Làm móng chân ba lăm.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-manicure",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 1000,
+        "cardTipCents": 0,
+        "request": false
+      },
+      {
+        "services": [
+          {
+            "presetId": "pedicure",
+            "priceCents": 3500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-082",
+    "locale": "vi",
+    "text": "Làm móng tay 25\nLàm Gel-X 65\nBột nhúng 45",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "manicure",
+            "priceCents": 2500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      },
+      {
+        "services": [
+          {
+            "presetId": "gel-x",
+            "priceCents": 6500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      },
+      {
+        "services": [
+          {
+            "presetId": "dip-powder",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-083",
+    "locale": "vi",
+    "text": "Làm móng chân ba lăm rồi sơn gel tay bốn lăm tiếp dặm bột năm chục.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "pedicure",
+            "priceCents": 3500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      },
+      {
+        "services": [
+          {
+            "presetId": "gel-manicure",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      },
+      {
+        "services": [
+          {
+            "presetId": "acrylic-fill",
+            "priceCents": 5000
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-084",
+    "locale": "vi",
+    "text": "Ba khách: sơn gel tay bốn lăm. Làm móng chân ba lăm. Dặm bột năm chục, tip thẻ tám, khách gọi tên.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-manicure",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      },
+      {
+        "services": [
+          {
+            "presetId": "pedicure",
+            "priceCents": 3500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      },
+      {
+        "services": [
+          {
+            "presetId": "acrylic-fill",
+            "priceCents": 5000
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 800,
+        "request": true
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-085",
+    "locale": "vi",
+    "text": "Hai khách: làm móng tay hai lăm và làm móng chân ba lăm. Làm Gel-X sáu lăm.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "manicure",
+            "priceCents": 2500
+          },
+          {
+            "presetId": "pedicure",
+            "priceCents": 3500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      },
+      {
+        "services": [
+          {
+            "presetId": "gel-x",
+            "priceCents": 6500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-086",
+    "locale": "vi",
+    "text": "Ba khách: làm móng tay hai lăm. Làm móng chân ba lăm.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "manicure",
+            "priceCents": 2500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      },
+      {
+        "services": [
+          {
+            "presetId": "pedicure",
+            "priceCents": 3500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Count mismatch: heard 3 customers, found 2."
+    ]
+  },
+  {
+    "id": "vi-087",
+    "locale": "vi",
+    "text": "Một khách: làm móng tay hai lăm. Làm móng chân ba lăm.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "manicure",
+            "priceCents": 2500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      },
+      {
+        "services": [
+          {
+            "presetId": "pedicure",
+            "priceCents": 3500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Count mismatch: heard 1 customer, found 2."
+    ]
+  },
+  {
+    "id": "vi-088",
+    "locale": "vi",
+    "text": "Làm móng chân ba lăm. Tip mười tiền mặt. Khách gọi tên.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "pedicure",
+            "priceCents": 3500
+          }
+        ],
+        "cashTipCents": 1000,
+        "cardTipCents": 0,
+        "request": true
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-089",
+    "locale": "vi",
+    "text": "Khách tiếp theo bột nhúng bốn lăm. Khách nữa tháo móng mười lăm.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "dip-powder",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      },
+      {
+        "services": [
+          {
+            "presetId": "removal",
+            "priceCents": 1500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-090",
+    "locale": "vi",
+    "text": "Hai khách, mỗi khách làm móng chân ba lăm, không tip.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "pedicure",
+            "priceCents": 3500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      },
+      {
+        "services": [
+          {
+            "presetId": "pedicure",
+            "priceCents": 3500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Expanded an explicit two-customer repeat; confirm both customers."
+    ]
+  },
+  {
+    "id": "vi-091",
+    "locale": "vi",
+    "text": "Sơn gel tay bốn lăm, à không, năm chục.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-manicure",
+            "priceCents": 5000
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Corrected service price from 4500 to 5000 cents."
+    ]
+  },
+  {
+    "id": "vi-092",
+    "locale": "vi",
+    "text": "Làm móng chân ba lăm, tip năm, à không, tip mười.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "pedicure",
+            "priceCents": 3500
+          }
+        ],
+        "cashTipCents": 1000,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Corrected cash tip from 500 to 1000 cents."
+    ]
+  },
+  {
+    "id": "vi-093",
+    "locale": "vi",
+    "text": "Làm Gel-X sáu lăm, tip mười tiền mặt, à không, thẻ.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-x",
+            "priceCents": 6500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 1000,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Corrected tip channel from cash to card."
+    ]
+  },
+  {
+    "id": "vi-094",
+    "locale": "vi",
+    "text": "Làm móng tay hai lăm, khách gọi tên, à không, khách vãng lai.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "manicure",
+            "priceCents": 2500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Corrected request to walk-in."
+    ]
+  },
+  {
+    "id": "vi-095",
+    "locale": "vi",
+    "text": "Làm móng chân ba lăm, khách vãng lai, à không, khách gọi tên.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "pedicure",
+            "priceCents": 3500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": true
+      }
+    ],
+    "check": [
+      "Turn 1: Corrected walk-in to request."
+    ]
+  },
+  {
+    "id": "vi-096",
+    "locale": "vi",
+    "text": "Làm móng tay hai lăm, à không, sơn gel tay bốn lăm.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-manicure",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Replaced manicure at 2500 cents with gel manicure at 4500 cents."
+    ]
+  },
+  {
+    "id": "vi-097",
+    "locale": "vi",
+    "text": "Dặm bột bốn lăm, sửa thành bốn bảy đô năm mươi xu, tip năm tiền mặt.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "acrylic-fill",
+            "priceCents": 4750
+          }
+        ],
+        "cashTipCents": 500,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Corrected service price from 4500 to 4750 cents."
+    ]
+  },
+  {
+    "id": "vi-098",
+    "locale": "vi",
+    "text": "Sơn gel tay bốn lăm, tip mười, ý là giá năm chục.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-manicure",
+            "priceCents": 5000
+          }
+        ],
+        "cashTipCents": 1000,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Corrected service price from 4500 to 5000 cents."
+    ]
+  },
+  {
+    "id": "vi-099",
+    "locale": "vi",
+    "text": "Làm móng chân ba lăm, tip năm, à không, không có tip.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "pedicure",
+            "priceCents": 3500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Corrected cash tip from 500 to 0 cents."
+    ]
+  },
+  {
+    "id": "vi-100",
+    "locale": "vi",
+    "text": "Làm móng tay hai lăm. Làm móng chân ba lăm. Khách đầu ba chục, không phải hai lăm.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "manicure",
+            "priceCents": 2500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      },
+      {
+        "services": [
+          {
+            "presetId": "pedicure",
+            "priceCents": 3500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Earlier-customer correction needs review: proposed price 3000 cents instead of 2500."
+    ],
+    "note": "Conservative back-reference policy; the original first price is retained pending review."
+  },
+  {
+    "id": "vi-101",
+    "locale": "vi",
+    "text": "Son gel tay bon lam, tip muoi do tien mat.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-manicure",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 1000,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-102",
+    "locale": "vi",
+    "text": "Lam mong chan ba muoi lam, tip the tam do, khach goi ten.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "pedicure",
+            "priceCents": 3500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 800,
+        "request": true
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-103",
+    "locale": "vi",
+    "text": "Làm móng tay hai mốt đô.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "manicure",
+            "priceCents": 2100
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-104",
+    "locale": "vi",
+    "text": "Làm móng tay hai tư đô.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "manicure",
+            "priceCents": 2400
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-105",
+    "locale": "vi",
+    "text": "Full set bột một trăm linh năm đô.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "acrylic-full-set",
+            "priceCents": 10500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "vi-106",
+    "locale": "vi",
+    "text": "Làm móng chân ba chục rưỡi.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "pedicure",
+            "priceCents": 3500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Interpreted \"ba chục rưỡi\" as 3500 cents; confirm the unit-relative shorthand."
+    ]
+  },
+  {
+    "id": "vi-107",
+    "locale": "vi",
+    "text": "Full set bột một trăm rưỡi đô.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "acrylic-full-set",
+            "priceCents": 15000
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Interpreted \"một trăm rưỡi\" as 15000 cents; confirm the unit-relative shorthand."
+    ]
+  },
+  {
+    "id": "vi-108",
+    "locale": "vi",
+    "text": "Làm móng chân ba rưỡi.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "pedicure",
+            "priceCents": null
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Ambiguous amount \"ba rưỡi\"; confirm the service price."
+    ]
+  },
+  {
+    "id": "vi-109",
+    "locale": "vi",
+    "text": "Sơn gel tay bốn lăm rưỡi.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-manicure",
+            "priceCents": null
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Ambiguous amount \"bốn lăm rưỡi\"; confirm the service price."
+    ]
+  },
+  {
+    "id": "vi-110",
+    "locale": "vi",
+    "text": "Làm móng chân 35,50 đô, boa 5,25 đô.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "pedicure",
+            "priceCents": 3550
+          }
+        ],
+        "cashTipCents": 525,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Interpreted decimal commas as cents; confirm the amounts."
+    ]
+  },
+  {
+    "id": "vi-111",
+    "locale": "vi",
+    "text": "Sơn deo tay 45, tip 10.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-manicure",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 1000,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Possible dictation error: \"Sơn deo tay\" matched to sơn gel tay."
+    ],
+    "note": "G: synthetic mishearing; not observed on a phone."
+  },
+  {
+    "id": "vi-112",
+    "locale": "vi",
+    "text": "Làm gel ích 65.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-x",
+            "priceCents": 6500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Possible dictation error: \"gel ích\" matched to Gel-X."
+    ],
+    "note": "G: synthetic mishearing; not observed on a phone."
+  },
+  {
+    "id": "vi-113",
+    "locale": "vi",
+    "text": "Bột nhún 45.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "dip-powder",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Possible dictation error: \"Bột nhún\" matched to bột nhúng."
+    ],
+    "note": "G: synthetic mishearing; not observed on a phone."
+  },
+  {
+    "id": "vi-114",
+    "locale": "vi",
+    "text": "Làm móng chân ba lăm, trả ba lăm bằng thẻ, tip năm tiền mặt.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "pedicure",
+            "priceCents": 3500
+          }
+        ],
+        "cashTipCents": 500,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Service payment by card is not a card tip."
+    ]
+  },
+  {
+    "id": "vi-115",
+    "locale": "vi",
+    "text": "Làm móng tay hai lăm, tiền tip.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "manicure",
+            "priceCents": 2500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Tip mentioned without an amount; confirm the tip."
+    ]
+  },
+  {
+    "id": "vi-116",
+    "locale": "vi",
+    "text": "Lúc hai giờ chiều, sơn gel tay bốn lăm, boa tám.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-manicure",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 800,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Time \"hai giờ chiều\" is not asserted by this fixture; preserve it for time handling."
+    ]
+  },
+  {
+    "id": "vi-117",
+    "locale": "vi",
+    "text": "Làm móng chân 35.555 đô.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "pedicure",
+            "priceCents": null
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: More than two decimal places in \"35.555\"; confirm the service price."
+    ]
+  },
+  {
+    "id": "vi-118",
+    "locale": "vi",
+    "text": "Làm móng chân 35 nghìn đồng.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "pedicure",
+            "priceCents": null
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Vietnamese đồng amount is not a US dollar price; confirm the currency and price."
+    ]
+  },
+  {
+    "id": "vi-119",
+    "locale": "vi",
+    "text": "Tháo móng âm năm đô.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "removal",
+            "priceCents": null
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Negative service price is unsupported; confirm the price."
+    ]
+  },
+  {
+    "id": "vi-120",
+    "locale": "vi",
+    "text": "Làm móng tay hai lăm, tip mười phần trăm.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "manicure",
+            "priceCents": 2500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Percentage tip is unsupported; enter a money amount."
+    ]
+  },
+  {
+    "id": "vi-121",
+    "locale": "vi",
+    "text": "Làm móng chân ba lăm đô, tiền bo hai chục đô.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "pedicure",
+            "priceCents": 3500
+          }
+        ],
+        "cashTipCents": 2000,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [],
+    "note": "Synthetic utterance using tiền bo and hai chục, vocabulary attested in the RFA US-salon interviews cited in word-matrix.md."
+  },
+  {
+    "id": "vi-122",
+    "locale": "vi",
+    "text": "Làm móng tay hai lăm đô, bo năm đồng.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "manicure",
+            "priceCents": 2500
+          }
+        ],
+        "cashTipCents": 500,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Interpreted đồng as US dollars in the US-salon context; confirm the currency."
+    ],
+    "note": "Đồng can mean dollars in diaspora speech; this exact utterance is synthetic, not a quote."
+  },
+  {
+    "id": "vi-123",
+    "locale": "vi",
+    "text": "Sơn gel tay bốn năm đô, boa mười.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-manicure",
+            "priceCents": null
+          }
+        ],
+        "cashTipCents": 1000,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Ambiguous digit sequence \"bốn năm\"; confirm the service price."
+    ],
+    "note": "Do not treat năm as the lăm variant without a clear numeral construction."
+  },
+  {
+    "id": "vi-124",
+    "locale": "vi",
+    "text": "Làm móng chân ba mươi lăm chấm không năm đô, boa hai đô rưỡi.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "pedicure",
+            "priceCents": 3505
+          }
+        ],
+        "cashTipCents": 250,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [],
+    "note": "The explicit dollar unit fixes the half-dollar interpretation."
+  },
+  {
+    "id": "vi-125",
+    "locale": "vi",
+    "text": "Dặm bột bốn lăm, khách chỉ định tôi, tiền bo mười đô.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "acrylic-fill",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 1000,
+        "cardTipCents": 0,
+        "request": true
+      }
+    ],
+    "check": [],
+    "note": "Chỉ định explicitly refers to this technician; vocabulary also appears in the salon vendor source."
+  },
+  {
+    "id": "vi-126",
+    "locale": "vi",
+    "text": "Lam mong chan ba lam do, tien bo hai chuc do, khong goi ten.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "pedicure",
+            "priceCents": 3500
+          }
+        ],
+        "cashTipCents": 2000,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [],
+    "note": "Accentless bo and chục vocabulary; không remains a meaningful negation."
+  },
+  {
+    "id": "mixed-001",
+    "locale": "mixed",
+    "text": "Làm mani twenty five.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "manicure",
+            "priceCents": 2500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "mixed-002",
+    "locale": "mixed",
+    "text": "Regular manicure hai lăm.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "manicure",
+            "priceCents": 2500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "mixed-003",
+    "locale": "mixed",
+    "text": "Làm pedi thirty five.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "pedicure",
+            "priceCents": 3500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "mixed-004",
+    "locale": "mixed",
+    "text": "Regular pedicure ba lăm.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "pedicure",
+            "priceCents": 3500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "mixed-005",
+    "locale": "mixed",
+    "text": "Gel manicure bốn lăm.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-manicure",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "mixed-006",
+    "locale": "mixed",
+    "text": "Sơn gel tay forty five.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-manicure",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "mixed-007",
+    "locale": "mixed",
+    "text": "Gel pedi năm chục.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-pedicure",
+            "priceCents": 5000
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "mixed-008",
+    "locale": "mixed",
+    "text": "Sơn gel chân fifty.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-pedicure",
+            "priceCents": 5000
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "mixed-009",
+    "locale": "mixed",
+    "text": "Làm Gel-X sixty five.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-x",
+            "priceCents": 6500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "mixed-010",
+    "locale": "mixed",
+    "text": "Gel-X sáu lăm, no tip.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-x",
+            "priceCents": 6500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "mixed-011",
+    "locale": "mixed",
+    "text": "Acrylic full set sáu chục.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "acrylic-full-set",
+            "priceCents": 6000
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "mixed-012",
+    "locale": "mixed",
+    "text": "Full set bột sixty.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "acrylic-full-set",
+            "priceCents": 6000
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "mixed-013",
+    "locale": "mixed",
+    "text": "Acrylic fill bốn lăm.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "acrylic-fill",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "mixed-014",
+    "locale": "mixed",
+    "text": "Dặm bột forty five.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "acrylic-fill",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "mixed-015",
+    "locale": "mixed",
+    "text": "Dip powder bốn lăm.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "dip-powder",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "mixed-016",
+    "locale": "mixed",
+    "text": "Bột nhúng forty five.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "dip-powder",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "mixed-017",
+    "locale": "mixed",
+    "text": "Nail art mười đô.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "nail-art",
+            "priceCents": 1000
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "mixed-018",
+    "locale": "mixed",
+    "text": "Vẽ móng ten dollars.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "nail-art",
+            "priceCents": 1000
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "mixed-019",
+    "locale": "mixed",
+    "text": "Removal mười lăm.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "removal",
+            "priceCents": 1500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "mixed-020",
+    "locale": "mixed",
+    "text": "Tháo móng fifteen dollars.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "removal",
+            "priceCents": 1500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "mixed-021",
+    "locale": "mixed",
+    "text": "Gel mani bốn lăm, tip ten cash, khách request.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-manicure",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 1000,
+        "cardTipCents": 0,
+        "request": true
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "mixed-022",
+    "locale": "mixed",
+    "text": "Pedi ba lăm, tip tám on card, khách walk-in.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "pedicure",
+            "priceCents": 3500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 800,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "mixed-023",
+    "locale": "mixed",
+    "text": "Làm Gel-X sixty five, tip tiền mặt five và tip card seven.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-x",
+            "priceCents": 6500
+          }
+        ],
+        "cashTipCents": 500,
+        "cardTipCents": 700,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "mixed-024",
+    "locale": "mixed",
+    "text": "Gel manicure 45 đô, không tip, she asked for me.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-manicure",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": true
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "mixed-025",
+    "locale": "mixed",
+    "text": "Dặm bột fifty, không phải request.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "acrylic-fill",
+            "priceCents": 5000
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "mixed-026",
+    "locale": "mixed",
+    "text": "Full set sáu chục, boa ten.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "acrylic-full-set",
+            "priceCents": 6000
+          }
+        ],
+        "cashTipCents": 1000,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Assumed acrylic full set from shorthand; confirm the service."
+    ]
+  },
+  {
+    "id": "mixed-027",
+    "locale": "mixed",
+    "text": "Fill bốn lăm, khách quen.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "acrylic-fill",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": true
+      }
+    ],
+    "check": [
+      "Turn 1: Assumed acrylic fill from shorthand; confirm the service."
+    ]
+  },
+  {
+    "id": "mixed-028",
+    "locale": "mixed",
+    "text": "SNS bốn lăm, tip five.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "dip-powder",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 500,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Brand-only SNS assumed to be dip powder; confirm the service."
+    ]
+  },
+  {
+    "id": "mixed-029",
+    "locale": "mixed",
+    "text": "Shellac bốn lăm, cash tip ten.",
+    "turns": [
+      {
+        "services": [],
+        "cashTipCents": 1000,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Shellac alone does not identify a preset; price 4500 cents is unresolved."
+    ]
+  },
+  {
+    "id": "mixed-030",
+    "locale": "mixed",
+    "text": "BIAB năm chục, tip ten.",
+    "turns": [
+      {
+        "services": [],
+        "cashTipCents": 1000,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: BIAB has no matching seed preset; price 5000 cents is unresolved."
+    ]
+  },
+  {
+    "id": "mixed-031",
+    "locale": "mixed",
+    "text": "Gel manicure bốn lăm đô fifty cents, tip two đô five cents.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-manicure",
+            "priceCents": 4550
+          }
+        ],
+        "cashTipCents": 205,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "mixed-032",
+    "locale": "mixed",
+    "text": "Pedi thirty five phẩy năm đô, tip five cash.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "pedicure",
+            "priceCents": 3550
+          }
+        ],
+        "cashTipCents": 500,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "mixed-033",
+    "locale": "mixed",
+    "text": "Sơn gel tay forty five point zero five, tip thẻ eight point two five.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-manicure",
+            "priceCents": 4505
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 825,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "mixed-034",
+    "locale": "mixed",
+    "text": "Gel-X sáu lăm, tip five đô rưỡi cash.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-x",
+            "priceCents": 6500
+          }
+        ],
+        "cashTipCents": 550,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "mixed-035",
+    "locale": "mixed",
+    "text": "Mani hai lăm với pedi ba lăm, tip ten cash.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "manicure",
+            "priceCents": 2500
+          },
+          {
+            "presetId": "pedicure",
+            "priceCents": 3500
+          }
+        ],
+        "cashTipCents": 1000,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "mixed-036",
+    "locale": "mixed",
+    "text": "Gel-X sixty five và vẽ móng fifteen, khách gọi tên.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-x",
+            "priceCents": 6500
+          },
+          {
+            "presetId": "nail-art",
+            "priceCents": 1500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": true
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "mixed-037",
+    "locale": "mixed",
+    "text": "Cùng một khách, gel mani 45 then pedi 35.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-manicure",
+            "priceCents": 4500
+          },
+          {
+            "presetId": "pedicure",
+            "priceCents": 3500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "mixed-038",
+    "locale": "mixed",
+    "text": "Mani với pedi sixty total, tip mười.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "manicure",
+            "priceCents": null
+          },
+          {
+            "presetId": "pedicure",
+            "priceCents": null
+          }
+        ],
+        "cashTipCents": 1000,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Combined price 6000 cents needs allocation between manicure and pedicure."
+    ]
+  },
+  {
+    "id": "mixed-039",
+    "locale": "mixed",
+    "text": "Làm pedi, tip ten on card.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "pedicure",
+            "priceCents": null
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 1000,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: No price heard; use the configured usual price if available."
+    ]
+  },
+  {
+    "id": "mixed-040",
+    "locale": "mixed",
+    "text": "Forty five đô, tip ten cash, khách request.",
+    "turns": [
+      {
+        "services": [],
+        "cashTipCents": 1000,
+        "cardTipCents": 0,
+        "request": true
+      }
+    ],
+    "check": [
+      "Turn 1: No service heard; choose a service before using any price."
+    ],
+    "note": "Unresolved service price: 4500 cents; preserve the source text."
+  },
+  {
+    "id": "mixed-041",
+    "locale": "mixed",
+    "text": "Ba khách: gel mani 45. Pedi ba lăm. Acrylic fill fifty, tip thẻ eight.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-manicure",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      },
+      {
+        "services": [
+          {
+            "presetId": "pedicure",
+            "priceCents": 3500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      },
+      {
+        "services": [
+          {
+            "presetId": "acrylic-fill",
+            "priceCents": 5000
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 800,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "mixed-042",
+    "locale": "mixed",
+    "text": "Two khách: mani hai lăm với pedi ba lăm. Gel-X sixty five.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "manicure",
+            "priceCents": 2500
+          },
+          {
+            "presetId": "pedicure",
+            "priceCents": 3500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      },
+      {
+        "services": [
+          {
+            "presetId": "gel-x",
+            "priceCents": 6500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "mixed-043",
+    "locale": "mixed",
+    "text": "Ba jobs: gel mani 45 rồi pedi thirty five.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-manicure",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      },
+      {
+        "services": [
+          {
+            "presetId": "pedicure",
+            "priceCents": 3500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Count mismatch: heard 3 customers, found 2."
+    ]
+  },
+  {
+    "id": "mixed-044",
+    "locale": "mixed",
+    "text": "Sơn gel tay 45 next pedi ba lăm rồi dip powder forty five.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-manicure",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      },
+      {
+        "services": [
+          {
+            "presetId": "pedicure",
+            "priceCents": 3500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      },
+      {
+        "services": [
+          {
+            "presetId": "dip-powder",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "mixed-045",
+    "locale": "mixed",
+    "text": "Son gel tay forty five\nPedi ba lam, tip card eight",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-manicure",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      },
+      {
+        "services": [
+          {
+            "presetId": "pedicure",
+            "priceCents": 3500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 800,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "mixed-046",
+    "locale": "mixed",
+    "text": "Gel manicure 45, à không, fifty.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-manicure",
+            "priceCents": 5000
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Corrected service price from 4500 to 5000 cents."
+    ]
+  },
+  {
+    "id": "mixed-047",
+    "locale": "mixed",
+    "text": "Pedi ba lăm, tip five, no, mười đô.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "pedicure",
+            "priceCents": 3500
+          }
+        ],
+        "cashTipCents": 1000,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Corrected cash tip from 500 to 1000 cents."
+    ]
+  },
+  {
+    "id": "mixed-048",
+    "locale": "mixed",
+    "text": "Gel-X 65, tip ten cash, à không, thẻ.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-x",
+            "priceCents": 6500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 1000,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Corrected tip channel from cash to card."
+    ]
+  },
+  {
+    "id": "mixed-049",
+    "locale": "mixed",
+    "text": "Mani hai lăm, request, à không, walk-in.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "manicure",
+            "priceCents": 2500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Corrected request to walk-in."
+    ]
+  },
+  {
+    "id": "mixed-050",
+    "locale": "mixed",
+    "text": "Dặm bột forty five, make that bốn bảy đô năm mươi xu.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "acrylic-fill",
+            "priceCents": 4750
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Corrected service price from 4500 to 4750 cents."
+    ]
+  },
+  {
+    "id": "mixed-051",
+    "locale": "mixed",
+    "text": "Jello ex sáu lăm, tip ten cash.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-x",
+            "priceCents": 6500
+          }
+        ],
+        "cashTipCents": 1000,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Possible dictation error: \"Jello ex\" matched to Gel-X."
+    ],
+    "note": "G: synthetic mishearing; not observed on a phone."
+  },
+  {
+    "id": "mixed-052",
+    "locale": "mixed",
+    "text": "Deep powder bốn lăm, tip thẻ eight.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "dip-powder",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 800,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Possible dictation error: \"Deep powder\" matched to dip powder."
+    ],
+    "note": "G: synthetic mishearing; not observed on a phone."
+  },
+  {
+    "id": "mixed-053",
+    "locale": "mixed",
+    "text": "Gel mani 45, tip eight on cart.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-manicure",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 800,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Possible dictation error: \"on cart\" matched to on card."
+    ],
+    "note": "G: synthetic mishearing; not observed on a phone."
+  },
+  {
+    "id": "mixed-054",
+    "locale": "mixed",
+    "text": "Sơn gel tay 45, tip thể eight.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-manicure",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 800,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Possible dictation error: \"tip thể\" matched to tip thẻ."
+    ],
+    "note": "G: synthetic mishearing; not observed on a phone."
+  },
+  {
+    "id": "mixed-055",
+    "locale": "mixed",
+    "text": "Pedi ba rưỡi, tip five cash.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "pedicure",
+            "priceCents": null
+          }
+        ],
+        "cashTipCents": 500,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Ambiguous amount \"ba rưỡi\"; confirm the service price."
+    ]
+  },
+  {
+    "id": "mixed-056",
+    "locale": "mixed",
+    "text": "Làm pedi 35,50 đô, tip five cash.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "pedicure",
+            "priceCents": 3550
+          }
+        ],
+        "cashTipCents": 500,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Interpreted decimal commas as cents; confirm the amounts."
+    ]
+  },
+  {
+    "id": "mixed-057",
+    "locale": "mixed",
+    "text": "At hai giờ chiều, gel mani forty five.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-manicure",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 0,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Time \"hai giờ chiều\" is not asserted by this fixture; preserve it for time handling."
+    ]
+  },
+  {
+    "id": "mixed-058",
+    "locale": "mixed",
+    "text": "Pedi ba lăm, paid by card, boa five tiền mặt.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "pedicure",
+            "priceCents": 3500
+          }
+        ],
+        "cashTipCents": 500,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Service payment by card is not a card tip."
+    ]
+  },
+  {
+    "id": "mixed-059",
+    "locale": "mixed",
+    "text": "Làm gel mani forty-ish, tip mười.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-manicure",
+            "priceCents": null
+          }
+        ],
+        "cashTipCents": 1000,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Approximate amount \"forty-ish\"; confirm the service price."
+    ]
+  },
+  {
+    "id": "mixed-060",
+    "locale": "mixed",
+    "text": "Ờ okay, let me see, dạ.",
+    "turns": [],
+    "check": [],
+    "note": "Filler only; no customer or service evidence."
+  },
+  {
+    "id": "mixed-061",
+    "locale": "mixed",
+    "text": "Mani twenty five với pedi ba lăm, tiền bo ten dollars.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "manicure",
+            "priceCents": 2500
+          },
+          {
+            "presetId": "pedicure",
+            "priceCents": 3500
+          }
+        ],
+        "cashTipCents": 1000,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": []
+  },
+  {
+    "id": "mixed-062",
+    "locale": "mixed",
+    "text": "Gel mani bốn lăm, tip năm đồng cash.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "gel-manicure",
+            "priceCents": 4500
+          }
+        ],
+        "cashTipCents": 500,
+        "cardTipCents": 0,
+        "request": false
+      }
+    ],
+    "check": [
+      "Turn 1: Interpreted đồng as US dollars in the US-salon context; confirm the currency."
+    ]
+  },
+  {
+    "id": "mixed-063",
+    "locale": "mixed",
+    "text": "Pedi thirty five, khách chỉ định em, bo ten cash.",
+    "turns": [
+      {
+        "services": [
+          {
+            "presetId": "pedicure",
+            "priceCents": 3500
+          }
+        ],
+        "cashTipCents": 1000,
+        "cardTipCents": 0,
+        "request": true
+      }
+    ],
+    "check": []
+  }
+]
