@@ -26,6 +26,10 @@ export interface Settings {
   lastBackupDate: IsoDate | null
   /** Reminder key to the day it was dismissed. */
   dismissedReminders: Record<string, IsoDate>
+  /** What the person wants to earn in a week, or null for no goal. */
+  weeklyGoalCents: number | null
+  /** What the person wants to earn in a month, or null for no goal. */
+  monthlyGoalCents: number | null
 }
 
 const STORAGE_KEY = 'nail-tracker.settings'
@@ -43,6 +47,8 @@ const isRate = (value: unknown): value is number =>
 const isDateText = (value: unknown): value is IsoDate => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)
 const isReminderDays = (value: unknown): value is BackupReminderDays =>
   value === 7 || value === 14 || value === 30 || value === 0
+const isGoalCents = (value: unknown): value is number =>
+  typeof value === 'number' && Number.isInteger(value) && value > 0
 
 function isDismissedMap(value: unknown): value is Record<string, IsoDate> {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) return false
@@ -74,6 +80,8 @@ export function resolveSettings(saved: string | null, languages: readonly string
     backupReminderDays: isReminderDays(parsed.backupReminderDays) ? parsed.backupReminderDays : 14,
     lastBackupDate: isDateText(parsed.lastBackupDate) ? parsed.lastBackupDate : null,
     dismissedReminders: isDismissedMap(parsed.dismissedReminders) ? parsed.dismissedReminders : {},
+    weeklyGoalCents: isGoalCents(parsed.weeklyGoalCents) ? parsed.weeklyGoalCents : null,
+    monthlyGoalCents: isGoalCents(parsed.monthlyGoalCents) ? parsed.monthlyGoalCents : null,
   }
 }
 
