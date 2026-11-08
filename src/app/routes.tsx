@@ -1,6 +1,6 @@
 import { Link, Route, Switch, useLocation } from 'wouter'
 import { AdjustmentForm } from '../features/adjustments/AdjustmentForm.tsx'
-import { EarningsPage } from '../features/earnings/EarningsPage.tsx'
+import { ReportsPage } from '../features/reports/ReportsPage.tsx'
 import { HistoryPage } from '../features/history/HistoryPage.tsx'
 import { HomePage } from '../features/home/HomePage.tsx'
 import { OnboardingPage } from '../features/onboarding/OnboardingPage.tsx'
@@ -24,7 +24,7 @@ export function Routes() {
     <Switch>
       <Route path={paths.today} component={HomePage} />
       <Route path={paths.history} component={HistoryPage} />
-      <Route path={paths.earnings} component={EarningsPage} />
+      <Route path={paths.earnings} component={ReportsPage} />
       <Route path={paths.payday} component={PaydayPage} />
       <Route path="/payday/:periodId/pay">
         {(params) => (
