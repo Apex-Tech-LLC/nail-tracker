@@ -159,7 +159,7 @@ describe('exportJson and importJson', () => {
     const text = await exportJson(source, settings, new Date('2026-11-08T12:00:00Z'))
     expect(JSON.parse(text)).toMatchObject({
       app: 'nail-tracker',
-      version: 3,
+      version: 4,
       exportedAt: '2026-11-08T12:00:00.000Z',
     })
 
@@ -293,7 +293,7 @@ describe('exportJson and importJson', () => {
     const copy = openFresh()
     await importJson(copy, JSON.stringify(old))
 
-    expect(copy.verno).toBe(3)
+    expect(copy.verno).toBe(4)
     expect(await copy.workDays.count()).toBe(0)
     expect(await copy.turns.count()).toBe(1)
   })
@@ -365,6 +365,8 @@ describe('exportJson and importJson', () => {
       cardTipFeeBp: 300,
       checkBp: 5000,
       cardTipsPaidIn: 'split',
+      guarantee: { kind: 'none' },
+      tiers: null,
       createdAt: 500,
       updatedAt: 500,
     })
@@ -390,6 +392,8 @@ describe('exportJson and importJson', () => {
       supplyFee: { kind: 'perService', cents: 200, when: 'beforeSplit' },
       cardTipFeeBp: 300,
       checkBp: 5000,
+      guarantee: { kind: 'none' },
+      tiers: null,
     })
     expect(await copy.paycheckRecords.get('check-1')).toMatchObject({
       payPeriodId: PERIOD_ID,
@@ -437,7 +441,7 @@ describe('importJson refuses a bad file', () => {
     const fresh = openFresh()
     await seedFull(fresh)
     const data = JSON.parse(await exportJson(fresh, settings)) as Backup
-    data.version = 4
+    data.version = 5
 
     await expect(importJson(fresh, JSON.stringify(data))).rejects.toMatchObject({
       code: 'unsupportedVersion',
@@ -550,15 +554,38 @@ describe('migrateBackup', () => {
   })
 
   it('refuses a version newer than the app knows', () => {
-    expect(errorCode(() => migrateBackup({ version: 4 }))).toBe('unsupportedVersion')
+    expect(errorCode(() => migrateBackup({ version: 5 }))).toBe('unsupportedVersion')
   })
 
   it('adds an empty work day list when upgrading a version 2 backup', () => {
     expect(MIGRATIONS[2]({ version: 2 })).toEqual({ version: 2, workDays: [] })
     expect(migrateBackup({ version: 2, turns: [] })).toEqual({
-      version: 3,
+      version: 4,
       turns: [],
       workDays: [],
+      payRules: [],
+    })
+  })
+
+  it('turns guarantee and tiers off when upgrading a version 3 backup', () => {
+    const rule = {
+      id: 'rules',
+      startDate: '2026-11-01',
+      supplyFee: { kind: 'none' },
+      cardTipFeeBp: 0,
+      checkBp: null,
+      cardTipsPaidIn: 'split',
+      createdAt: 1,
+      updatedAt: 1,
+    }
+
+    expect(MIGRATIONS[3]({ version: 3, payRules: [rule] })).toEqual({
+      version: 3,
+      payRules: [{ ...rule, guarantee: { kind: 'none' }, tiers: null }],
+    })
+    expect(migrateBackup({ version: 3, payRules: [rule] })).toEqual({
+      version: 4,
+      payRules: [{ ...rule, guarantee: { kind: 'none' }, tiers: null }],
     })
   })
 

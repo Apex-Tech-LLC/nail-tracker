@@ -15,7 +15,7 @@ import type { IsoDate } from '../../domain/dates.ts'
 import type { PayRules } from '../../domain/payRules.ts'
 
 /** Version of the backup file format. Bump it when a record changes, and add a step to MIGRATIONS. */
-export const BACKUP_VERSION = 3
+export const BACKUP_VERSION = 4
 
 export interface Backup {
   app: 'nail-tracker'

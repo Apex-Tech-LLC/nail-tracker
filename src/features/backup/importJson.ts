@@ -15,7 +15,7 @@ import type {
   WorkDay,
 } from '../../db/schema.ts'
 import { isIsoDate } from '../../domain/dates.ts'
-import type { FeeWhen, PayRules, SupplyFee } from '../../domain/payRules.ts'
+import type { FeeWhen, Guarantee, PayRules, SupplyFee, TierLevel, Tiers } from '../../domain/payRules.ts'
 import type { AdjustmentCategory } from '../../domain/totals.ts'
 import { ImportError } from './importError.ts'
 import { migrateBackup } from './migrateBackup.ts'
@@ -277,14 +277,66 @@ function toSupplyFee(value: unknown): SupplyFee | null {
   return null
 }
 
+function toGuarantee(value: unknown): Guarantee | null {
+  if (!isObject(value)) return null
+  const { kind } = value
+  if (kind === 'none') return { kind: 'none' }
+  if (kind === 'perDay' || kind === 'perPeriod') {
+    const { cents, minDays } = value
+    if (!isOwnCents(cents)) return null
+    if (minDays !== null && !(isCount(minDays) && minDays >= 1)) return null
+    return { kind, cents, minDays }
+  }
+  return null
+}
+
+function toTierLevel(value: unknown): TierLevel | null {
+  if (!isObject(value)) return null
+  const { fromCents, rateBp } = value
+  if (!isOwnCents(fromCents) || !isRate(rateBp)) return null
+  return { fromCents, rateBp }
+}
+
+function toTiers(value: unknown): Tiers | null {
+  if (!isObject(value)) return null
+  const { mode, levels } = value
+  if (mode !== 'eachPart' && mode !== 'wholeAtTop') return null
+  if (!Array.isArray(levels) || levels.length < 2 || levels.length > 5) return null
+  const converted: TierLevel[] = []
+  for (const level of levels) {
+    const parsed = toTierLevel(level)
+    if (parsed === null) return null
+    converted.push(parsed)
+  }
+  if (converted[0].fromCents !== 0) return null
+  for (let index = 1; index < converted.length; index += 1) {
+    if (converted[index].fromCents <= converted[index - 1].fromCents) return null
+  }
+  return { mode, levels: converted }
+}
+
 function toPayRules(value: unknown): PayRules | null {
   if (!isObject(value)) return null
-  const { id, startDate, supplyFee, cardTipFeeBp, checkBp, cardTipsPaidIn, createdAt, updatedAt } =
-    value
+  const {
+    id,
+    startDate,
+    supplyFee,
+    cardTipFeeBp,
+    checkBp,
+    cardTipsPaidIn,
+    guarantee,
+    tiers,
+    createdAt,
+    updatedAt,
+  } = value
   if (!isText(id) || !isIsoDate(startDate)) return null
   const fee = toSupplyFee(supplyFee)
-  if (fee === null || !isRate(cardTipFeeBp) || !isRateOrNull(checkBp)) return null
+  const guaranteeValue = toGuarantee(guarantee)
+  const tiersValue = tiers === null ? null : toTiers(tiers)
+  if (fee === null || guaranteeValue === null) return null
+  if (!isRate(cardTipFeeBp) || !isRateOrNull(checkBp)) return null
   if (!isCardTipsPaidIn(cardTipsPaidIn)) return null
+  if (tiers !== null && tiersValue === null) return null
   if (!isTime(createdAt) || !isTime(updatedAt)) return null
   return {
     id,
@@ -293,6 +345,8 @@ function toPayRules(value: unknown): PayRules | null {
     cardTipFeeBp,
     checkBp,
     cardTipsPaidIn,
+    guarantee: guaranteeValue,
+    tiers: tiersValue,
     createdAt,
     updatedAt,
   }

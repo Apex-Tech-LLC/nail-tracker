@@ -6,6 +6,22 @@ export type SupplyFee =
   | { kind: 'perService'; cents: number; when: FeeWhen }
   | { kind: 'percent'; bp: number; when: FeeWhen }
 
+/** A floor for a whole pay period: none, per day worked, or per pay period. */
+export type Guarantee =
+  | { kind: 'none' }
+  | { kind: 'perDay'; cents: number; minDays: number | null }
+  | { kind: 'perPeriod'; cents: number; minDays: number | null }
+
+export interface TierLevel {
+  fromCents: number // where this level starts; the first is always 0
+  rateBp: number
+}
+
+export interface Tiers {
+  mode: 'eachPart' | 'wholeAtTop'
+  levels: TierLevel[] // ascending by fromCents; 2 to 5 levels, the first from 0
+}
+
 export interface PayRules {
   id: string
   startDate: IsoDate
@@ -13,10 +29,11 @@ export interface PayRules {
   cardTipFeeBp: number // 0 = none
   checkBp: number | null // null = no check/cash split; 5000 = 50% by check
   cardTipsPaidIn: 'check' | 'cash' | 'split'
+  guarantee: Guarantee
+  tiers: Tiers | null
   createdAt: number
   updatedAt: number
 }
-// Release 2.4 adds guarantee and tiers: leave room, add no fields for them now.
 
 export const DEFAULT_PAY_RULES_ID = 'default'
 
@@ -27,6 +44,8 @@ export const NO_RULES: Omit<PayRules, 'id' | 'createdAt' | 'updatedAt'> = {
   cardTipFeeBp: 0,
   checkBp: null,
   cardTipsPaidIn: 'split',
+  guarantee: { kind: 'none' },
+  tiers: null,
 }
 
 export function defaultPayRules(startDate: IsoDate = NO_RULES.startDate, now = 0): PayRules {
@@ -37,6 +56,8 @@ export function defaultPayRules(startDate: IsoDate = NO_RULES.startDate, now = 0
     cardTipFeeBp: NO_RULES.cardTipFeeBp,
     checkBp: NO_RULES.checkBp,
     cardTipsPaidIn: NO_RULES.cardTipsPaidIn,
+    guarantee: { kind: 'none' },
+    tiers: null,
     createdAt: now,
     updatedAt: now,
   }
@@ -71,5 +92,7 @@ export function rulesOn(
     cardTipFeeBp: chosen.cardTipFeeBp,
     checkBp: chosen.checkBp,
     cardTipsPaidIn: chosen.cardTipsPaidIn,
+    guarantee: chosen.guarantee,
+    tiers: chosen.tiers,
   }
 }

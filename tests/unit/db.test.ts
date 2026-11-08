@@ -52,8 +52,8 @@ describe('seeded database', () => {
   })
 })
 
-describe('version 3 upgrade', () => {
-  it('opens a version 2 database as version 3 and keeps its data', async () => {
+describe('version 4 upgrade', () => {
+  it('opens a version 2 database as version 4 and keeps its data', async () => {
     const name = `upgrade-v3-${++counter}`
     const old = new Dexie(name)
     old.version(1).stores({
@@ -78,9 +78,13 @@ describe('version 3 upgrade', () => {
     const fresh = createDb(name)
     db = fresh
 
-    expect(fresh.verno).toBe(3)
+    expect(fresh.verno).toBe(4)
     expect(await fresh.turns.count()).toBe(1)
     expect(await fresh.payRules.count()).toBe(1)
+    expect(await fresh.payRules.get('rules')).toMatchObject({
+      guarantee: { kind: 'none' },
+      tiers: null,
+    })
     expect(await fresh.workDays.count()).toBe(0)
 
     await fresh.workDays.put({
@@ -92,6 +96,50 @@ describe('version 3 upgrade', () => {
       updatedAt: 1,
     })
     expect(await fresh.workDays.get('2026-11-08')).toMatchObject({ dayOff: true })
+  })
+
+  it('opens a version 3 database as version 4 and fills in the new pay rule fields', async () => {
+    const name = `upgrade-v4-${++counter}`
+    const old = new Dexie(name)
+    old.version(1).stores({
+      salons: 'id',
+      servicePresets: 'id, sortOrder',
+      turns: 'id, localWorkDate, occurredAt, updatedAt',
+      turnServices: 'id, turnId, serviceNameSnapshot',
+      adjustments: 'id, localWorkDate',
+      payments: 'id, paymentDate',
+      paymentAllocations: 'id, paymentId, payPeriodId',
+      payPeriods: 'id, startDate, endDate',
+    })
+    old.version(2).stores({
+      payRules: 'id, startDate',
+      paycheckRecords: 'id, payPeriodId',
+    })
+    old.version(3).stores({
+      workDays: 'date',
+    })
+    await old.open()
+    await old.table('payRules').add({
+      id: 'rules',
+      startDate: '2026-11-01',
+      supplyFee: { kind: 'none' },
+      cardTipFeeBp: 0,
+      checkBp: null,
+      cardTipsPaidIn: 'split',
+      createdAt: 1,
+      updatedAt: 1,
+    })
+    old.close()
+
+    const fresh = createDb(name)
+    db = fresh
+
+    expect(fresh.verno).toBe(4)
+    expect(await fresh.payRules.get('rules')).toMatchObject({
+      id: 'rules',
+      guarantee: { kind: 'none' },
+      tiers: null,
+    })
   })
 })
 

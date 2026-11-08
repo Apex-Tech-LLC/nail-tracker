@@ -4,7 +4,7 @@ import type { PayRules } from '../../domain/payRules.ts'
 
 export type PayRulesValues = Pick<
   PayRules,
-  'supplyFee' | 'cardTipFeeBp' | 'checkBp' | 'cardTipsPaidIn'
+  'supplyFee' | 'cardTipFeeBp' | 'checkBp' | 'cardTipsPaidIn' | 'guarantee' | 'tiers'
 >
 
 export function loadPayRules(db: NailDb): Promise<PayRules[]> {

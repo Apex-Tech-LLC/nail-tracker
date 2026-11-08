@@ -249,7 +249,14 @@ function PayRulesForm({ initial, today, periodStart }: FormProps) {
       : checkChoice === 'half'
         ? 5000
         : (parseRateBp(checkPercent) ?? 0)
-  const draft: RuleValues = { supplyFee, cardTipFeeBp, checkBp, cardTipsPaidIn }
+  const draft: RuleValues = {
+    supplyFee,
+    cardTipFeeBp,
+    checkBp,
+    cardTipsPaidIn,
+    guarantee: initial.guarantee,
+    tiers: initial.tiers,
+  }
 
   const sample = sampleStatement(draft, rateBp, today)
   const rateOnly = sampleStatement({ ...draft, supplyFee: { kind: 'none' } }, rateBp, today)

@@ -38,6 +38,8 @@ describe('rulesOn', () => {
       cardTipFeeBp: 0,
       checkBp: null,
       cardTipsPaidIn: 'split',
+      guarantee: { kind: 'none' },
+      tiers: null,
     })
   })
 })
