@@ -104,6 +104,21 @@ const strings = {
     homeEmptyTurns: 'Your turns today will show here.',
     seeAll: 'See all',
 
+    // Goals
+    goals: 'Goals',
+    goalWeekly: 'Weekly goal',
+    goalMonthly: 'Monthly goal',
+    goalNotSet: 'Not set',
+    goalSummaryWeek: '{amount} a week',
+    goalSummaryMonth: '{amount} a month',
+    goalOptionalHint: 'Leave a box empty for no goal.',
+    setAGoal: 'Set a goal',
+    goalProgress: '{earned} of {goal} · {toGo} to go',
+    goalReached: '{earned} of {goal}',
+    goalHitWeek: 'You hit your goal for this week.',
+    goalHitMonth: 'You hit your goal for this month.',
+    goalLine: 'Goal {amount}',
+
     // Add and edit turn
     newTurn: 'Add Turn',
     editTurn: 'Edit Turn',
@@ -679,6 +694,21 @@ const strings = {
     homeTodayTurns: 'Turn hôm nay',
     homeEmptyTurns: 'Turn hôm nay sẽ hiện ở đây.',
     seeAll: 'Xem tất cả',
+
+    // Goals
+    goals: 'Mục tiêu',
+    goalWeekly: 'Mục tiêu tuần',
+    goalMonthly: 'Mục tiêu tháng',
+    goalNotSet: 'Chưa đặt',
+    goalSummaryWeek: '{amount} mỗi tuần',
+    goalSummaryMonth: '{amount} mỗi tháng',
+    goalOptionalHint: 'Để trống nếu không đặt mục tiêu.',
+    setAGoal: 'Đặt mục tiêu',
+    goalProgress: '{earned} / {goal} · còn {toGo}',
+    goalReached: '{earned} / {goal}',
+    goalHitWeek: 'Bạn đã đạt mục tiêu tuần này.',
+    goalHitMonth: 'Bạn đã đạt mục tiêu tháng này.',
+    goalLine: 'Mục tiêu {amount}',
 
     // Add and edit turn
     newTurn: 'Thêm turn',

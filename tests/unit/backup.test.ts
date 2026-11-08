@@ -30,6 +30,8 @@ const settings: Settings = {
   backupReminderDays: 14,
   lastBackupDate: '2026-11-04',
   dismissedReminders: { 'backup:2026-10-01': '2026-11-04' },
+  weeklyGoalCents: 100_000,
+  monthlyGoalCents: 400_000,
 }
 
 const opened: NailDb[] = []

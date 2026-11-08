@@ -30,6 +30,8 @@ describe('resolveSettings', () => {
     backupReminderDays: 14,
     lastBackupDate: null,
     dismissedReminders: {},
+    weeklyGoalCents: null,
+    monthlyGoalCents: null,
   }
 
   it('uses English defaults when nothing is saved', () => {
@@ -78,6 +80,24 @@ describe('resolveSettings', () => {
       backupReminderDays: 14,
       lastBackupDate: null,
       dismissedReminders: {},
+    })
+  })
+
+  it('keeps saved weekly and monthly goals', () => {
+    const saved = JSON.stringify({ weeklyGoalCents: 100_000, monthlyGoalCents: 400_000 })
+    expect(resolveSettings(saved, [])).toMatchObject({
+      weeklyGoalCents: 100_000,
+      monthlyGoalCents: 400_000,
+    })
+  })
+
+  it.each([
+    { weeklyGoalCents: 0, monthlyGoalCents: -5 },
+    { weeklyGoalCents: 12.5, monthlyGoalCents: '4000' },
+  ])('falls back when a goal is not whole positive cents in %j', (saved) => {
+    expect(resolveSettings(JSON.stringify(saved), [])).toMatchObject({
+      weeklyGoalCents: null,
+      monthlyGoalCents: null,
     })
   })
 })

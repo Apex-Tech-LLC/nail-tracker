@@ -1,6 +1,6 @@
 import { formatRange } from '../../domain/dates.ts'
-import { formatUsd } from '../../domain/money.ts'
-import { t } from '../../lib/i18n.ts'
+import { formatUsd, formatUsdShort } from '../../domain/money.ts'
+import { t, tf } from '../../lib/i18n.ts'
 import { useSettings } from '../../app/settings.ts'
 import type { TrendPoint } from './reportsData.ts'
 
@@ -22,6 +22,12 @@ function heightOf(value: number, max: number): number {
   return Math.max((value / max) * 100, 3)
 }
 
+/** The goal line sits at its true share of the tallest bar, with no minimum height. */
+function goalHeightOf(goalCents: number, max: number): number {
+  if (goalCents <= 0) return 0
+  return Math.min(100, (goalCents / max) * 100)
+}
+
 export function TrendChart({
   title,
   bars,
@@ -32,7 +38,8 @@ export function TrendChart({
   goalCents = null,
 }: Props) {
   const { locale } = useSettings()
-  const max = Math.max(1, ...bars.map((bar) => bar.earnedCents))
+  // The goal line must fit over the bars, so the scale includes it.
+  const max = Math.max(1, ...bars.map((bar) => bar.earnedCents), goalCents ?? 0)
   const hasData = bars.some((bar) => bar.earnedCents > 0)
   const selected = selectedIndex === null ? null : bars[selectedIndex]
 
@@ -45,34 +52,48 @@ export function TrendChart({
 
       {hasData ? (
         <>
-          <div
-            role="group"
-            aria-label={title}
-            className="flex items-end gap-1"
-            style={{ height: CHART_HEIGHT }}
-            data-testid="trend-chart"
-          >
-            {bars.map((bar, index) => (
-              <button
-                key={bar.key}
-                type="button"
-                data-testid="trend-bar"
-                aria-pressed={selectedIndex === index}
-                aria-label={`${formatRange(bar.start, bar.end, locale)}: ${formatUsd(bar.earnedCents)}`}
-                onClick={() => onSelect(index)}
-                className="flex h-full min-w-0 flex-1 items-end justify-center rounded-sm focus-visible:outline-2 focus-visible:outline-brand-600"
+          <div className="relative" style={{ height: CHART_HEIGHT }}>
+            <div
+              role="group"
+              aria-label={title}
+              className="flex h-full items-end gap-1"
+              data-testid="trend-chart"
+            >
+              {bars.map((bar, index) => (
+                <button
+                  key={bar.key}
+                  type="button"
+                  data-testid="trend-bar"
+                  aria-pressed={selectedIndex === index}
+                  aria-label={`${formatRange(bar.start, bar.end, locale)}: ${formatUsd(bar.earnedCents)}`}
+                  onClick={() => onSelect(index)}
+                  className="flex h-full min-w-0 flex-1 items-end justify-center rounded-sm focus-visible:outline-2 focus-visible:outline-brand-600"
+                >
+                  <span
+                    aria-hidden="true"
+                    className="block w-full max-w-7 rounded-t"
+                    style={{
+                      height: `${heightOf(bar.earnedCents, max)}%`,
+                      backgroundColor:
+                        index === currentIndex ? 'var(--brand-600)' : 'var(--brand-200)',
+                    }}
+                  />
+                </button>
+              ))}
+            </div>
+
+            {goalCents !== null && goalCents > 0 && (
+              <div
+                data-testid="goal-line"
+                className="pointer-events-none absolute inset-x-0"
+                style={{ bottom: `${goalHeightOf(goalCents, max)}%` }}
               >
-                <span
-                  aria-hidden="true"
-                  className="block w-full max-w-7 rounded-t"
-                  style={{
-                    height: `${heightOf(bar.earnedCents, max)}%`,
-                    backgroundColor:
-                      index === currentIndex ? 'var(--brand-600)' : 'var(--brand-200)',
-                  }}
-                />
-              </button>
-            ))}
+                <div aria-hidden="true" className="border-t border-dashed border-text-secondary" />
+                <span className="absolute right-0 top-0.5 rounded-sm bg-surface px-1 text-[11px] font-semibold text-text-secondary">
+                  {tf(locale, 'goalLine', { amount: formatUsdShort(goalCents) })}
+                </span>
+              </div>
+            )}
           </div>
 
           <div className="flex justify-between text-xs text-text-muted" aria-hidden="true">
