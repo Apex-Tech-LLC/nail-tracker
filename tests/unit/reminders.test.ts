@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { dueReminder, type DueReminderInput } from '../../src/domain/reminders.ts'
+import { nextTaxQuarter } from '../../src/domain/taxes.ts'
 
 const base: DueReminderInput = {
   today: '2026-11-18',
@@ -112,6 +113,92 @@ describe('paycheck reminder', () => {
     expect(dueReminder({ ...base, dismissed, paycheckPeriods: [period] })).toEqual({
       id: 'backup',
       key: 'backup:2026-11-04',
+    })
+  })
+})
+
+describe('tax reminder', () => {
+  const due = {
+    dueDate: '2027-01-15',
+    start: '2026-09-01',
+    end: '2026-12-31',
+    earnedCents: 4_000_000,
+  }
+
+  const taxBase: DueReminderInput = {
+    today: '2027-01-05',
+    hasTurns: false,
+    backupReminderDays: 0,
+    lastBackupDate: null,
+    firstTurnDate: null,
+    dismissed: {},
+    taxSetAsideBp: 2000,
+    taxDue: due,
+  }
+
+  it('is quiet while the set-aside is off', () => {
+    expect(dueReminder({ ...taxBase, taxSetAsideBp: null })).toBeNull()
+    expect(dueReminder({ ...taxBase, taxSetAsideBp: undefined })).toBeNull()
+  })
+
+  it('waits for the 14-day window: 15 days is early, 14 and 0 are due', () => {
+    expect(dueReminder({ ...taxBase, today: '2026-12-31' })).toBeNull()
+    expect(dueReminder({ ...taxBase, today: '2027-01-01' })).toMatchObject({
+      id: 'tax',
+      key: 'tax:2027-01-15',
+    })
+    expect(dueReminder({ ...taxBase, today: '2027-01-15' })).toMatchObject({ id: 'tax' })
+    expect(dueReminder({ ...taxBase, today: '2027-01-16' })).toBeNull()
+  })
+
+  it('gives the quarter, its due date and the amount to set aside', () => {
+    expect(dueReminder({ ...taxBase, today: '2027-01-05' })).toEqual({
+      id: 'tax',
+      key: 'tax:2027-01-15',
+      dueDate: '2027-01-15',
+      quarter: { start: '2026-09-01', end: '2026-12-31' },
+      amountCents: 800_000,
+    })
+  })
+
+  it('comes after the paycheck and backup reminders', () => {
+    expect(
+      dueReminder({ ...base, today: '2027-01-05', taxSetAsideBp: 2000, taxDue: due }),
+    ).toMatchObject({ id: 'backup' })
+
+    const period = {
+      id: 'period-2026-12-01-2026-12-31',
+      startDate: '2026-12-01',
+      endDate: '2026-12-31',
+      hasTurns: true,
+      checkedDate: null,
+    }
+    expect(
+      dueReminder({
+        ...base,
+        today: '2027-01-05',
+        taxSetAsideBp: 2000,
+        taxDue: due,
+        paycheckPeriods: [period],
+      }),
+    ).toMatchObject({ id: 'paycheck' })
+  })
+
+  it('on January 5 names January 15 and last year September to December', () => {
+    const next = nextTaxQuarter('2027-01-05')
+    if (!next) throw new Error('expected a next tax quarter')
+    expect(next.dueDate).toBe('2027-01-15')
+
+    expect(
+      dueReminder({
+        ...taxBase,
+        today: '2027-01-05',
+        taxDue: { ...next, earnedCents: 4_000_000 },
+      }),
+    ).toMatchObject({
+      id: 'tax',
+      dueDate: '2027-01-15',
+      quarter: { start: '2026-09-01', end: '2026-12-31' },
     })
   })
 })
