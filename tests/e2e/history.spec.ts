@@ -103,3 +103,21 @@ test('saving a turn opened from History goes back to History', async ({ page }) 
   await expect(page.getByRole('heading', { name: 'Wednesday, November 4' })).toBeVisible()
   await expect(page).toHaveURL(/#\/history$/)
 })
+
+test('a day opened from Home lets Back return to Home and does not stick to the History tab', async ({
+  page,
+}) => {
+  await seedTwoTurns(page)
+  await page.goto('./')
+
+  // Monday has no turns, so History shows only that day.
+  await page.locator('a[href$="day=2026-11-02"]').click()
+  await expect(page.getByRole('heading', { name: 'Wednesday, November 4' })).toHaveCount(0)
+
+  await page.goBack()
+  await expect(page.getByRole('list', { name: 'This week' })).toBeVisible()
+
+  await page.getByRole('navigation').getByRole('link', { name: 'History' }).click()
+  await expect(page.getByRole('heading', { name: 'Wednesday, November 4' })).toBeVisible()
+  expect(new URL(page.url()).search).toBe('')
+})

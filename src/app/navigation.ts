@@ -44,11 +44,23 @@ export function useAppLocation(
   const navigateInApp = useCallback<HashNavigate>(
     (to, navOptions) => {
       if (!navOptions?.replace) navigatedInApp = true
-      navigate(to, navOptions)
+      // wouter keeps the old ?query when the new path has none, so a day
+      // opened in History would stick to every later screen. An empty query
+      // clears it.
+      navigate(to.includes('?') ? to : `${to}?`, navOptions)
     },
     [navigate],
   )
   return [location, navigateInApp]
+}
+
+// wouter redraws only on hashchange. Going back from "?day=…#/history" to
+// "#/" changes the query too, and browsers then fire popstate alone, so the
+// screen would stay put while the address changed.
+if (typeof window !== 'undefined') {
+  window.addEventListener('popstate', () => {
+    window.dispatchEvent(new HashChangeEvent('hashchange'))
+  })
 }
 
 // wouter reads this off the hook so links render as "#/path". Without it
