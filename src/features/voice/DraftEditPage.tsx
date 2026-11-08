@@ -17,7 +17,7 @@ export function DraftEditPage({ cardKey }: { cardKey: string }) {
 
   if (!card) return null
   const date = sessionDate(session)
-  const timeToFix = card.reader.checks.some((check) => check.code === 'timeNotRead')
+  const timeToFix = card.reader.checks.some((check) => check.code === 'timeNotRead' || check.code === 'timeGuessedHalf')
   const clientToFix = card.reader.checks.some((check) => check.code === 'requestConflict')
 
   return (

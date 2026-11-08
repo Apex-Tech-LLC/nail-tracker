@@ -117,7 +117,7 @@ All bare service amounts here mean US dollars. No VND conversion, implied thousa
 - Immediate corrections replace the nearest compatible value, service or channel and get a warning. Contradictory unscoped request flags or an unsupported back-reference do not silently rewrite an earlier turn. Explicit `first customer` corrections in this corpus preserve the earlier value for review and state the proposed correction in the warning.
 - Sentences normally split turns; tip-only and request-only fragments attach to the previous draft. Decimal dots do not split. `and`/và/với joins services; explicit same-customer language overrides rồi/then. Missing punctuation with no connector is a proposed split with a warning. A declared count checks results, not a license to fabricate customers.
 - Mishearing examples in the JSON use only a small proposed alias subset, always warned. They are adversarial synthetic input, not device captures. A valid but wrong dictated number cannot be detected without the audio or technician's review.
-- Times, dates, customer names and cash/card service payments are outside this JSON's output fields. Do not convert their numbers into prices/tips. Examples with time preserve prices and add an explicit warning that time is not asserted in this fixture. This does not remove the spec's later time support requirement.
+- Dates, customer names and cash/card service payments are outside this JSON's output fields. Do not convert their numbers into prices/tips. A turn may carry an optional `startTime` ("HH:MM", 24 hours) when a time was said and the reader reads it; the table compares it when present (en-117, vi-116, mixed-057).
 
 ## Technician review questions
 
