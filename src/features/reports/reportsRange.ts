@@ -5,44 +5,52 @@ import {
   yearRange,
   type IsoDate,
 } from '../../domain/dates.ts'
+import type { Span } from '../../domain/comparisons.ts'
+import type { ReportKind } from '../../domain/reports.ts'
 
-export type PeriodChoice = 'daily' | 'weekly' | 'monthly' | 'yearly' | 'custom'
+export type ReportChoice = 'day' | 'week' | 'month' | 'year' | 'custom'
+export type SteppableChoice = Exclude<ReportChoice, 'custom'>
 
 export function rangeOf(
-  choice: Exclude<PeriodChoice, 'custom'>,
+  choice: SteppableChoice,
   date: IsoDate,
   weekStart: 0 | 1,
-): { start: IsoDate; end: IsoDate } {
+): Span {
   switch (choice) {
-    case 'daily':
+    case 'day':
       return { start: date, end: date }
-    case 'weekly':
+    case 'week':
       return weekRange(date, weekStart)
-    case 'monthly':
+    case 'month':
       return monthRange(date)
-    case 'yearly':
+    case 'year':
       return yearRange(date)
   }
 }
 
 /** Moves to the neighbouring period. The returned date is always a real day. */
 export function stepDate(
-  choice: Exclude<PeriodChoice, 'custom'>,
+  choice: SteppableChoice,
   date: IsoDate,
   direction: -1 | 1,
 ): IsoDate {
   switch (choice) {
-    case 'daily':
+    case 'day':
       return addDays(date, direction)
-    case 'weekly':
+    case 'week':
       return addDays(date, direction * 7)
-    case 'monthly': {
+    case 'month': {
       const { start, end } = monthRange(date)
       return addDays(direction === -1 ? start : end, direction)
     }
-    case 'yearly': {
+    case 'year': {
       const { start, end } = yearRange(date)
       return addDays(direction === -1 ? start : end, direction)
     }
   }
+}
+
+/** The V12 maths works in week, month, year and custom periods; one day reads through the week rules. */
+export function reportKindOf(choice: ReportChoice): ReportKind {
+  return choice === 'day' ? 'week' : choice
 }

@@ -115,6 +115,20 @@ export function formatMonthYear(iso: IsoDate, locale: DateLocale): string {
   return formatIso(iso, locale, { month: 'long', year: 'numeric' })
 }
 
+export function formatMonthShort(iso: IsoDate, locale: DateLocale): string {
+  return formatIso(iso, locale, { month: 'short' })
+}
+
+export function formatMonthShortYear(iso: IsoDate, locale: DateLocale): string {
+  return formatIso(iso, locale, { month: 'short', year: 'numeric' })
+}
+
+/** A weekday by its number (0 is Sunday), named in the chosen language. */
+export function formatWeekday(weekday: number, locale: DateLocale): string {
+  // 2024-01-07 was a Sunday, so any weekday number lands on its own day.
+  return formatWeekdayLong(addDays('2024-01-07', weekday), locale)
+}
+
 export function formatRange(start: IsoDate, end: IsoDate, locale: DateLocale): string {
   if (start === end) return formatDayShort(start, locale)
   return `${formatDayShort(start, locale)} – ${formatDayShort(end, locale)}`

@@ -47,7 +47,7 @@ test('works from start to finish with no connection', async ({ page, context }) 
   await expect(page.getByRole('heading', { level: 1, name: 'History' })).toBeVisible()
   await expect(turnRow(page, 2)).toBeVisible()
 
-  await nav.getByRole('link', { name: 'Earnings' }).click()
+  await nav.getByRole('link', { name: 'Reports' }).click()
   // The amount on the card labelled "Total earned", never a matching amount elsewhere.
   await expect(page.getByText('Total earned', { exact: true }).locator('..')).toContainText('$115.00')
 
@@ -77,7 +77,7 @@ test('makes no requests outside this app', async ({ page }) => {
   const nav = page.getByRole('navigation')
   for (const [tab, heading] of [
     ['History', 'History'],
-    ['Earnings', 'Earnings'],
+    ['Reports', 'Reports'],
     ['Paycheck', 'Paycheck'],
     ['Settings', 'Settings'],
     ['Home', 'Nail Tracker'],

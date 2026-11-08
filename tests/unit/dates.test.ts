@@ -5,7 +5,10 @@ import {
   diffDays,
   formatDayLong,
   formatDayShort,
+  formatMonthShort,
+  formatMonthShortYear,
   formatMonthYear,
+  formatWeekday,
   formatWeekdayLong,
   formatWeekdayShort,
   formatRange,
@@ -129,6 +132,19 @@ describe('formatting', () => {
     expect(formatWeekdayLong('2026-11-04', 'vi')).toBe('Thứ Tư')
     expect(formatWeekdayShort('2026-11-04', 'en')).toBe('Wed')
     expect(formatWeekdayShort('2026-11-04', 'vi')).toBe('Thứ 4')
+  })
+
+  it('names a weekday by its number', () => {
+    expect(formatWeekday(0, 'en')).toBe('Sunday')
+    expect(formatWeekday(3, 'en')).toBe('Wednesday')
+    expect(formatWeekday(6, 'en')).toBe('Saturday')
+    expect(formatWeekday(1, 'vi')).toBe('Thứ Hai')
+  })
+
+  it('writes a short month, with and without the year', () => {
+    expect(formatMonthShort('2026-10-15', 'en')).toBe('Oct')
+    expect(formatMonthShortYear('2026-10-15', 'en')).toBe('Oct 2026')
+    expect(formatMonthShort('2026-10-15', 'vi')).toBe('Tháng 10')
   })
 
   it('writes a range, and one day alone when both ends match', () => {
