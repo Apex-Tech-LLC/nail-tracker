@@ -644,7 +644,7 @@ Bay asked for "a real full app" without answering the open questions, so these d
 1. **Order:** look and speed first, then Home, then Paycheck (section 11), because Bay's complaints were the look,
    copying, and having nothing to see after logging.
 2. **Guarantee and tiers** move to release 2.4.
-3. **Web address:** stays at unity7.github.io/nail-tracker until Bay picks a domain. Moving later means each user
+3. **Web address:** moved to apex-tech-llc.github.io/nail-tracker on 2026-11-08 (Bay's choice). Moving again means each user
    moves their data with a backup file.
 4. **Vietnamese:** new wording gets a ChatGPT review pass, as in version 1, until a salon worker can read it.
 5. **Reddit:** a partial pass ran (`docs/design/reddit-research.md`): Reddit blocked the research browser after 7
