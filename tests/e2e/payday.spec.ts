@@ -339,7 +339,7 @@ test('paying a period that no longer exists shows not found with no Save button'
   await page.goto('./#/payday/period-nope/pay')
 
   await expect(page.getByText('This entry no longer exists.', { exact: true })).toBeVisible()
-  await expect(page.getByRole('link', { name: 'Payday', exact: true })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Paycheck', exact: true })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Save', exact: true })).toHaveCount(0)
 })
 

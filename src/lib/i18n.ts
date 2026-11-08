@@ -11,7 +11,7 @@ const strings = {
     navToday: 'Home',
     navHistory: 'History',
     navEarnings: 'Earnings',
-    navPayday: 'Payday',
+    navPayday: 'Paycheck',
     navSettings: 'Settings',
     notFound: 'This page does not exist.',
     backToToday: 'Back to Today',
@@ -214,8 +214,8 @@ const strings = {
     chartEarnedLegend: 'Earned',
     chartSummary: '{days} days shown. Highest day {amount}.',
 
-    // Payday
-    paydayTitle: 'Payday',
+    // Paycheck
+    paydayTitle: 'Paycheck',
     paydayNoSchedule: 'Set your payday schedule to see what the salon owes you.',
     paydayOpenSettings: 'Open Settings',
     paydayNoPeriods: 'No pay periods yet.',
@@ -473,7 +473,7 @@ const strings = {
     navToday: 'Trang chính',
     navHistory: 'Lịch sử',
     navEarnings: 'Thu nhập',
-    navPayday: 'Ngày lương',
+    navPayday: 'Lương',
     navSettings: 'Cài đặt',
     notFound: 'Trang này không tồn tại.',
     backToToday: 'Quay lại Hôm nay',
@@ -676,8 +676,8 @@ const strings = {
     chartEarnedLegend: 'Tiền kiếm được',
     chartSummary: 'Hiển thị {days} ngày. Ngày kiếm được nhiều nhất: {amount}.',
 
-    // Payday
-    paydayTitle: 'Ngày nhận lương',
+    // Paycheck
+    paydayTitle: 'Lương',
     paydayNoSchedule: 'Cài lịch nhận lương để xem tiệm còn nợ bạn bao nhiêu.',
     paydayOpenSettings: 'Mở Cài đặt',
     paydayNoPeriods: 'Chưa có kỳ lương nào.',

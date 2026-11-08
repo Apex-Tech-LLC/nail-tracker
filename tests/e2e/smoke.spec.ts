@@ -8,7 +8,7 @@ test('all five tabs open, and the language choice survives a reload', async ({ p
   for (const [tab, heading] of [
     ['History', 'History'],
     ['Earnings', 'Earnings'],
-    ['Payday', 'Payday'],
+    ['Paycheck', 'Paycheck'],
     ['Settings', 'Settings'],
     ['Home', 'Nail Tracker'],
   ]) {
