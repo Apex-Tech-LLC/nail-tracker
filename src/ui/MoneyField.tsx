@@ -1,4 +1,5 @@
-import { useId, type FocusEvent, type RefObject } from 'react'
+import { useId, useRef, type FocusEvent, type RefObject } from 'react'
+import { padTypedRecently } from './NumberPad.tsx'
 import { errorText, field, label } from './styles.ts'
 
 interface Props {
@@ -31,6 +32,8 @@ export function MoneyField({
   onFieldBlur,
 }: Props) {
   const id = useId()
+  // Set while the box takes focus back, so that is not a fresh tap on it.
+  const refocusing = useRef(false)
   return (
     <div>
       <label htmlFor={id} className={label}>
@@ -53,8 +56,23 @@ export function MoneyField({
           data-pad-target={usePad ? padTarget : undefined}
           value={value}
           onChange={(event) => onChange(event.target.value)}
-          onFocus={(event) => onFieldFocus?.(event.currentTarget)}
-          onBlur={onFieldBlur}
+          onFocus={(event) => {
+            if (refocusing.current) {
+              refocusing.current = false
+              return
+            }
+            onFieldFocus?.(event.currentTarget)
+          }}
+          onBlur={(event) => {
+            // Focus lost to nowhere right after a pad key: keep typing here.
+            if (usePad && event.relatedTarget === null && padTypedRecently()) {
+              refocusing.current = true
+              event.currentTarget.focus({ preventScroll: true })
+              refocusing.current = false
+              return
+            }
+            onFieldBlur?.(event)
+          }}
           aria-invalid={!!error}
           aria-describedby={error ? `${id}-error` : undefined}
           className={`${field} pl-7 ${
