@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
-import { addTurn, seedSettings, turnRow } from './helpers.ts'
+import { addTurn, formSave, seedSettings, selectServices, turnRow } from './helpers.ts'
 
 /** Records a turn on the day locked in the browser clock, with an explicit offset. */
 async function addTurnOn(
@@ -9,6 +9,23 @@ async function addTurnOn(
 ): Promise<void> {
   await page.clock.setFixedTime(moment)
   await addTurn(page, options)
+}
+
+/** A turn whose client type chip is picked on the form. */
+async function addTurnWithClient(
+  page: Page,
+  moment: Date,
+  client: 'Request' | 'Walk-in',
+  amount: string,
+): Promise<void> {
+  await page.clock.setFixedTime(moment)
+  await page.goto('./#/add')
+  await page.getByRole('button', { name: 'More options', exact: true }).click()
+  await page.getByRole('button', { name: client, exact: true }).click()
+  await selectServices(page, ['Manicure'])
+  await page.getByLabel('Service amount').fill(amount)
+  await formSave(page).click()
+  await expect(page.getByRole('link', { name: /Add Turn|Add your first turn/ })).toBeVisible()
 }
 
 test('November shows each worked day’s earned total and a tap opens the day', async ({ page }) => {
@@ -81,4 +98,30 @@ test('a day off shows on the calendar, survives a reload and a backup', async ({
   await page.goto('./#/history')
   await page.getByRole('button', { name: 'Calendar', exact: true }).click()
   await expect(page.getByRole('button', { name: /^Wednesday, November 4 · .*Off/ })).toBeVisible()
+})
+
+test('the Request filter lists just those turns and just their total', async ({ page }) => {
+  await seedSettings(page)
+  await addTurnWithClient(page, new Date('2026-11-04T12:00:00-06:00'), 'Request', '100')
+  await addTurnWithClient(page, new Date('2026-11-04T12:30:00-06:00'), 'Walk-in', '50')
+  await page.goto('./#/history')
+
+  await expect(turnRow(page, 1)).toBeVisible()
+  await expect(turnRow(page, 2)).toBeVisible()
+  await expect(page.getByTestId('history-total')).toHaveText('$90 from 2 turns')
+
+  await page.getByRole('button', { name: 'Filter', exact: true }).click()
+  const dialog = page.getByRole('dialog')
+  await dialog.getByRole('button', { name: 'Request', exact: true }).click()
+  await dialog.getByRole('button', { name: 'Close', exact: true }).click()
+
+  await expect(turnRow(page, 1)).toBeVisible()
+  await expect(turnRow(page, 2)).toHaveCount(0)
+  await expect(page.getByTestId('history-total')).toHaveText('$60 from 1 turn')
+
+  await page.getByRole('button', { name: 'Clear', exact: true }).click()
+
+  await expect(turnRow(page, 1)).toBeVisible()
+  await expect(turnRow(page, 2)).toBeVisible()
+  await expect(page.getByTestId('history-total')).toHaveText('$90 from 2 turns')
 })

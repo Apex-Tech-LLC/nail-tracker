@@ -74,6 +74,66 @@ const fold = (value: string) =>
     .replace(/Đ/g, 'D')
     .toLowerCase()
 
+export type ClientFilter = 'request' | 'walkIn'
+export type TipFilter = 'cash' | 'card' | 'none'
+
+export interface Filters {
+  services: string[] // service names picked from the range's turns
+  clients: ClientFilter[]
+  tips: TipFilter[]
+  hasNote: boolean
+}
+
+export const NO_FILTERS: Filters = { services: [], clients: [], tips: [], hasNote: false }
+
+export function hasFilters(filters: Filters): boolean {
+  return (
+    filters.services.length > 0 ||
+    filters.clients.length > 0 ||
+    filters.tips.length > 0 ||
+    filters.hasNote
+  )
+}
+
+/** Picks within one group are alternatives; the groups themselves must all match. */
+export function matchesFilters(
+  turn: Turn,
+  services: readonly TurnService[],
+  filters: Filters,
+): boolean {
+  if (
+    filters.services.length > 0 &&
+    !services.some((service) => filters.services.includes(service.serviceNameSnapshot))
+  ) {
+    return false
+  }
+
+  if (filters.clients.length > 0 && !filters.clients.some((type) => type === turn.clientType)) {
+    return false
+  }
+
+  if (filters.tips.length > 0) {
+    const hasCash = turn.cashTipCents > 0
+    const hasCard = turn.cardTipCents > 0
+    const tipMatches =
+      (filters.tips.includes('cash') && hasCash) ||
+      (filters.tips.includes('card') && hasCard) ||
+      (filters.tips.includes('none') && !hasCash && !hasCard)
+    if (!tipMatches) return false
+  }
+
+  if (filters.hasNote && (turn.note ?? '').trim() === '') return false
+
+  return true
+}
+
+/** The service names one range's turns used, sorted for the filter chips. */
+export function serviceNames(services: readonly TurnService[]): string[] {
+  return [...new Set(services.map((service) => service.serviceNameSnapshot))].sort((a, b) =>
+    a.localeCompare(b),
+  )
+}
+
 /** Empty text matches everything; otherwise any service name may contain the text. */
 export function matchesSearch(services: readonly TurnService[], text: string): boolean {
   const needle = fold(text.trim())

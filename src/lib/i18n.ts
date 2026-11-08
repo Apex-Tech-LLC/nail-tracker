@@ -169,6 +169,16 @@ const strings = {
     dayTurnCount: '{n} turns',
     addAdjustment: 'Add adjustment',
     errorRange: 'The end date must be on or after the start date.',
+    filter: 'Filter',
+    filterTitle: 'Filter',
+    filterService: 'Service',
+    filterClient: 'Client',
+    filterTips: 'Tips',
+    filterHasNote: 'Has a note',
+    filterNoTip: 'No tip',
+    filterClear: 'Clear',
+    historyTotalOne: '{amount} from 1 turn',
+    historyTotal: '{amount} from {n} turns',
 
     // Adjustments
     newAdjustment: 'New adjustment',
@@ -640,6 +650,16 @@ const strings = {
     dayTurnCount: '{n} turn',
     addAdjustment: 'Thêm điều chỉnh',
     errorRange: 'Ngày kết thúc phải bằng hoặc sau ngày bắt đầu.',
+    filter: 'Lọc',
+    filterTitle: 'Lọc',
+    filterService: 'Dịch vụ',
+    filterClient: 'Khách',
+    filterTips: 'Tip',
+    filterHasNote: 'Có ghi chú',
+    filterNoTip: 'Không tip',
+    filterClear: 'Xóa lọc',
+    historyTotalOne: '{amount} từ 1 turn',
+    historyTotal: '{amount} từ {n} turn',
 
     // Adjustments
     newAdjustment: 'Điều chỉnh mới',

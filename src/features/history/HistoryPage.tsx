@@ -1,4 +1,4 @@
-import { IconDots } from '@tabler/icons-react'
+import { IconDots, IconFilter, IconX } from '@tabler/icons-react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useId, useState } from 'react'
 import { Link, useLocation, useSearch } from 'wouter'
@@ -15,7 +15,7 @@ import {
   type IsoDate,
 } from '../../domain/dates.ts'
 import { formatUsdShort } from '../../domain/money.ts'
-import { numberTurns } from '../../domain/totals.ts'
+import { numberTurns, sumTotals } from '../../domain/totals.ts'
 import { t, tf, type StringKey } from '../../lib/i18n.ts'
 import {
   chip,
@@ -32,7 +32,18 @@ import { loadRange, servicesByTurn } from '../turns/turnStore.ts'
 import { TurnRow } from '../turns/TurnRow.tsx'
 import { CalendarView } from './CalendarView.tsx'
 import { DayOffSheet } from './DayOffSheet.tsx'
-import { groupByDay, matchesSearch, rangeFor, type RangeChoice } from './historyRange.ts'
+import { FilterSheet } from './FilterSheet.tsx'
+import {
+  groupByDay,
+  hasFilters,
+  matchesFilters,
+  matchesSearch,
+  NO_FILTERS,
+  rangeFor,
+  serviceNames,
+  type Filters,
+  type RangeChoice,
+} from './historyRange.ts'
 import { dayOffDates, loadWorkDays } from './workDays.ts'
 
 const CHOICES: { value: RangeChoice; key: StringKey }[] = [
@@ -47,6 +58,10 @@ type View = 'list' | 'calendar'
 
 // Remembered while the app stays open; a reload starts on the list.
 let sessionView: View = 'list'
+
+function rememberView(next: View): void {
+  sessionView = next
+}
 
 const VIEW_KEYS = {
   list: 'historyList',
@@ -66,11 +81,13 @@ export function HistoryPage() {
   const [customStart, setCustomStart] = useState<IsoDate>(openedDay ?? today)
   const [customEnd, setCustomEnd] = useState<IsoDate>(openedDay ?? today)
   const [search, setSearch] = useState('')
+  const [filters, setFilters] = useState<Filters>(NO_FILTERS)
+  const [filterOpen, setFilterOpen] = useState(false)
   const [menuDay, setMenuDay] = useState<IsoDate | null>(null)
   const id = useId()
 
   function setView(next: View) {
-    sessionView = next
+    rememberView(next)
     setViewState(next)
   }
 
@@ -109,13 +126,54 @@ export function HistoryPage() {
     }
   }
 
+  const filtersOn = hasFilters(filters)
+  const hidingTurns = hasSearch || filtersOn
   const visibleTurns = data
-    ? hasSearch
-      ? data.turns.filter((turn) => matchesSearch(grouped.get(turn.id) ?? [], search))
-      : data.turns
+    ? data.turns.filter(
+        (turn) =>
+          matchesSearch(grouped.get(turn.id) ?? [], search) &&
+          matchesFilters(turn, grouped.get(turn.id) ?? [], filters),
+      )
     : []
-  const visibleAdjustments = data && !hasSearch ? data.adjustments : []
+  const visibleAdjustments = data && !hidingTurns ? data.adjustments : []
   const groups = groupByDay(visibleTurns, visibleAdjustments)
+  const totalTurns = visibleTurns.reduce((sum, turn) => sum + turn.turnCount, 0)
+  const totalEarnedCents = sumTotals(visibleTurns, visibleAdjustments).earnedCents
+  const serviceOptions = data ? serviceNames(data.services) : []
+  const activeFilters: { key: string; label: string; remove: () => void }[] = []
+  for (const name of filters.services) {
+    activeFilters.push({
+      key: `service:${name}`,
+      label: name,
+      remove: () =>
+        setFilters({ ...filters, services: filters.services.filter((item) => item !== name) }),
+    })
+  }
+  for (const type of filters.clients) {
+    activeFilters.push({
+      key: `client:${type}`,
+      label: t(locale, type === 'request' ? 'clientRequest' : 'clientWalkIn'),
+      remove: () =>
+        setFilters({ ...filters, clients: filters.clients.filter((item) => item !== type) }),
+    })
+  }
+  for (const type of filters.tips) {
+    activeFilters.push({
+      key: `tip:${type}`,
+      label: t(
+        locale,
+        type === 'cash' ? 'cashTip' : type === 'card' ? 'cardTip' : 'filterNoTip',
+      ),
+      remove: () => setFilters({ ...filters, tips: filters.tips.filter((item) => item !== type) }),
+    })
+  }
+  if (filters.hasNote) {
+    activeFilters.push({
+      key: 'note',
+      label: t(locale, 'filterHasNote'),
+      remove: () => setFilters({ ...filters, hasNote: false }),
+    })
+  }
 
   const monthGroups = data ? groupByDay(data.turns, data.adjustments) : []
   const earnedByDate = new Map(monthGroups.map((group) => [group.date, group.earnedCents]))
@@ -241,13 +299,57 @@ export function HistoryPage() {
             />
           </div>
 
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              aria-expanded={filterOpen}
+              onClick={() => setFilterOpen(true)}
+              className={`${chip} ${filtersOn ? chipOn : chipOff} inline-flex items-center gap-1`}
+            >
+              <IconFilter size={16} aria-hidden="true" />
+              {t(locale, 'filter')}
+            </button>
+          </div>
+
+          {filtersOn && (
+            <div className="flex flex-wrap items-center gap-2">
+              {activeFilters.map((active) => (
+                <button
+                  key={active.key}
+                  type="button"
+                  onClick={active.remove}
+                  className={`${chip} ${chipOn} inline-flex items-center gap-1`}
+                >
+                  {active.label}
+                  <IconX size={14} aria-hidden="true" />
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={() => setFilters(NO_FILTERS)}
+                className={`${chip} ${chipOff}`}
+              >
+                {t(locale, 'filterClear')}
+              </button>
+            </div>
+          )}
+
+          {!invalidRange && data !== null && visibleTurns.length > 0 && (
+            <p data-testid="history-total" className="text-sm font-semibold text-text-secondary">
+              {tf(locale, totalTurns === 1 ? 'historyTotalOne' : 'historyTotal', {
+                n: totalTurns,
+                amount: formatUsdShort(totalEarnedCents),
+              })}
+            </p>
+          )}
+
           <Link href={paths.adjustmentNew} className={`${secondaryButton} block text-center`}>
             {t(locale, 'addAdjustment')}
           </Link>
 
           {!invalidRange && data !== null && groups.length === 0 && (
             <p className="text-text-secondary">
-              {t(locale, hasSearch ? 'noMatches' : 'noEntries')}
+              {t(locale, hidingTurns ? 'noMatches' : 'noEntries')}
             </p>
           )}
 
@@ -299,6 +401,15 @@ export function HistoryPage() {
               )
             }          )}
         </>
+      )}
+
+      {filterOpen && (
+        <FilterSheet
+          filters={filters}
+          serviceOptions={serviceOptions}
+          onChange={setFilters}
+          onClose={() => setFilterOpen(false)}
+        />
       )}
 
       {menuDay !== null && (
