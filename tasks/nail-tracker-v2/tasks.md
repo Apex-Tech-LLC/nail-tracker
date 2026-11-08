@@ -29,8 +29,8 @@ opens the pull request, waits for checks, merges, updates this file. Product: `d
 |---|---|---|
 | V08 | Pay rules by date, statement maths, paycheck check maths, database and backup upgrade (no screens) | ✅ |
 | V09 | "How I'm paid" page: commission, supply fee, card-tip fee, check/cash split, rules by start date | ✅ |
-| V10 | Paycheck screen part 1: the statement, show by day, past periods; Home owes split | 🔄 |
-| V11 | Paycheck parts 2 and 3: record check and cash, stub numbers, Matches / Short / Over with reasons, reminder | ⬜ |
+| V10 | Paycheck screen part 1: the statement, show by day, past periods; Home owes split | ✅ |
+| V11 | Paycheck parts 2 and 3: record check and cash, stub numbers, Matches / Short / Over with reasons, reminder | 🔄 |
 
 ## Release 2.3: Reports and goals
 
