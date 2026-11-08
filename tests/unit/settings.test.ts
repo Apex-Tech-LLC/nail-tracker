@@ -27,6 +27,8 @@ describe('resolveSettings', () => {
     tipButtonsTarget: 'cash',
     numberPad: true,
     onboardingDone: false,
+    hoursOn: false,
+    minimumWageCents: null,
     backupReminderDays: 14,
     lastBackupDate: null,
     dismissedReminders: {},

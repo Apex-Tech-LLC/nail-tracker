@@ -22,6 +22,9 @@ export interface Settings {
   tipButtonsTarget: TipButtonsTarget
   numberPad: boolean
   onboardingDone: boolean
+  /** Optional hours tracking, off until the technician turns it on. */
+  hoursOn: boolean
+  minimumWageCents: number | null
   backupReminderDays: BackupReminderDays
   lastBackupDate: IsoDate | null
   /** Reminder key to the day it was dismissed. */
@@ -47,6 +50,8 @@ const isPeriodType = (value: unknown): value is PayPeriodType =>
 const isRate = (value: unknown): value is number =>
   typeof value === 'number' && Number.isInteger(value) && value >= 0 && value <= 10_000
 const isDateText = (value: unknown): value is IsoDate => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)
+const isCents = (value: unknown): value is number =>
+  typeof value === 'number' && Number.isInteger(value) && value >= 0
 const isReminderDays = (value: unknown): value is BackupReminderDays =>
   value === 7 || value === 14 || value === 30 || value === 0
 const isGoalCents = (value: unknown): value is number =>
@@ -79,6 +84,8 @@ export function resolveSettings(saved: string | null, languages: readonly string
     tipButtonsTarget: parsed.tipButtonsTarget === 'card' ? 'card' : 'cash',
     numberPad: parsed.numberPad !== false,
     onboardingDone: parsed.onboardingDone === true,
+    hoursOn: parsed.hoursOn === true,
+    minimumWageCents: isCents(parsed.minimumWageCents) ? parsed.minimumWageCents : null,
     backupReminderDays: isReminderDays(parsed.backupReminderDays) ? parsed.backupReminderDays : 14,
     lastBackupDate: isDateText(parsed.lastBackupDate) ? parsed.lastBackupDate : null,
     dismissedReminders: isDismissedMap(parsed.dismissedReminders) ? parsed.dismissedReminders : {},

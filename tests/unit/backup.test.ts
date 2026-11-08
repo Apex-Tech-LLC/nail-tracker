@@ -27,6 +27,8 @@ const settings: Settings = {
   tipButtonsTarget: 'cash',
   numberPad: true,
   onboardingDone: true,
+  hoursOn: true,
+  minimumWageCents: 1650,
   backupReminderDays: 14,
   lastBackupDate: '2026-11-04',
   dismissedReminders: { 'backup:2026-10-01': '2026-11-04' },
