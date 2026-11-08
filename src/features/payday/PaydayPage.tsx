@@ -10,6 +10,8 @@ import { formatRange } from '../../domain/dates.ts'
 import { formatUsd } from '../../domain/money.ts'
 import { t } from '../../lib/i18n.ts'
 import { list, primaryButton, secondaryButton } from '../../ui/styles.ts'
+import { CheckPanel } from '../paycheck/CheckPanel.tsx'
+import { checkStatusColor, checkStatusLabel } from '../paycheck/paycheckStatus.ts'
 import { StatementCard } from '../paycheck/StatementCard.tsx'
 import { AddPeriodForm } from './AddPeriodForm.tsx'
 import { PAY_STATE_COLOR, PAY_STATE_LABEL } from './payStateLabels.ts'
@@ -75,12 +77,15 @@ export function PaydayPage() {
         ))}
 
       {current && (
-        <StatementCard
-          period={current.period}
-          statement={current.statement}
-          endRules={current.endRules}
-          status={current.state}
-        />
+        <>
+          <StatementCard
+            period={current.period}
+            statement={current.statement}
+            endRules={current.endRules}
+            status={current.state}
+          />
+          <CheckPanel summary={current} />
+        </>
       )}
 
       {past.length > 0 && (
@@ -97,8 +102,17 @@ export function PaydayPage() {
                   <p className="font-medium">
                     {formatRange(summary.period.startDate, summary.period.endDate, locale)}
                   </p>
-                  <span className="shrink-0 rounded-full border border-border-strong px-2 py-0.5 text-xs text-text-secondary">
-                    {t(locale, 'notChecked')}
+                  <span
+                    className={`shrink-0 rounded-full border border-border-strong px-2 py-0.5 text-xs ${checkStatusColor(
+                      summary.check,
+                      summary.record?.checkedDate ?? null,
+                    )}`}
+                  >
+                    {checkStatusLabel(
+                      locale,
+                      summary.check,
+                      summary.record?.checkedDate ?? null,
+                    )}
                   </span>
                 </div>
                 <div className="mt-1 flex items-baseline justify-between gap-2">

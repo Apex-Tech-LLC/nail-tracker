@@ -1,4 +1,4 @@
-import type { NailDb, PayPeriod } from '../../db/schema.ts'
+import type { NailDb, PaycheckRecord, PayPeriod } from '../../db/schema.ts'
 import { addDays, type IsoDate } from '../../domain/dates.ts'
 import {
   customPeriodProblem,
@@ -6,11 +6,17 @@ import {
   periodId,
   type PayPeriodType,
 } from '../../domain/payPeriods.ts'
+import {
+  checkPaycheck,
+  type CheckResult,
+  type Received,
+} from '../../domain/paycheckCheck.ts'
 import { rulesOn, type PayRules } from '../../domain/payRules.ts'
 import { payState, type PayStateName } from '../../domain/payday.ts'
 import { buildStatement, type Statement } from '../../domain/statement.ts'
 import { sumTotals, type Totals } from '../../domain/totals.ts'
 import { loadRange } from '../turns/turnStore.ts'
+import { stubFromRecord } from '../paycheck/paycheckStore.ts'
 
 export interface PeriodSummary {
   period: PayPeriod
@@ -20,6 +26,12 @@ export interface PeriodSummary {
   paidCents: number
   outstandingCents: number
   state: PayStateName
+  /** What was paid for this period, split by the way it arrived. */
+  received: Received
+  paymentsCount: number
+  record: PaycheckRecord | null
+  /** Null until at least one payment is recorded. */
+  check: CheckResult | null
 }
 
 /**
@@ -108,19 +120,42 @@ export async function deletePeriod(db: NailDb, id: string): Promise<boolean> {
 }
 
 export async function loadPeriodSummaries(db: NailDb): Promise<PeriodSummary[]> {
-  const [periods, allocations, rules] = await Promise.all([
+  const [periods, allocations, rules, payments, records] = await Promise.all([
     db.payPeriods.orderBy('startDate').toArray(),
     db.paymentAllocations.toArray(),
     db.payRules.toArray(),
+    db.payments.toArray(),
+    db.paycheckRecords.toArray(),
   ])
 
+  const methodByPayment = new Map(payments.map((payment) => [payment.id, payment.paymentMethod]))
   const paidByPeriod = new Map<string, number>()
+  const receivedByPeriod = new Map<string, Received>()
+  const paymentCountByPeriod = new Map<string, number>()
+
   for (const allocation of allocations) {
     paidByPeriod.set(
       allocation.payPeriodId,
       (paidByPeriod.get(allocation.payPeriodId) ?? 0) + allocation.amountCents,
     )
+
+    const received = receivedByPeriod.get(allocation.payPeriodId) ?? {
+      checkCents: 0,
+      cashCents: 0,
+      otherCents: 0,
+    }
+    const method = methodByPayment.get(allocation.paymentId)
+    if (method === 'check') received.checkCents += allocation.amountCents
+    else if (method === 'cash') received.cashCents += allocation.amountCents
+    else received.otherCents += allocation.amountCents
+    receivedByPeriod.set(allocation.payPeriodId, received)
+    paymentCountByPeriod.set(
+      allocation.payPeriodId,
+      (paymentCountByPeriod.get(allocation.payPeriodId) ?? 0) + 1,
+    )
   }
+
+  const recordByPeriod = new Map(records.map((record) => [record.payPeriodId, record]))
 
   return Promise.all(
     periods.map(async (period) => {
@@ -143,6 +178,13 @@ export async function loadPeriodSummaries(db: NailDb): Promise<PeriodSummary[]> 
       })
       const paidCents = paidByPeriod.get(period.id) ?? 0
       const { outstandingCents, state } = payState(statement.salonPaysCents, paidCents)
+      const received = receivedByPeriod.get(period.id) ?? {
+        checkCents: 0,
+        cashCents: 0,
+        otherCents: 0,
+      }
+      const record = recordByPeriod.get(period.id) ?? null
+      const paymentsCount = paymentCountByPeriod.get(period.id) ?? 0
 
       return {
         period,
@@ -152,6 +194,10 @@ export async function loadPeriodSummaries(db: NailDb): Promise<PeriodSummary[]> 
         paidCents,
         outstandingCents,
         state,
+        received,
+        paymentsCount,
+        record,
+        check: paymentsCount > 0 ? checkPaycheck(statement, received, stubFromRecord(record)) : null,
       }
     }),
   )

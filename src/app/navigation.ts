@@ -19,6 +19,7 @@ export const paths = {
   adjustment: (id: string) => `/adjustment/${id}`,
   period: (id: string) => `/payday/${id}`,
   pay: (id: string) => `/payday/${id}/pay`,
+  record: (id: string) => `/payday/${id}/record`,
   payment: (id: string) => `/payment/${id}`,
   services: '/settings/services',
   payRules: '/settings/pay',
