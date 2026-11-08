@@ -49,7 +49,7 @@ opens the pull request, waits for checks, merges, updates this file. Product: `d
 | V17 | Taxes and year summary, set-aside, export for the tax preparer | ✅ |
 | V18 | Hours: start and end day, suggested hours, pay per hour, minimum wage note | ✅ |
 | V19 | Guarantee and tiers in pay rules and the statement | ✅ |
-| V20 | Speed with 20,000 turns; Vietnamese check of all new words at 375 pixels | 🔄 |
+| V20 | Speed with 20,000 turns; Vietnamese check of all new words at 375 pixels | ✅ |
 
 Briefs for 2.3 and 2.4 are written when the release before them is merged, so they match the code as it is then.
 
