@@ -215,7 +215,7 @@ function SummaryCard({
 }
 
 export function ReportsPage() {
-  const { locale, weekStartDay } = useSettings()
+  const { locale, weekStartDay, weeklyGoalCents, monthlyGoalCents } = useSettings()
   const today = useToday()
   const [choice, setChoice] = useState<ReportChoice>('week')
   const [date, setDate] = useState<IsoDate>(today)
@@ -251,6 +251,10 @@ export function ReportsPage() {
 
   const rangeKey = `${choice}:${start}:${end}`
   const selectedIndex = chosen?.rangeKey === rangeKey ? chosen.index : null
+  // Week mode draws the weekly goal and Month mode the monthly one; other
+  // modes have no goal line of their own.
+  const goalCents =
+    choice === 'week' ? weeklyGoalCents : choice === 'month' ? monthlyGoalCents : null
 
   // A quick double tap runs the download twice before React can re-render.
   const exportInFlight = useRef(false)
@@ -400,7 +404,7 @@ export function ReportsPage() {
               selectedIndex={selectedIndex}
               onSelect={(index) => setChosen({ rangeKey, index })}
               onOpen={openBar}
-              goalCents={null}
+              goalCents={goalCents}
             />
           </section>
 
