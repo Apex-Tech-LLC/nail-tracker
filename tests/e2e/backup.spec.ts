@@ -210,8 +210,8 @@ test('a double tap on delete all data deletes once', async ({ page }) => {
   await dialog.getByRole('button', { name: 'Delete all data' }).dblclick()
 
   await expect(page).toHaveURL(/#\/onboarding/)
-  // Ten tables are cleared once; a second delete would clear ten more.
-  expect(await storeClears(page)).toBe(before + 10)
+  // Eleven tables are cleared once; a second delete would clear eleven more.
+  expect(await storeClears(page)).toBe(before + 11)
   for (let step = 0; step < 4; step += 1) {
     await page.getByRole('button', { name: 'Skip', exact: true }).click()
   }

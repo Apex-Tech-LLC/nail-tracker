@@ -12,6 +12,7 @@ import type {
   ServicePreset,
   Turn,
   TurnService,
+  WorkDay,
 } from '../../db/schema.ts'
 import { isIsoDate } from '../../domain/dates.ts'
 import type { FeeWhen, PayRules, SupplyFee } from '../../domain/payRules.ts'
@@ -46,6 +47,10 @@ const isTextOrNull = (value: unknown): value is string | null =>
   value === null || isText(value)
 const isIsoDateOrNull = (value: unknown): value is string | null =>
   value === null || isIsoDate(value)
+const isClockTime = (value: unknown): value is string =>
+  typeof value === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(value)
+const isClockTimeOrNull = (value: unknown): value is string | null =>
+  value === null || isClockTime(value)
 const isOwnCentsOrNull = (value: unknown): value is number | null =>
   value === null || isOwnCents(value)
 const isRateOrNull = (value: unknown): value is number | null => value === null || isRate(value)
@@ -324,6 +329,15 @@ function toPaycheckRecord(value: unknown): PaycheckRecord | null {
   }
 }
 
+function toWorkDay(value: unknown): WorkDay | null {
+  if (!isObject(value)) return null
+  const { date, dayOff, startTime, endTime, createdAt, updatedAt } = value
+  if (!isIsoDate(date) || typeof dayOff !== 'boolean') return null
+  if (!isClockTimeOrNull(startTime) || !isClockTimeOrNull(endTime)) return null
+  if (!isTime(createdAt) || !isTime(updatedAt)) return null
+  return { date, dayOff, startTime, endTime, createdAt, updatedAt }
+}
+
 function readArray(data: Record<string, unknown>, key: string): unknown[] {
   const value = data[key]
   if (!Array.isArray(value)) throw new ImportError('notBackup', key)
@@ -338,21 +352,21 @@ function toRecords<T>(values: readonly unknown[], convert: (value: unknown) => T
   })
 }
 
-function assertUniqueIds(records: readonly { id: string }[], name: string): void {
+function assertUniqueBy<T>(records: readonly T[], keyOf: (record: T) => string, name: string): void {
   const seen = new Set<string>()
   for (const record of records) {
-    if (seen.has(record.id)) throw new ImportError('invalidRecord', `duplicate ${name}`)
-    seen.add(record.id)
+    const key = keyOf(record)
+    if (seen.has(key)) throw new ImportError('invalidRecord', `duplicate ${name}`)
+    seen.add(key)
   }
 }
 
-interface TimedRecord {
-  id: string
-  updatedAt: number
+function assertUniqueIds(records: readonly { id: string }[], name: string): void {
+  assertUniqueBy(records, (record) => record.id, name)
 }
 
 /** Counts what a merge would do, and returns the records that need writing. */
-function pickWrites<T extends TimedRecord>(
+function pickWrites<T extends { updatedAt: number }>(
   records: readonly T[],
   existing: readonly (T | undefined)[],
   result: ImportResult,
@@ -405,6 +419,7 @@ export async function importJson(db: NailDb, text: string): Promise<ImportOutcom
   )
   const payRules = toRecords(readArray(data, 'payRules'), toPayRules, 'pay rules')
   const paycheckRecords = toRecords(readArray(data, 'paycheckRecords'), toPaycheckRecord, 'paycheck record')
+  const workDays = toRecords(readArray(data, 'workDays'), toWorkDay, 'work day')
 
   for (const [records, name] of [
     [salons, 'salon'],
@@ -420,6 +435,7 @@ export async function importJson(db: NailDb, text: string): Promise<ImportOutcom
   ] as const) {
     assertUniqueIds(records, name)
   }
+  assertUniqueBy(workDays, (workDay) => workDay.date, 'work day')
 
   const turnIds = new Set(turns.map((turn) => turn.id))
   if (turnServices.some((service) => !turnIds.has(service.turnId))) {
@@ -451,6 +467,7 @@ export async function importJson(db: NailDb, text: string): Promise<ImportOutcom
       db.paymentAllocations,
       db.payRules,
       db.paycheckRecords,
+      db.workDays,
     ],
     async (): Promise<ImportOutcome> => {
       const [turnCount, adjustmentCount, paymentCount, periodCount] = await Promise.all([
@@ -526,6 +543,13 @@ export async function importJson(db: NailDb, text: string): Promise<ImportOutcom
         result,
       )
       if (paycheckWrites.length > 0) await db.paycheckRecords.bulkPut(paycheckWrites)
+
+      const workDayWrites = pickWrites(
+        workDays,
+        await db.workDays.bulkGet(workDays.map((workDay) => workDay.date)),
+        result,
+      )
+      if (workDayWrites.length > 0) await db.workDays.bulkPut(workDayWrites)
 
       return {
         ...result,

@@ -8,7 +8,7 @@ import { deleteAllData } from '../../src/features/backup/deleteAllData.ts'
 import { exportJson } from '../../src/features/backup/exportJson.ts'
 import { ImportError } from '../../src/features/backup/importError.ts'
 import { importJson } from '../../src/features/backup/importJson.ts'
-import { migrateBackup } from '../../src/features/backup/migrateBackup.ts'
+import { MIGRATIONS, migrateBackup } from '../../src/features/backup/migrateBackup.ts'
 import { addPayment } from '../../src/features/payday/paymentStore.ts'
 import { addCustomPeriod } from '../../src/features/payday/periodStore.ts'
 import { removePreset } from '../../src/features/presets/presetStore.ts'
@@ -107,6 +107,7 @@ async function rowCounts(fresh: NailDb) {
     paymentAllocations,
     payRules,
     paycheckRecords,
+    workDays,
   ] = await Promise.all([
     fresh.salons.count(),
     fresh.servicePresets.count(),
@@ -118,6 +119,7 @@ async function rowCounts(fresh: NailDb) {
     fresh.paymentAllocations.count(),
     fresh.payRules.count(),
     fresh.paycheckRecords.count(),
+    fresh.workDays.count(),
   ])
   return {
     salons,
@@ -130,6 +132,7 @@ async function rowCounts(fresh: NailDb) {
     paymentAllocations,
     payRules,
     paycheckRecords,
+    workDays,
   }
 }
 
@@ -156,7 +159,7 @@ describe('exportJson and importJson', () => {
     const text = await exportJson(source, settings, new Date('2026-11-08T12:00:00Z'))
     expect(JSON.parse(text)).toMatchObject({
       app: 'nail-tracker',
-      version: 2,
+      version: 3,
       exportedAt: '2026-11-08T12:00:00.000Z',
     })
 
@@ -195,6 +198,32 @@ describe('exportJson and importJson', () => {
     expect((await copy.paycheckRecords.toArray()).sort(byId)).toEqual(
       (await source.paycheckRecords.toArray()).sort(byId),
     )
+    expect(await copy.workDays.toArray()).toEqual(await source.workDays.toArray())
+  })
+
+  it('round-trips work days, including a day off', async () => {
+    const source = openFresh()
+    await source.workDays.put({
+      date: '2026-11-08',
+      dayOff: true,
+      startTime: null,
+      endTime: null,
+      createdAt: 700,
+      updatedAt: 700,
+    })
+    const text = await exportJson(source, settings)
+
+    const copy = openFresh()
+    await importJson(copy, text)
+
+    expect(await copy.workDays.get('2026-11-08')).toEqual({
+      date: '2026-11-08',
+      dayOff: true,
+      startTime: null,
+      endTime: null,
+      createdAt: 700,
+      updatedAt: 700,
+    })
   })
 
   it('adds nothing when the same file is restored a second time', async () => {
@@ -252,6 +281,61 @@ describe('exportJson and importJson', () => {
         .sort(),
     )
     expect(saved.every((service) => service.id.startsWith('file-'))).toBe(true)
+  })
+
+  it('restores a version 2 backup with no work days', async () => {
+    const source = openFresh()
+    await seedFull(source)
+    const old = JSON.parse(await exportJson(source, settings)) as Record<string, unknown>
+    old.version = 2
+    delete old.workDays
+
+    const copy = openFresh()
+    await importJson(copy, JSON.stringify(old))
+
+    expect(copy.verno).toBe(3)
+    expect(await copy.workDays.count()).toBe(0)
+    expect(await copy.turns.count()).toBe(1)
+  })
+
+  it('refuses a work day with an impossible date', async () => {
+    const fresh = openFresh()
+    await seedFull(fresh)
+    const data = JSON.parse(await exportJson(fresh, settings)) as Backup
+    data.workDays = [
+      {
+        date: '2026-02-30',
+        dayOff: true,
+        startTime: null,
+        endTime: null,
+        createdAt: 1,
+        updatedAt: 1,
+      },
+    ]
+
+    await expect(importJson(fresh, JSON.stringify(data))).rejects.toMatchObject({
+      code: 'invalidRecord',
+    })
+  })
+
+  it('refuses a work day time that is not HH:MM', async () => {
+    const fresh = openFresh()
+    await seedFull(fresh)
+    const data = JSON.parse(await exportJson(fresh, settings)) as Backup
+    data.workDays = [
+      {
+        date: '2026-11-08',
+        dayOff: false,
+        startTime: '9am',
+        endTime: null,
+        createdAt: 1,
+        updatedAt: 1,
+      },
+    ]
+
+    await expect(importJson(fresh, JSON.stringify(data))).rejects.toMatchObject({
+      code: 'invalidRecord',
+    })
   })
 
   it('restores a version 1 backup and gives it the default rules', async () => {
@@ -353,7 +437,7 @@ describe('importJson refuses a bad file', () => {
     const fresh = openFresh()
     await seedFull(fresh)
     const data = JSON.parse(await exportJson(fresh, settings)) as Backup
-    data.version = 3
+    data.version = 4
 
     await expect(importJson(fresh, JSON.stringify(data))).rejects.toMatchObject({
       code: 'unsupportedVersion',
@@ -412,6 +496,14 @@ describe('deleteAllData', () => {
     const fresh = openFresh()
     await addTurn(fresh, turnInput(), 1000)
     await removePreset(fresh, 'manicure')
+    await fresh.workDays.put({
+      date: '2026-11-08',
+      dayOff: true,
+      startTime: null,
+      endTime: null,
+      createdAt: 1,
+      updatedAt: 1,
+    })
     await fresh.paycheckRecords.put({
       id: 'check-1',
       payPeriodId: PERIOD_ID,
@@ -429,6 +521,7 @@ describe('deleteAllData', () => {
     expect(await fresh.turnServices.count()).toBe(0)
     expect(await fresh.salons.count()).toBe(1)
     expect(await fresh.paycheckRecords.count()).toBe(0)
+    expect(await fresh.workDays.count()).toBe(0)
     expect(await fresh.payRules.count()).toBe(1)
     const presets = await fresh.servicePresets.toArray()
     expect(presets).toHaveLength(10)
@@ -457,7 +550,16 @@ describe('migrateBackup', () => {
   })
 
   it('refuses a version newer than the app knows', () => {
-    expect(errorCode(() => migrateBackup({ version: 3 }))).toBe('unsupportedVersion')
+    expect(errorCode(() => migrateBackup({ version: 4 }))).toBe('unsupportedVersion')
+  })
+
+  it('adds an empty work day list when upgrading a version 2 backup', () => {
+    expect(MIGRATIONS[2]({ version: 2 })).toEqual({ version: 2, workDays: [] })
+    expect(migrateBackup({ version: 2, turns: [] })).toEqual({
+      version: 3,
+      turns: [],
+      workDays: [],
+    })
   })
 
   it('never changes the object it is given', () => {

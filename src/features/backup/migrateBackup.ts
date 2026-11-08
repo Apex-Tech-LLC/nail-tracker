@@ -23,9 +23,14 @@ function upgradeFromVersionOne(data: Record<string, unknown>): Record<string, un
   return { ...data, payRules: rules, paycheckRecords: [] }
 }
 
+function upgradeFromVersionTwo(data: Record<string, unknown>): Record<string, unknown> {
+  return { ...data, workDays: [] }
+}
+
 /** Key is the version a step upgrades FROM. */
 export const MIGRATIONS: Record<number, Migration> = {
   1: upgradeFromVersionOne,
+  2: upgradeFromVersionTwo,
 }
 
 /** Upgrades a parsed backup one version at a time. */

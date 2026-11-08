@@ -22,6 +22,7 @@ export async function deleteAllData(db: NailDb): Promise<void> {
       db.payPeriods,
       db.payRules,
       db.paycheckRecords,
+      db.workDays,
     ],
     async () => {
       await Promise.all([
@@ -35,6 +36,7 @@ export async function deleteAllData(db: NailDb): Promise<void> {
         db.payPeriods.clear(),
         db.payRules.clear(),
         db.paycheckRecords.clear(),
+        db.workDays.clear(),
       ])
       await db.salons.add(DEFAULT_SALON)
       await db.servicePresets.bulkAdd(DEFAULT_PRESETS)
