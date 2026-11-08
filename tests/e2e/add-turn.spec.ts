@@ -128,7 +128,8 @@ test('Save & Add Another keeps the form open for the next turn', async ({ page }
 
   await expect(page).toHaveURL(/#\/add$/)
   await expect(page.getByText('Saved. Add the next turn.')).toBeVisible()
-  await expect(page.getByLabel('Service amount')).toHaveValue('')
+  // The next turn starts on the same service at the price just charged.
+  await expect(page.getByLabel('Service amount')).toHaveValue('30.00')
 
   await page.getByLabel('Service amount').fill('40')
   await formSave(page).click()

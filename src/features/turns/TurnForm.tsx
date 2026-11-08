@@ -96,6 +96,23 @@ function newLine(choice: string, rateBp: number): LineState {
   }
 }
 
+/**
+ * A new turn's first line: the last service used, with its usual price or else
+ * the last one charged. It is only a guess until the person types a price.
+ */
+function startingLine(
+  preset: ServicePreset | undefined,
+  fallbackRateBp: number,
+  lastPrices: ReadonlyMap<string, number>,
+): LineState {
+  const line = {
+    ...newLine(preset?.id ?? 'other', preset?.defaultCommissionRateBp ?? fallbackRateBp),
+    guess: true,
+  }
+  const priceCents = preset ? (preset.defaultPriceCents ?? lastPrices.get(preset.id) ?? null) : null
+  return priceCents === null ? line : { ...line, amount: centsToInput(priceCents) }
+}
+
 /** A saved service row back into form state. Its rate is "touched" so it cannot change. */
 function lineFromService(service: TurnService, presets: ServicePreset[]): LineState {
   const preset = presets.find((item) => item.id === service.servicePresetId)
@@ -272,13 +289,11 @@ function TurnFormFields({ presets, existing, quick, copy, onDone, onClose }: Fie
             : lineFromService(service, presets),
         )
       : [
-          {
-            ...newLine(
-              initialPreset?.id ?? 'other',
-              initialPreset?.defaultCommissionRateBp ?? defaultCommissionRateBp,
-            ),
-            guess: true,
-          },
+          startingLine(
+            initialPreset,
+            defaultCommissionRateBp,
+            quick ? lastPrice(quick.entries) : new Map(),
+          ),
         ],
   )
   const [cashText, setCashText] = useState(
@@ -287,6 +302,9 @@ function TurnFormFields({ presets, existing, quick, copy, onDone, onClose }: Fie
   const [cardText, setCardText] = useState(
     source && source.cardTipCents > 0 ? centsToInput(source.cardTipCents) : '',
   )
+  // The tip box filled by the % button keeps following the services total
+  // until the person types in it or taps another tip button.
+  const [percentTipBox, setPercentTipBox] = useState<'cash' | 'card' | null>(null)
   const [date, setDate] = useState<IsoDate>(turn?.localWorkDate ?? today)
   const [turnCountText, setTurnCountText] = useState(String(source?.turnCount ?? 1))
   const [time, setTime] = useState(turn ? timeOf(turn.occurredAt) : '')
@@ -323,9 +341,17 @@ function TurnFormFields({ presets, existing, quick, copy, onDone, onClose }: Fie
   const saveInFlight = useRef(false)
   const amountRef = useRef<HTMLInputElement | null>(null)
   const lastSavedChoice = useRef(initialPreset?.id ?? 'other')
+  const lastSavedPriceCents = useRef<number | null>(null)
 
-  const cashCents = cashText.trim() === '' ? 0 : parseCents(cashText)
-  const cardCents = cardText.trim() === '' ? 0 : parseCents(cardText)
+  const serviceCents = lines.reduce(
+    (sum, line) => sum + (parseCents(line.amount) ?? 0),
+    0,
+  )
+  const percentTipCents = roundDiv(serviceCents * 1800, 10_000)
+  const cashShown = percentTipBox === 'cash' ? centsToInput(percentTipCents) : cashText
+  const cardShown = percentTipBox === 'card' ? centsToInput(percentTipCents) : cardText
+  const cashCents = cashShown.trim() === '' ? 0 : parseCents(cashShown)
+  const cardCents = cardShown.trim() === '' ? 0 : parseCents(cardShown)
   // While a field cannot be read, the preview treats it as 0 instead of hiding.
   const preview = turnTotals(
     lines.map((line) => ({
@@ -349,16 +375,11 @@ function TurnFormFields({ presets, existing, quick, copy, onDone, onClose }: Fie
   const orderedPresets = [...presets].sort(
     (a, b) => (useCounts.get(b.id) ?? 0) - (useCounts.get(a.id) ?? 0),
   )
-  const serviceCents = lines.reduce(
-    (sum, line) => sum + (parseCents(line.amount) ?? 0),
-    0,
-  )
-  const percentTipCents = roundDiv(serviceCents * 1800, 10_000)
   const tipOptions = [
-    ...TIP_VALUES.map((cents) => ({ label: formatUsdShort(cents), cents })),
-    { label: '18%', cents: percentTipCents },
+    ...TIP_VALUES.map((cents) => ({ label: formatUsdShort(cents), cents, percent: false })),
+    { label: '18%', cents: percentTipCents, percent: true },
   ]
-  const targetText = tipButtonsTarget === 'cash' ? cashText : cardText
+  const targetText = tipButtonsTarget === 'cash' ? cashShown : cardShown
   const targetCents = targetText.trim() === '' ? null : parseCents(targetText)
 
   function changed() {
@@ -393,22 +414,18 @@ function TurnFormFields({ presets, existing, quick, copy, onDone, onClose }: Fie
   }
 
   function padTextFor(target: string): string {
-    if (target === 'cash') return cashText
-    if (target === 'card') return cardText
+    if (target === 'cash') return cashShown
+    if (target === 'card') return cardShown
     const key = target.slice('line:'.length)
     return lines.find((line) => line.key === key)?.amount ?? ''
   }
 
   function changePadText(target: string, value: string) {
-    if (target === 'cash') {
-      setCashText(value)
-      clearError('cash')
-    } else if (target === 'card') {
-      setCardText(value)
-      clearError('card')
+    if (target === 'cash' || target === 'card') {
+      typeTip(target, value)
     } else {
       const key = target.slice('line:'.length)
-      updateLine(key, (line) => ({ ...line, amount: value }))
+      updateLine(key, (line) => ({ ...line, amount: value, guess: false }))
       clearLineError(key, 'amount')
     }
     changed()
@@ -510,7 +527,6 @@ function TurnFormFields({ presets, existing, quick, copy, onDone, onClose }: Fie
     const only = lines.length === 1 ? lines[0] : undefined
     const guess =
       only?.guess &&
-      only.amount.trim() === '' &&
       only.customName.trim() === '' &&
       !(showPerLine && only.rateTouched)
         ? only
@@ -571,15 +587,20 @@ function TurnFormFields({ presets, existing, quick, copy, onDone, onClose }: Fie
     changed()
   }
 
-  function fillTip(cents: number) {
-    const value = centsToInput(cents)
-    if (tipButtonsTarget === 'cash') {
-      setCashText(value)
-      clearError('cash')
-    } else {
-      setCardText(value)
-      clearError('card')
-    }
+  /** A tip typed by hand, which stops the box following the % button. */
+  function typeTip(box: 'cash' | 'card', value: string) {
+    if (box === 'cash') setCashText(value)
+    else setCardText(value)
+    if (percentTipBox === box) setPercentTipBox(null)
+    clearError(box)
+  }
+
+  /** A tip button fills the chosen box; tapping the pressed one empties it again. */
+  function fillTip(cents: number, percent: boolean) {
+    const box = tipButtonsTarget
+    const pressed = targetCents === cents
+    typeTip(box, pressed ? '' : centsToInput(cents))
+    if (percent && !pressed) setPercentTipBox(box)
     setPadReplace(true)
     changed()
   }
@@ -660,6 +681,7 @@ function TurnFormFields({ presets, existing, quick, copy, onDone, onClose }: Fie
     const lastLine = lines[lines.length - 1]
     const lastPreset = presets.find((item) => item.id === lastLine.choice)
     lastSavedChoice.current = lastLine.choice
+    lastSavedPriceCents.current = parseCents(lastLine.amount)
 
     saveInFlight.current = true
     const input = {
@@ -728,14 +750,16 @@ function TurnFormFields({ presets, existing, quick, copy, onDone, onClose }: Fie
   function resetForNextTurn() {
     const choice = lastSavedChoice.current
     const preset = presets.find((item) => item.id === choice)
-    setLines([
-      {
-        ...newLine(choice, preset?.defaultCommissionRateBp ?? defaultCommissionRateBp),
-        guess: true,
-      },
-    ])
+    // The price just saved is newer than the quick picks loaded with the form.
+    const prices = new Map(lastPrices)
+    if (lastSavedPriceCents.current !== null) prices.set(choice, lastSavedPriceCents.current)
+    const next = startingLine(preset, defaultCommissionRateBp, prices)
+    // A commission set for the whole turn carries on to the next one.
+    const shared = !showPerLine && lines[0]?.rateTouched ? lines[0].rate : null
+    setLines([shared === null ? next : { ...next, rate: shared, rateTouched: true }])
     setCashText('')
     setCardText('')
+    setPercentTipBox(null)
     setTurnCountText('1')
     setTime('')
     setClientType('unspecified')
@@ -939,7 +963,7 @@ function TurnFormFields({ presets, existing, quick, copy, onDone, onClose }: Fie
             changed()
           }}
           onAmount={(value) => {
-            updateLine(line.key, (current) => ({ ...current, amount: value }))
+            updateLine(line.key, (current) => ({ ...current, amount: value, guess: false }))
             clearLineError(line.key, 'amount')
             changed()
           }}
@@ -968,10 +992,9 @@ function TurnFormFields({ presets, existing, quick, copy, onDone, onClose }: Fie
       <div className="grid grid-cols-2 gap-3">
         <MoneyField
           label={t(locale, 'cashTip')}
-          value={cashText}
+          value={cashShown}
           onChange={(value) => {
-            setCashText(value)
-            clearError('cash')
+            typeTip('cash', value)
             changed()
           }}
           error={errors.cash}
@@ -983,10 +1006,9 @@ function TurnFormFields({ presets, existing, quick, copy, onDone, onClose }: Fie
         />
         <MoneyField
           label={t(locale, 'cardTip')}
-          value={cardText}
+          value={cardShown}
           onChange={(value) => {
-            setCardText(value)
-            clearError('card')
+            typeTip('card', value)
             changed()
           }}
           error={errors.card}
@@ -1023,7 +1045,7 @@ function TurnFormFields({ presets, existing, quick, copy, onDone, onClose }: Fie
               key={option.label}
               type="button"
               aria-pressed={on}
-              onClick={() => fillTip(option.cents)}
+              onClick={() => fillTip(option.cents, option.percent)}
               className={`min-h-11 min-w-11 rounded-control border-[1.5px] px-3 text-sm font-semibold ${
                 on
                   ? 'border-positive-text bg-positive-bg text-positive-text'

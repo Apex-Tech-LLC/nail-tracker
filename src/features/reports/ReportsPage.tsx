@@ -262,6 +262,15 @@ export function ReportsPage() {
     }
   }
 
+  // Custom starts on the period just shown, not on today.
+  function chooseRange(next: ReportChoice) {
+    if (next === 'custom' && choice !== 'custom' && !invalidRange) {
+      setCustomStart(start)
+      setCustomEnd(end)
+    }
+    setChoice(next)
+  }
+
   function openBar(bar: TrendPoint) {
     if (choice === 'custom') {
       setCustomStart(bar.start)
@@ -311,7 +320,7 @@ export function ReportsPage() {
             type="button"
             aria-pressed={choice === value}
             className={`${chip} ${choice === value ? chipOn : chipOff}`}
-            onClick={() => setChoice(value)}
+            onClick={() => chooseRange(value)}
           >
             {t(locale, key)}
           </button>

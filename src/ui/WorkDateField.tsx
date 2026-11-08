@@ -1,7 +1,7 @@
-import { useId, useState } from 'react'
+import { useId, useState, type FocusEvent } from 'react'
 import { useSettings } from '../app/settings.ts'
 import { useToday } from '../app/useToday.ts'
-import { addDays, formatDayShort, type IsoDate } from '../domain/dates.ts'
+import { addDays, formatDayShort, isIsoDate, type IsoDate } from '../domain/dates.ts'
 import { t } from '../lib/i18n.ts'
 import { chip, chipOff, chipOn, errorText, field, label, pill } from './styles.ts'
 
@@ -28,9 +28,14 @@ export function WorkDateField({ value, onChange, error, compact = false }: Props
     if (compact) setOpen(false)
   }
 
-  function changeDate(date: IsoDate) {
-    onChange(date)
-    if (compact) setOpen(false)
+  /**
+   * Typing a date fires a change on every whole part, so the choices close
+   * only once the person leaves the date box for somewhere outside them.
+   */
+  function leaveDate(event: FocusEvent<HTMLInputElement>) {
+    const into = event.relatedTarget
+    const choices = event.currentTarget.closest('[data-date-choices]')
+    if (compact && !(into instanceof Node && choices?.contains(into))) setOpen(false)
   }
 
   const choices = (
@@ -70,7 +75,8 @@ export function WorkDateField({ value, onChange, error, compact = false }: Props
             id={`${id}-date`}
             type="date"
             value={value}
-            onChange={(event) => changeDate(event.target.value)}
+            onChange={(event) => onChange(event.target.value)}
+            onBlur={leaveDate}
             aria-invalid={!!error}
             aria-describedby={error ? `${id}-date-error` : undefined}
             className={field}
@@ -91,7 +97,10 @@ export function WorkDateField({ value, onChange, error, compact = false }: Props
         ? t(locale, 'today')
         : value === yesterday
           ? t(locale, 'yesterday')
-          : formatDayShort(value, locale)
+          : // A date half typed into the box is not a day yet.
+            isIsoDate(value)
+            ? formatDayShort(value, locale)
+            : t(locale, 'otherDay')
     return (
       <div className={open ? 'w-full' : undefined}>
         <div className="flex justify-end">
@@ -106,7 +115,11 @@ export function WorkDateField({ value, onChange, error, compact = false }: Props
             <span aria-hidden="true">▾</span>
           </button>
         </div>
-        {open && <div className="mt-2">{choices}</div>}
+        {open && (
+          <div className="mt-2" data-date-choices>
+            {choices}
+          </div>
+        )}
       </div>
     )
   }
