@@ -101,14 +101,26 @@ export function HistoryPage() {
   const queryStart = view === 'calendar' ? month.start : start
   const queryEnd = view === 'calendar' ? month.end : end
 
-  const data = useLiveQuery(
-    () => (invalidRange ? null : loadRange(db, queryStart, queryEnd)),
+  // useLiveQuery keeps the last result while a new range loads, so each
+  // result carries its range. Otherwise a tapped calendar day would flash
+  // the whole month in the list.
+  const rangeKey = `${queryStart}..${queryEnd}`
+  const loaded = useLiveQuery(
+    async () => ({
+      key: rangeKey,
+      data: invalidRange ? null : await loadRange(db, queryStart, queryEnd),
+    }),
     [queryStart, queryEnd, invalidRange],
   )
-  const workDays = useLiveQuery(
-    () => loadWorkDays(db, queryStart, queryEnd),
+  const loadedDays = useLiveQuery(
+    async () => ({ key: rangeKey, workDays: await loadWorkDays(db, queryStart, queryEnd) }),
     [queryStart, queryEnd],
   )
+  // While a newer range loads, keep the page (and any focused date box) and
+  // show no list, as for a rejected range.
+  const data = loaded === undefined ? undefined : loaded.key === rangeKey ? loaded.data : null
+  const workDays =
+    loadedDays === undefined ? undefined : loadedDays.key === rangeKey ? loadedDays.workDays : []
 
   // A null result is a rejected range: keep the page and its date inputs
   // on screen, just without a list or an empty message.
