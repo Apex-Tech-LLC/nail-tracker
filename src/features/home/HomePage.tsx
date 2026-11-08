@@ -191,10 +191,10 @@ export function HomePage() {
   const currentPayPeriod = summaries.find(
     (summary) => summary.period.startDate <= today && today <= summary.period.endDate,
   )
-  // "Salon owes" is money still to come: a paid period owes nothing, even
-  // though the Payday list shows its full payout as what was paid.
+  // "Salon owes" is what the statement says the salon should pay, less what it
+  // has already paid: a paid period owes nothing.
   const salonOwesCents = currentPayPeriod
-    ? Math.max(0, currentPayPeriod.outstandingCents)
+    ? Math.max(0, currentPayPeriod.statement.salonPaysCents - currentPayPeriod.paidCents)
     : totals.expectedPayoutCents
 
   const todayTotals = sumTotals(data.todayData.turns, data.todayData.adjustments)
@@ -390,6 +390,15 @@ export function HomePage() {
         <Stat value={formatUsdShort(totals.tipsCents)} label={t(locale, 'homeTips')} edge />
         <Stat value={formatUsdShort(salonOwesCents)} label={t(locale, 'homeSalonOwes')} edge />
       </div>
+
+      {currentPayPeriod?.statement.checkCents != null && (
+        <p className="mt-2 text-sm text-text-secondary">
+          {tf(locale, 'homeCheckCashLine', {
+            check: formatUsdShort(currentPayPeriod.statement.checkCents),
+            cash: formatUsdShort(currentPayPeriod.statement.cashCents ?? 0),
+          })}
+        </p>
+      )}
 
       <section className="flex flex-col gap-2 pb-16">
         <div className="flex items-baseline justify-between gap-3">

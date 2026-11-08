@@ -126,3 +126,28 @@ test('with no fees and no split the card shows only four lines and the earned to
   await expect(page.getByText('Cash tips you already have')).toHaveCount(0)
   await expect(page.getByText('Adjustments', { exact: true })).toHaveCount(0)
 })
+
+test('Home agrees with the statement and shows the check and cash split', async ({ page }) => {
+  await start(page)
+  await seedPayRules(page, SPEC_RULES)
+  await addTurn(page, { amount: '100', card: '8' })
+
+  await page.goto('./')
+  // $58.80 share after the supply fee, plus $8 of card tips, less the $0.24 card-tip fee.
+  await expect(page.getByText('Salon owes', { exact: true }).locator('..').locator('b')).toHaveText(
+    '$66.56',
+  )
+  await expect(page.getByText('Check $33.28 · Cash $33.28')).toBeVisible()
+
+  await page.goto('./#/payday')
+  await page.getByRole('link', { name: /Nov 1 – Nov 7/ }).click()
+  await page.getByRole('link', { name: 'Record payment', exact: true }).click()
+  await page.getByLabel('Amount received').first().fill('66.56')
+  await page.getByRole('button', { name: 'Save', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Payments', exact: true })).toBeVisible()
+
+  await page.goto('./')
+  await expect(page.getByText('Salon owes', { exact: true }).locator('..').locator('b')).toHaveText(
+    '$0',
+  )
+})
