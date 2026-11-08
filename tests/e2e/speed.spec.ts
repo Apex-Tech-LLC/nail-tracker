@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
-import { seedSettings } from './helpers.ts'
-import { fixNow, seedFiveYears, speedSettings, SPEED_NOW } from './speedSeed.ts'
+import { fixNow, seedSettings } from './helpers.ts'
+import { seedFiveYears, speedSettings, SPEED_NOW } from './speedSeed.ts'
 
 // Desktop Chrome on GitHub should load each screen well under a second with
 // five years of data. The 300 ms phone target from the spec is checked by hand

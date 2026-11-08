@@ -6,27 +6,6 @@ export const SPEED_NOW = new Date('2026-11-04T12:00:00-06:00')
 /** Sunday five years before the fixed day, so about 260 weekly periods exist. */
 export const SPEED_ANCHOR = '2021-11-01'
 
-/**
- * Pins the app's calendar day without Playwright's clock API: that API also
- * replaces the User Timing timeline, and the speed marks need it intact.
- * `new Date()` returns the fixed moment; `new Date(value)` still works.
- */
-export async function fixNow(page: Page, date: Date): Promise<void> {
-  await page.addInitScript((millis) => {
-    const RealDate = Date
-    class FixedDate extends RealDate {
-      constructor(...args: unknown[]) {
-        if (args.length === 0) super(millis)
-        else super(...(args as [number]))
-      }
-      static now(): number {
-        return millis
-      }
-    }
-    window.Date = FixedDate as DateConstructor
-  }, date.getTime())
-}
-
 /** Settings a real five-year user has: a weekly pay schedule starting five years back. */
 export const speedSettings = {
   payPeriodType: 'weekly',

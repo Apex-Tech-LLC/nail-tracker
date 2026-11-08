@@ -295,7 +295,7 @@ function RecordFields({ periodId, record, onDone }: FieldsProps) {
           >
             <IconX size={22} aria-hidden="true" />
           </button>
-          <h1 className="min-w-0 flex-1 truncate text-center font-medium">
+          <h1 className="min-w-0 flex-1 break-words text-center font-medium leading-tight">
             {t(locale, 'recordWhatYouGot')}
           </h1>
           <span className="w-11" />

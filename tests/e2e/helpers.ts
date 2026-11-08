@@ -20,6 +20,27 @@ export async function seedSettings(page: Page, overrides: Record<string, unknown
   }, { locale: 'en', onboardingDone: true, ...overrides })
 }
 
+/**
+ * Pins the app's calendar day without Playwright's clock API: that API also
+ * replaces the User Timing timeline, which the speed marks need intact.
+ * `new Date()` returns the fixed moment; `new Date(value)` still works.
+ */
+export async function fixNow(page: Page, date: Date): Promise<void> {
+  await page.addInitScript((millis) => {
+    const RealDate = Date
+    class FixedDate extends RealDate {
+      constructor(...args: unknown[]) {
+        if (args.length === 0) super(millis)
+        else super(...(args as [number]))
+      }
+      static now(): number {
+        return millis
+      }
+    }
+    window.Date = FixedDate as DateConstructor
+  }, date.getTime())
+}
+
 /** Pay period settings used by the payday tests: weekly, November 1 to 7 contains the fixed test date. */
 export const weeklyPay = { payPeriodType: 'weekly', payPeriodAnchorDate: '2026-11-01' }
 

@@ -121,7 +121,7 @@ export function PayRulesPage({ onDone }: { onDone: () => void }) {
         >
           <IconX size={22} aria-hidden="true" />
         </button>
-        <h1 className="min-w-0 flex-1 truncate text-center text-lg font-semibold">
+        <h1 className="min-w-0 flex-1 break-words text-center text-lg font-semibold leading-tight">
           {t(locale, 'howImPaid')}
         </h1>
         <span className="w-11" />

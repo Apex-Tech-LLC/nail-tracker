@@ -80,7 +80,7 @@ export function PeriodPage({ periodId, onDone }: Props) {
         >
           <IconX size={22} aria-hidden="true" />
         </button>
-        <h1 className="min-w-0 flex-1 truncate text-center font-medium">
+        <h1 className="min-w-0 flex-1 break-words text-center font-medium leading-tight">
           {formatRange(period.startDate, period.endDate, locale)}
         </h1>
         <span className="shrink-0 rounded-full border border-border-strong px-2 py-0.5 text-xs">
