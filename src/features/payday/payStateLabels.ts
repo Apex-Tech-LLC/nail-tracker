@@ -20,6 +20,6 @@ export const PAY_STATE_LABEL: Record<PayStateName, StringKey> = {
 export const PAY_STATE_COLOR: Record<PayStateName, string> = {
   owed: 'text-warning-text',
   paid: 'text-positive-text',
-  overpaid: 'text-danger-text',
+  overpaid: 'text-text',
   empty: 'text-text-secondary',
 }
