@@ -12,6 +12,8 @@ const VALUES: PayRulesValues = {
   cardTipFeeBp: 300,
   checkBp: 5000,
   cardTipsPaidIn: 'split',
+  guarantee: { kind: 'none' },
+  tiers: null,
 }
 
 let db: NailDb

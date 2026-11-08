@@ -6,11 +6,22 @@ import type { TurnFigures } from '../../domain/totals.ts'
 
 export type RuleValues = Pick<
   PayRules,
-  'supplyFee' | 'cardTipFeeBp' | 'checkBp' | 'cardTipsPaidIn'
+  'supplyFee' | 'cardTipFeeBp' | 'checkBp' | 'cardTipsPaidIn' | 'guarantee' | 'tiers'
 >
 
+/** The plain examples below explain commission, fees and the split, so tiers and guarantee stay off. */
 function exampleRules(values: RuleValues, date: IsoDate): PayRules[] {
-  return [{ id: 'example', startDate: date, ...values, createdAt: 0, updatedAt: 0 }]
+  return [
+    {
+      id: 'example',
+      startDate: date,
+      ...values,
+      guarantee: { kind: 'none' },
+      tiers: null,
+      createdAt: 0,
+      updatedAt: 0,
+    },
+  ]
 }
 
 function exampleService(priceCents: number, rateBp: number, date: IsoDate): StatementService {
@@ -55,6 +66,7 @@ export function sampleStatement(
     adjustments: [],
     rules: exampleRules(values, date),
     periodEnd: date,
+    daysOff: new Set(),
   })
 }
 
@@ -79,5 +91,6 @@ export function specStatement(
     adjustments: [],
     rules: exampleRules(values, date),
     periodEnd: date,
+    daysOff: new Set(),
   })
 }

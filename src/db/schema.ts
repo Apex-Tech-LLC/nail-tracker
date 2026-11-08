@@ -169,6 +169,19 @@ export function createDb(name = 'nail-tracker'): NailDb {
     workDays: 'date',
   })
 
+  // Guarantee and tiers: every saved rule keeps working with them off.
+  db.version(4)
+    .stores({})
+    .upgrade(async (tx) => {
+      await tx
+        .table<PayRules>('payRules')
+        .toCollection()
+        .modify((rule: PayRules) => {
+          rule.guarantee = { kind: 'none' }
+          rule.tiers = null
+        })
+    })
+
   // Runs once, when the database is first created.
   db.on('populate', (tx) => {
     tx.table('salons').add(DEFAULT_SALON)

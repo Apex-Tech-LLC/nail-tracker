@@ -45,12 +45,50 @@ export function StatementCard({ period, statement, endRules, status }: Props) {
   }
 
   const shareLabel =
-    statement.shareRateBp !== null && statement.supplyFeeWhen !== 'afterSplit'
-      ? tf(locale, 'statementShareWithRate', {
-          rate: formatRate(statement.shareRateBp),
+    statement.tierRates !== null
+      ? tf(locale, 'statementShareWithTiers', {
+          rates: statement.tierRates.map(formatRate).join(' / '),
           base: formatUsd(statement.shareBaseCents),
         })
-      : t(locale, 'statementShare')
+      : statement.shareRateBp !== null && statement.supplyFeeWhen !== 'afterSplit'
+        ? tf(locale, 'statementShareWithRate', {
+            rate: formatRate(statement.shareRateBp),
+            base: formatUsd(statement.shareBaseCents),
+          })
+        : t(locale, 'statementShare')
+
+  const guarantee = endRules.guarantee
+  let guaranteeLabel: string | null = null
+  if (guarantee.kind !== 'none') {
+    const days = statement.guaranteeDays
+    if (guarantee.minDays !== null && days < guarantee.minDays) {
+      guaranteeLabel = tf(locale, 'statementGuaranteeMinDays', {
+        needed: guarantee.minDays,
+        days,
+      })
+    } else if (guarantee.kind === 'perPeriod') {
+      const total = formatUsdShort(guarantee.cents)
+      guaranteeLabel =
+        statement.guaranteeTopUpCents > 0
+          ? tf(locale, 'statementGuaranteePeriod', { total })
+          : tf(locale, 'statementGuaranteePeriodNotNeeded', { total })
+    } else {
+      const amount = formatUsdShort(guarantee.cents)
+      const total = formatUsdShort(guarantee.cents * days)
+      guaranteeLabel =
+        statement.guaranteeTopUpCents > 0
+          ? tf(locale, days === 1 ? 'statementGuaranteeTopUpOne' : 'statementGuaranteeTopUp', {
+              amount,
+              days,
+              total,
+            })
+          : tf(
+              locale,
+              days === 1 ? 'statementGuaranteeNotNeededOne' : 'statementGuaranteeNotNeeded',
+              { amount, days, total },
+            )
+    }
+  }
 
   const checkBp = endRules.checkBp
   const cashBp = checkBp === null ? null : 10_000 - checkBp
@@ -113,6 +151,12 @@ export function StatementCard({ period, statement, endRules, status }: Props) {
           <StatementRow
             label={t(locale, 'adjustments')}
             value={formatUsd(statement.adjustmentsCents)}
+          />
+        )}
+        {guaranteeLabel !== null && (
+          <StatementRow
+            label={guaranteeLabel}
+            value={formatUsd(statement.guaranteeTopUpCents)}
           />
         )}
 

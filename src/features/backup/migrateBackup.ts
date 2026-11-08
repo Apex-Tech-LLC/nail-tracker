@@ -27,10 +27,23 @@ function upgradeFromVersionTwo(data: Record<string, unknown>): Record<string, un
   return { ...data, workDays: [] }
 }
 
+function upgradeFromVersionThree(data: Record<string, unknown>): Record<string, unknown> {
+  const rules = Array.isArray(data.payRules) ? data.payRules : []
+  return {
+    ...data,
+    payRules: rules.map((rule) =>
+      typeof rule === 'object' && rule !== null
+        ? { ...(rule as Record<string, unknown>), guarantee: { kind: 'none' }, tiers: null }
+        : rule,
+    ),
+  }
+}
+
 /** Key is the version a step upgrades FROM. */
 export const MIGRATIONS: Record<number, Migration> = {
   1: upgradeFromVersionOne,
   2: upgradeFromVersionTwo,
+  3: upgradeFromVersionThree,
 }
 
 /** Upgrades a parsed backup one version at a time. */
