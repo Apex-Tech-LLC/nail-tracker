@@ -26,6 +26,7 @@ import {
   type TipsSummary,
   type WeekdayLine,
 } from '../../domain/reports.ts'
+import { hoursPay, type HoursPay } from '../../domain/hours.ts'
 import { averages, sumTotals, type Totals } from '../../domain/totals.ts'
 import { loadRange } from '../turns/turnStore.ts'
 import { reportKindOf, type ReportChoice } from './reportsRange.ts'
@@ -57,6 +58,7 @@ export interface ReportData {
   weekdayLines: WeekdayLine[]
   clientLines: ClientLine[]
   tips: TipsSummary
+  hours: HoursPay
   records: Records | null
 }
 
@@ -119,7 +121,7 @@ export async function loadReport(db: NailDb, request: ReportRequest): Promise<Re
   const trendStart = trend[0].start
   const trendEnd = trend[trend.length - 1].end
 
-  const [range, previous, lastYearFigures, trendFigures, allTurns, allAdjustments, allPayments, paymentsInRange] =
+  const [range, previous, lastYearFigures, trendFigures, allTurns, allAdjustments, allPayments, paymentsInRange, workDays] =
     await Promise.all([
       loadRange(db, span.start, span.end),
       loadSpan(db, previousSpan),
@@ -130,6 +132,7 @@ export async function loadReport(db: NailDb, request: ReportRequest): Promise<Re
       db.adjustments.toArray(),
       db.payments.toArray(),
       db.payments.where('paymentDate').between(span.start, span.end, true, true).toArray(),
+      db.workDays.where('date').between(span.start, span.end, true, true).toArray(),
     ])
 
   const totals = sumTotals(range.turns, range.adjustments)
@@ -176,6 +179,7 @@ export async function loadReport(db: NailDb, request: ReportRequest): Promise<Re
     weekdayLines: byWeekday(range.turns, range.adjustments, weekStart),
     clientLines: clients(range.turns),
     tips: tipsSummary(range.turns),
+    hours: hoursPay(range.turns, range.adjustments, workDays),
     records: records(allTurns, allAdjustments, weekStart, today),
   }
 }

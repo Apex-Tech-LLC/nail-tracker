@@ -36,6 +36,7 @@ import {
 } from '../../ui/styles.ts'
 import { backupFileName, download } from '../backup/backupFormat.ts'
 import { exportCsv } from '../backup/exportCsv.ts'
+import { durationText } from '../hours/hoursText.ts'
 import { loadRange } from '../turns/turnStore.ts'
 import { loadReport, type ReportData, type TrendPoint } from './reportsData.ts'
 import { rangeOf, stepDate, type ReportChoice } from './reportsRange.ts'
@@ -133,12 +134,14 @@ function SummaryCard({
   data,
   choice,
   locale,
+  hoursOn,
   showDetails,
   onToggleDetails,
 }: {
   data: ReportData
   choice: ReportChoice
   locale: DateLocale
+  hoursOn: boolean
   showDetails: boolean
   onToggleDetails: () => void
 }) {
@@ -171,7 +174,11 @@ function SummaryCard({
       {previousText && <ComparisonLine text={previousText} />}
       {lastYearText && <p className="text-sm text-text-secondary">{lastYearText}</p>}
 
-      <div className="mt-3 grid grid-cols-3 divide-x divide-border overflow-hidden rounded-control border border-border bg-surface">
+      <div
+        className={`mt-3 grid ${
+          hoursOn ? 'grid-cols-4' : 'grid-cols-3'
+        } divide-x divide-border overflow-hidden rounded-control border border-border bg-surface`}
+      >
         <Stat labelText={t(locale, 'turns')} value={String(totals.turns)} testId="report-stat-turns" />
         <Stat
           labelText={t(locale, 'reportClients')}
@@ -183,6 +190,13 @@ function SummaryCard({
           value={formatUsd(totals.tipsCents)}
           testId="report-stat-tips"
         />
+        {hoursOn && (
+          <Stat
+            labelText={t(locale, 'hoursTitle')}
+            value={durationText(locale, data.hours.minutes)}
+            testId="report-stat-hours"
+          />
+        )}
       </div>
 
       <button
@@ -218,7 +232,8 @@ function SummaryCard({
 }
 
 export function ReportsPage() {
-  const { locale, weekStartDay, weeklyGoalCents, monthlyGoalCents } = useSettings()
+  const { locale, weekStartDay, weeklyGoalCents, monthlyGoalCents, hoursOn, minimumWageCents } =
+    useSettings()
   const today = useToday()
   const [choice, setChoice] = useState<ReportChoice>('week')
   const [date, setDate] = useState<IsoDate>(today)
@@ -308,6 +323,13 @@ export function ReportsPage() {
     data !== null &&
     data.weekdayLines.some((line) => line.days > 0)
 
+  const belowMinimum =
+    data != null &&
+    choice === 'week' &&
+    minimumWageCents !== null &&
+    data.hours.withoutTipsCents !== null &&
+    data.hours.withoutTipsCents < minimumWageCents
+
   return (
     <>
       <PageHeader title={t(locale, 'reportsTitle')} />
@@ -394,6 +416,7 @@ export function ReportsPage() {
             data={data}
             choice={choice}
             locale={locale}
+            hoursOn={hoursOn}
             showDetails={showDetails}
             onToggleDetails={() => setShowDetails((open) => !open)}
           />
@@ -528,6 +551,36 @@ export function ReportsPage() {
                 value={data.tips.percentOfPrice === null ? '—' : `${data.tips.percentOfPrice}%`}
               />
               <Row label={t(locale, 'reportCardHeld')} value={formatUsd(data.tips.cardHeldCents)} />
+            </section>
+          )}
+
+          {hoursOn && data.hours.minutes > 0 && (
+            <section className={card}>
+              <h2 className="mb-2 text-base font-semibold">{t(locale, 'perHour')}</h2>
+              <Row
+                label={t(locale, 'withTips')}
+                value={
+                  data.hours.withTipsCents === null
+                    ? '—'
+                    : formatUsd(data.hours.withTipsCents)
+                }
+              />
+              <Row
+                label={t(locale, 'salonPayWithoutTips')}
+                value={
+                  data.hours.withoutTipsCents === null
+                    ? '—'
+                    : formatUsd(data.hours.withoutTipsCents)
+                }
+              />
+              {belowMinimum && data.hours.withoutTipsCents !== null && minimumWageCents !== null && (
+                <p className="mt-2 text-sm text-text-secondary">
+                  {tf(locale, 'belowMinimumWage', {
+                    paid: formatUsd(data.hours.withoutTipsCents),
+                    minimum: formatUsd(minimumWageCents),
+                  })}
+                </p>
+              )}
             </section>
           )}
 
