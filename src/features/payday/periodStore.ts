@@ -6,13 +6,17 @@ import {
   periodId,
   type PayPeriodType,
 } from '../../domain/payPeriods.ts'
+import { rulesOn, type PayRules } from '../../domain/payRules.ts'
 import { payState, type PayStateName } from '../../domain/payday.ts'
+import { buildStatement, type Statement } from '../../domain/statement.ts'
 import { sumTotals, type Totals } from '../../domain/totals.ts'
 import { loadRange } from '../turns/turnStore.ts'
 
 export interface PeriodSummary {
   period: PayPeriod
   totals: Totals
+  statement: Statement
+  endRules: Omit<PayRules, 'id' | 'createdAt' | 'updatedAt'>
   paidCents: number
   outstandingCents: number
   state: PayStateName
@@ -104,9 +108,10 @@ export async function deletePeriod(db: NailDb, id: string): Promise<boolean> {
 }
 
 export async function loadPeriodSummaries(db: NailDb): Promise<PeriodSummary[]> {
-  const [periods, allocations] = await Promise.all([
+  const [periods, allocations, rules] = await Promise.all([
     db.payPeriods.orderBy('startDate').toArray(),
     db.paymentAllocations.toArray(),
+    db.payRules.toArray(),
   ])
 
   const paidByPeriod = new Map<string, number>()
@@ -121,10 +126,33 @@ export async function loadPeriodSummaries(db: NailDb): Promise<PeriodSummary[]> 
     periods.map(async (period) => {
       const range = await loadRange(db, period.startDate, period.endDate)
       const totals = sumTotals(range.turns, range.adjustments)
+      const workDateByTurn = new Map(
+        range.turns.map((turn): [string, IsoDate] => [turn.id, turn.localWorkDate]),
+      )
+      const statement = buildStatement({
+        services: range.services.map((service) => ({
+          localWorkDate: workDateByTurn.get(service.turnId) ?? period.startDate,
+          priceCents: service.servicePriceCents,
+          commissionRateBp: service.commissionRateSnapshotBp,
+          commissionCents: service.commissionCents,
+        })),
+        turns: range.turns,
+        adjustments: range.adjustments,
+        rules,
+        periodEnd: period.endDate,
+      })
       const paidCents = paidByPeriod.get(period.id) ?? 0
-      const { outstandingCents, state } = payState(totals.expectedPayoutCents, paidCents)
+      const { outstandingCents, state } = payState(statement.salonPaysCents, paidCents)
 
-      return { period, totals, paidCents, outstandingCents, state }
+      return {
+        period,
+        totals,
+        statement,
+        endRules: rulesOn(rules, period.endDate),
+        paidCents,
+        outstandingCents,
+        state,
+      }
     }),
   )
 }

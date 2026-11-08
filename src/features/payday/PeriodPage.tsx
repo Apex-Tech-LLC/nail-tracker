@@ -54,7 +54,7 @@ export function PeriodPage({ periodId, onDone }: Props) {
     )
   }
 
-  const { period, totals, paidCents, outstandingCents, state } = summary
+  const { period, totals, statement, paidCents, outstandingCents, state } = summary
   const open = period.status === 'open'
 
   async function toggleStatus(): Promise<void> {
@@ -120,7 +120,7 @@ export function PeriodPage({ periodId, onDone }: Props) {
         <h2 className="font-medium">{t(locale, 'owedSection')}</h2>
         <Row
           label={t(locale, 'expectedPayout')}
-          value={formatUsd(totals.expectedPayoutCents)}
+          value={formatUsd(statement.salonPaysCents)}
         />
         <Row label={t(locale, 'salonPaid')} value={formatUsd(paidCents)} />
         {outstandingCents >= 0 ? (

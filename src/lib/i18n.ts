@@ -11,7 +11,7 @@ const strings = {
     navToday: 'Home',
     navHistory: 'History',
     navEarnings: 'Earnings',
-    navPayday: 'Payday',
+    navPayday: 'Paycheck',
     navSettings: 'Settings',
     notFound: 'This page does not exist.',
     backToToday: 'Back to Today',
@@ -214,8 +214,8 @@ const strings = {
     chartEarnedLegend: 'Earned',
     chartSummary: '{days} days shown. Highest day {amount}.',
 
-    // Payday
-    paydayTitle: 'Payday',
+    // Paycheck
+    paydayTitle: 'Paycheck',
     paydayNoSchedule: 'Set your payday schedule to see what the salon owes you.',
     paydayOpenSettings: 'Open Settings',
     paydayNoPeriods: 'No pay periods yet.',
@@ -246,6 +246,30 @@ const strings = {
     earnedSection: 'Money earned',
     receivedSection: 'Money already received',
     owedSection: 'Money still owed',
+
+    // Paycheck statement
+    pastPayPeriods: 'Past pay periods',
+    notChecked: 'Not checked',
+    daysWorkedOne: '1 day worked',
+    daysWorked: '{n} days worked',
+    statementServicesLine: 'Services you did ({services} services, {turns} turns)',
+    statementServicesLineOne: 'Services you did (1 service, 1 turn)',
+    statementSupplyFeePerService: 'Supply fee ({amount} × {n} services)',
+    statementSupplyFeePerServiceOne: 'Supply fee ({amount} × 1 service)',
+    statementSupplyFeePercent: 'Supply fee ({rate} of services)',
+    statementShare: 'Your share',
+    statementShareWithRate: 'Your share ({rate} of {base})',
+    statementCardTipFee: 'Card-tip fee ({rate})',
+    salonShouldPay: 'Salon should pay you',
+    statementAsCheck: 'as check ({rate})',
+    statementAsCash: 'as cash ({rate})',
+    cashTipsAlreadyHave: 'Cash tips you already have',
+    cashTipsSalonHolds: 'Cash tips the salon holds',
+    earnedInTotal: 'You earned in total',
+    showByDay: 'Show by day',
+    statementServicesColumn: 'Services',
+    statementTotal: 'Total',
+    homeCheckCashLine: 'Check {check} · Cash {cash}',
 
     // Payments
     recordPayment: 'Record payment',
@@ -449,7 +473,7 @@ const strings = {
     navToday: 'Trang chính',
     navHistory: 'Lịch sử',
     navEarnings: 'Thu nhập',
-    navPayday: 'Ngày lương',
+    navPayday: 'Lương',
     navSettings: 'Cài đặt',
     notFound: 'Trang này không tồn tại.',
     backToToday: 'Quay lại Hôm nay',
@@ -652,8 +676,8 @@ const strings = {
     chartEarnedLegend: 'Tiền kiếm được',
     chartSummary: 'Hiển thị {days} ngày. Ngày kiếm được nhiều nhất: {amount}.',
 
-    // Payday
-    paydayTitle: 'Ngày nhận lương',
+    // Paycheck
+    paydayTitle: 'Lương',
     paydayNoSchedule: 'Cài lịch nhận lương để xem tiệm còn nợ bạn bao nhiêu.',
     paydayOpenSettings: 'Mở Cài đặt',
     paydayNoPeriods: 'Chưa có kỳ lương nào.',
@@ -684,6 +708,30 @@ const strings = {
     earnedSection: 'Tiền kiếm được',
     receivedSection: 'Tiền đã nhận',
     owedSection: 'Tiền tiệm còn nợ',
+
+    // Paycheck statement
+    pastPayPeriods: 'Kỳ lương trước',
+    notChecked: 'Chưa kiểm tra',
+    daysWorkedOne: '1 ngày làm',
+    daysWorked: '{n} ngày làm',
+    statementServicesLine: 'Dịch vụ bạn đã làm ({services} dịch vụ, {turns} turn)',
+    statementServicesLineOne: 'Dịch vụ bạn đã làm (1 dịch vụ, 1 turn)',
+    statementSupplyFeePerService: 'Tiền đồ nghề ({amount} × {n} dịch vụ)',
+    statementSupplyFeePerServiceOne: 'Tiền đồ nghề ({amount} × 1 dịch vụ)',
+    statementSupplyFeePercent: 'Tiền đồ nghề ({rate} tiền dịch vụ)',
+    statementShare: 'Phần của bạn',
+    statementShareWithRate: 'Phần của bạn ({rate} của {base})',
+    statementCardTipFee: 'Phí tip thẻ ({rate})',
+    salonShouldPay: 'Tiệm phải trả bạn',
+    statementAsCheck: 'bằng check ({rate})',
+    statementAsCash: 'bằng tiền mặt ({rate})',
+    cashTipsAlreadyHave: 'Tip tiền mặt bạn đã có',
+    cashTipsSalonHolds: 'Tip tiền mặt tiệm đang giữ',
+    earnedInTotal: 'Tổng bạn kiếm được',
+    showByDay: 'Xem theo ngày',
+    statementServicesColumn: 'Dịch vụ',
+    statementTotal: 'Tổng',
+    homeCheckCashLine: 'Check {check} · Tiền mặt {cash}',
 
     // Payments
     recordPayment: 'Ghi khoản đã nhận',

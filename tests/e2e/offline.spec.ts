@@ -78,7 +78,7 @@ test('makes no requests outside this app', async ({ page }) => {
   for (const [tab, heading] of [
     ['History', 'History'],
     ['Earnings', 'Earnings'],
-    ['Payday', 'Payday'],
+    ['Paycheck', 'Paycheck'],
     ['Settings', 'Settings'],
     ['Home', 'Nail Tracker'],
   ] as const) {
