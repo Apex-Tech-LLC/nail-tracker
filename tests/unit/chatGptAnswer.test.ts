@@ -144,9 +144,10 @@ describe('readChatGptAnswer: strict fields', () => {
     },
   )
 
-  it('refuses a price that is a JSON number, because money is text', () => {
-    expect(only('{"services":[{"id":"manicure","price":45}]}').problem?.code).toBe('badPrice')
-    expect(only('{"services":[{"id":"manicure","price":45.5}]}').problem?.code).toBe('badPrice')
+  it('reads a price written as a plain JSON number, and refuses one with three decimals', () => {
+    expect(only('{"services":[{"id":"manicure","price":45}]}').turns[0].services[0].priceCents).toBe(4500)
+    expect(only('{"services":[{"id":"manicure","price":45.5}]}').turns[0].services[0].priceCents).toBe(4550)
+    expect(only('{"services":[{"id":"manicure","price":45.123}]}').problem?.code).toBe('badPrice')
   })
 
   it('refuses a price above the cents limit', () => {
@@ -157,7 +158,8 @@ describe('readChatGptAnswer: strict fields', () => {
     expect(only(`{"services":[{"id":"manicure","price":"30"}],"cashTip":"-5"}`).problem?.code).toBe('negativeTip')
     expect(only(`{"services":[{"id":"manicure","price":"30"}],"cardTip":"−5.00"}`).problem?.code).toBe('negativeTip')
     expect(only(`{"services":[{"id":"manicure","price":"30"}],"cashTip":"ten"}`).problem?.code).toBe('badTip')
-    expect(only(`{"services":[{"id":"manicure","price":"30"}],"cashTip":10}`).problem?.code).toBe('badTip')
+    expect(only(`{"services":[{"id":"manicure","price":"30"}],"cashTip":10}`).turns[0].cashTipCents).toBe(1000)
+    expect(only(`{"services":[{"id":"manicure","price":"30"}],"cashTip":-5}`).problem?.code).toBe('negativeTip')
     expect(only(`{"services":[{"id":"manicure","price":"30"}],"cardTip":"2.555"}`).problem?.code).toBe('badTip')
   })
 

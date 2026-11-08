@@ -149,10 +149,15 @@ type Fail = { problem: AnswerProblem }
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value)
 
-/** Dollars as a string ("45", "45.5", "45.00") to whole cents. No signs, commas or spaces; at most two decimals. */
+/**
+ * Dollars ("45", "45.5", "45.00") to whole cents. No signs, commas or spaces;
+ * at most two decimals. ChatGPT often writes a bare number despite the prompt,
+ * so a plain JSON number is read through its text the same way.
+ */
 function moneyCents(value: unknown): number | null {
-  if (typeof value !== 'string' || !/^\d+(\.\d{1,2})?$/.test(value)) return null
-  return parseCents(value)
+  const text = typeof value === 'number' && Number.isFinite(value) ? String(value) : value
+  if (typeof text !== 'string' || !/^\d+(\.\d{1,2})?$/.test(text)) return null
+  return parseCents(text)
 }
 
 function readTurn(
@@ -197,7 +202,8 @@ function readTurn(
       tips.push(0)
       continue
     }
-    if (typeof value === 'string' && /^\s*[-−]/.test(value)) return fail('negativeTip', short(value))
+    if ((typeof value === 'string' && /^\s*[-−]/.test(value)) || (typeof value === 'number' && value < 0))
+      return fail('negativeTip', short(value))
     const cents = moneyCents(value)
     if (cents === null) return fail('badTip', short(value))
     tips.push(cents)
