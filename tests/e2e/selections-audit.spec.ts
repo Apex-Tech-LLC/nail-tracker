@@ -1659,14 +1659,13 @@ test('pay rules per-service checkbox: off at first, on gives every service its o
   await expect(commissionPill(page)).toHaveAccessibleName('Commission: 60%')
 })
 
-// Waits for Bay: today the commission tiles save at once (the settings tests rely on that).
-test.fixme('pay rules: leaving the page with the X after tapping 50% does not change the commission', async ({ page }) => {
+test('pay rules: tapping 50% saves it at once, even when leaving with the X', async ({ page }) => {
   await start(page)
   await page.goto('./#/settings/pay')
   await choose(page, 'Default commission', '50%')
   await page.getByRole('button', { name: 'Close', exact: true }).click()
 
-  expect((await savedSettings(page)).defaultCommissionRateBp ?? 6000).toBe(6000)
+  expect((await savedSettings(page)).defaultCommissionRateBp).toBe(5000)
   await page.goto('./#/add')
-  await expect(commissionPill(page)).toHaveAccessibleName('Commission: 60%')
+  await expect(commissionPill(page)).toHaveAccessibleName('Commission: 50%')
 })
