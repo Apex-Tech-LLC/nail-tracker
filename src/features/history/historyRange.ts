@@ -1,5 +1,6 @@
 import type { Adjustment, Turn, TurnService } from '../../db/schema.ts'
 import { addDays, weekRange, type IsoDate } from '../../domain/dates.ts'
+import { foldText } from '../../domain/textFold.ts'
 import { sumTotals } from '../../domain/totals.ts'
 
 export type RangeChoice = 'today' | 'yesterday' | 'thisWeek' | 'lastWeek' | 'custom'
@@ -66,14 +67,6 @@ export function groupByDay(
     })
 }
 
-const fold = (value: string) =>
-  value
-    .normalize('NFD')
-    .replace(/\p{Diacritic}/gu, '')
-    .replace(/đ/g, 'd')
-    .replace(/Đ/g, 'D')
-    .toLowerCase()
-
 export type ClientFilter = 'request' | 'walkIn'
 export type TipFilter = 'cash' | 'card' | 'none'
 
@@ -136,7 +129,7 @@ export function serviceNames(services: readonly TurnService[]): string[] {
 
 /** Empty text matches everything; otherwise any service name may contain the text. */
 export function matchesSearch(services: readonly TurnService[], text: string): boolean {
-  const needle = fold(text.trim())
+  const needle = foldText(text.trim())
   if (needle === '') return true
-  return services.some((service) => fold(service.serviceNameSnapshot).includes(needle))
+  return services.some((service) => foldText(service.serviceNameSnapshot).includes(needle))
 }

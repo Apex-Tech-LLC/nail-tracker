@@ -5256,7 +5256,7 @@
         "services": [
           {
             "presetId": "gel-manicure",
-            "priceCents": null
+            "priceCents": 4500
           }
         ],
         "cashTipCents": 1000,
@@ -5265,9 +5265,9 @@
       }
     ],
     "check": [
-      "Turn 1: Ambiguous digit sequence \"bốn năm\"; confirm the service price."
+      "Turn 1: Read \"bốn năm\" as 45 (năm after a tens digit is lăm); confirm the price."
     ],
-    "note": "Do not treat năm as the lăm variant without a clear numeral construction."
+    "note": "After a tens digit, năm is the lăm variant (45); the reader flags it for a check."
   },
   {
     "id": "vi-124",
