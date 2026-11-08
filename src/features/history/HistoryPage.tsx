@@ -67,6 +67,16 @@ function rememberView(next: View): void {
   sessionView = next
 }
 
+interface ShownRange {
+  choice: RangeChoice
+  customStart: IsoDate
+  customEnd: IsoDate
+}
+
+// The range chosen, kept the same way, so opening a turn and coming back
+// returns to it.
+let sessionRange: ShownRange | null = null
+
 const VIEW_KEYS = {
   list: 'historyList',
   calendar: 'historyCalendar',
@@ -81,9 +91,12 @@ export function HistoryPage() {
   const openedDay = queryDay !== null && isIsoDate(queryDay) ? queryDay : null
   const [view, setViewState] = useState<View>(openedDay ? 'list' : sessionView)
   const [monthAnchor, setMonthAnchor] = useState<IsoDate>(openedDay ?? today)
-  const [choice, setChoice] = useState<RangeChoice>(openedDay ? 'custom' : 'thisWeek')
-  const [customStart, setCustomStart] = useState<IsoDate>(openedDay ?? today)
-  const [customEnd, setCustomEnd] = useState<IsoDate>(openedDay ?? today)
+  const [shown, setShown] = useState<ShownRange>(() =>
+    openedDay
+      ? { choice: 'custom', customStart: openedDay, customEnd: openedDay }
+      : (sessionRange ?? { choice: 'thisWeek', customStart: today, customEnd: today }),
+  )
+  const { choice, customStart, customEnd } = shown
   const [search, setSearch] = useState('')
   const [filters, setFilters] = useState<Filters>(NO_FILTERS)
   const [filterOpen, setFilterOpen] = useState(false)
@@ -94,6 +107,20 @@ export function HistoryPage() {
   function setView(next: View) {
     rememberView(next)
     setViewState(next)
+  }
+
+  function showRange(next: ShownRange) {
+    sessionRange = next
+    setShown(next)
+  }
+
+  /** Custom opens on the range that was just shown, so it can be widened from there. */
+  function chooseRange(next: RangeChoice) {
+    if (next === 'custom' && choice !== 'custom' && !invalidRange) {
+      showRange({ choice: next, customStart: start, customEnd: end })
+    } else {
+      showRange({ ...shown, choice: next })
+    }
   }
 
   const range =
@@ -214,9 +241,7 @@ export function HistoryPage() {
 
   function openDay(date: IsoDate) {
     setView('list')
-    setChoice('custom')
-    setCustomStart(date)
-    setCustomEnd(date)
+    showRange({ choice: 'custom', customStart: date, customEnd: date })
     navigate(paths.historyDay(date), { replace: true })
   }
 
@@ -268,7 +293,7 @@ export function HistoryPage() {
                 type="button"
                 aria-pressed={choice === value}
                 className={`${chip} ${choice === value ? chipOn : chipOff}`}
-                onClick={() => setChoice(value)}
+                onClick={() => chooseRange(value)}
               >
                 {t(locale, key)}
               </button>
@@ -286,7 +311,7 @@ export function HistoryPage() {
                     id={`${id}-from`}
                     type="date"
                     value={customStart}
-                    onChange={(event) => setCustomStart(event.target.value)}
+                    onChange={(event) => showRange({ ...shown, customStart: event.target.value })}
                     aria-invalid={invalidRange}
                     aria-describedby={invalidRange ? `${id}-range-error` : undefined}
                     className={field}
@@ -300,7 +325,7 @@ export function HistoryPage() {
                     id={`${id}-to`}
                     type="date"
                     value={customEnd}
-                    onChange={(event) => setCustomEnd(event.target.value)}
+                    onChange={(event) => showRange({ ...shown, customEnd: event.target.value })}
                     aria-invalid={invalidRange}
                     aria-describedby={invalidRange ? `${id}-range-error` : undefined}
                     className={field}
