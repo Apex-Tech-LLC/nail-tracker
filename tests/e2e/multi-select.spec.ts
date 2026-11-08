@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 import {
   formSave,
   openCommission,
@@ -190,4 +190,53 @@ test('the picker and its error speak Vietnamese', async ({ page }) => {
   await page.getByRole('button', { name: 'Lưu', exact: true }).click()
 
   await expect(page.getByText('Chọn ít nhất một dịch vụ.')).toBeVisible()
+})
+
+/** The service a new turn starts on: the one saved last. */
+async function startOnService(page: Page, presetId: string): Promise<void> {
+  await page.addInitScript((id) => {
+    const settings = JSON.parse(localStorage.getItem('nail-tracker.settings') ?? '{}')
+    localStorage.setItem('nail-tracker.settings', JSON.stringify({ ...settings, lastServicePresetId: id }))
+  }, presetId)
+}
+
+test('on a new turn, the first chip tapped replaces the starting service', async ({ page }) => {
+  await startOnService(page, 'gel-x')
+  await page.goto('./#/add')
+  const lines = page.getByTestId('service-line')
+  await expect(serviceChip(page, 'Gel-X')).toHaveAttribute('aria-pressed', 'true')
+
+  await serviceChip(page, 'Pedicure').click()
+  await expect(lines).toHaveCount(1)
+  await expect(serviceChip(page, 'Gel-X')).toHaveAttribute('aria-pressed', 'false')
+  await lines.first().getByLabel('Service amount').fill('45')
+  await page.locator('form').getByRole('button', { name: 'Save & Add Another' }).click()
+
+  // The next turn starts on Pedicure, and tapping Manicure replaces that too.
+  await expect(serviceChip(page, 'Pedicure')).toHaveAttribute('aria-pressed', 'true')
+  await serviceChip(page, 'Manicure').click()
+  await expect(lines).toHaveCount(1)
+  await lines.first().getByLabel('Service amount').fill('30')
+  // A second chip after that adds a service.
+  await serviceChip(page, 'Nail Art / Design').click()
+  await expect(lines).toHaveCount(2)
+  await lines.nth(1).getByLabel('Service amount').fill('10')
+  await formSave(page).click()
+
+  const rows = page.getByTestId('turn-row')
+  await expect(rows).toHaveCount(2)
+  await expect(rows.filter({ hasText: /^Pedicure\d/ })).toHaveCount(1)
+  await expect(rows.filter({ hasText: /^Manicure \+ Nail Art \/ Design\d/ })).toHaveCount(1)
+  await expect(rows.filter({ hasText: 'Gel-X' })).toHaveCount(0)
+})
+
+test('a price typed for the starting service keeps it when another chip is tapped', async ({ page }) => {
+  await startOnService(page, 'gel-x')
+  await page.goto('./#/add')
+  const lines = page.getByTestId('service-line')
+
+  await lines.first().getByLabel('Service amount').fill('60')
+  await serviceChip(page, 'Pedicure').click()
+  await expect(lines).toHaveCount(2)
+  await expect(serviceChip(page, 'Gel-X')).toHaveAttribute('aria-pressed', 'true')
 })
