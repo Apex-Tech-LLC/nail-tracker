@@ -27,18 +27,23 @@ import {
   formatWeekdayShort,
   monthRange,
   parseIsoDate,
+  timeOf,
   weekRange,
   type IsoDate,
 } from '../../domain/dates.ts'
 import { goalMessageKey, goalProgress, type GoalKind } from '../../domain/goals.ts'
+import { openDay, workMinutes } from '../../domain/hours.ts'
 import { formatUsd, formatUsdShort } from '../../domain/money.ts'
 import { dueReminder } from '../../domain/reminders.ts'
 import { nextTaxQuarter } from '../../domain/taxes.ts'
 import { numberTurns, sumTotals } from '../../domain/totals.ts'
 import { t, tf, type StringKey } from '../../lib/i18n.ts'
 import { OfflineBadge } from '../../pwa/OfflineBadge.tsx'
-import { list, primaryButton } from '../../ui/styles.ts'
+import { list, primaryButton, secondaryButton } from '../../ui/styles.ts'
 import { saveBackupFile } from '../backup/saveBackup.ts'
+import { durationText } from '../hours/hoursText.ts'
+import { HoursSheet } from '../hours/HoursSheet.tsx'
+import { loadWorkDays, setWorkHours } from '../history/workDays.ts'
 import { ensurePayPeriods, loadPeriodSummaries } from '../payday/periodStore.ts'
 import { loadRange, servicesByTurn } from '../turns/turnStore.ts'
 import { TurnRow } from '../turns/TurnRow.tsx'
@@ -111,9 +116,11 @@ export function HomePage() {
     weeklyGoalCents,
     monthlyGoalCents,
     taxSetAsideBp,
+    hoursOn,
   } = useSettings()
   const today = useToday()
   const backupBusy = useRef(false)
+  const [hoursOpen, setHoursOpen] = useState(false)
   const periodKey = `${PERIOD_KEY}.${today}`
   // The choice is remembered for the day; a new day's key starts on Today.
   const [storedPeriod, setStoredPeriod] = useState(() => ({
@@ -143,15 +150,17 @@ export function HomePage() {
   }, [payPeriodType, payPeriodAnchorDate, today])
 
   const data = useLiveQuery(async () => {
-    const [current, previousData, todayData, weekData, firstTurn, taxData] = await Promise.all([
+    const [current, previousData, todayData, weekData, firstTurn, taxData, workDays] =
+      await Promise.all([
       loadRange(db, span.start, span.end),
       loadRange(db, previous.start, previous.end),
       loadRange(db, today, today),
       loadRange(db, weekLoadStart, week.end),
       db.turns.orderBy('localWorkDate').first(),
       loadRange(db, taxStart, taxEnd),
+      loadWorkDays(db, addDays(today, -1), today),
     ])
-    return { current, previousData, todayData, weekData, firstTurn, taxData }
+    return { current, previousData, todayData, weekData, firstTurn, taxData, workDays }
   }, [
     span.start,
     span.end,
@@ -252,6 +261,13 @@ export function HomePage() {
     { n: todayTotals.turns },
   )
 
+  const openWorkDay = openDay(data.workDays, today)
+  const todayDay = data.workDays.find((workDay) => workDay.date === today) ?? null
+  const todayHours =
+    todayDay !== null && todayDay.startTime !== null && todayDay.endTime !== null
+      ? { start: todayDay.startTime, end: todayDay.endTime }
+      : null
+
   function choosePeriod(next: HomePeriod) {
     setStoredPeriod({ key: periodKey, period: next })
     try {
@@ -273,6 +289,15 @@ export function HomePage() {
 
   function dismissReminder(key: string) {
     updateSettings({ dismissedReminders: { ...dismissedReminders, [key]: today } })
+  }
+
+  async function startDay() {
+    await setWorkHours(db, today, timeOf(Date.now()), null)
+  }
+
+  async function endDay(day: { date: IsoDate; startTime: string | null }) {
+    if (day.startTime === null) return
+    await setWorkHours(db, day.date, day.startTime, timeOf(Date.now()))
   }
 
   return (
@@ -487,6 +512,56 @@ export function HomePage() {
             cash: formatUsdShort(currentPayPeriod.statement.cashCents ?? 0),
           })}
         </p>
+      )}
+
+      {hoursOn && period === 'today' && (
+        <section>
+          {openWorkDay !== null && openWorkDay.startTime !== null ? (
+            <button
+              type="button"
+              className={secondaryButton}
+              onClick={() => {
+                void endDay({ date: openWorkDay.date, startTime: openWorkDay.startTime })
+              }}
+            >
+              {t(locale, 'endDay')}
+            </button>
+          ) : todayHours !== null ? (
+            <div className="flex items-center justify-between gap-2 rounded-card border border-border bg-surface px-4 py-2">
+              <p className="text-sm">
+                <span className="text-text-secondary">{t(locale, 'hoursTitle')}</span>{' '}
+                <b>{durationText(locale, workMinutes(todayHours.start, todayHours.end))}</b>
+              </p>
+              <button
+                type="button"
+                className="min-h-11 shrink-0 rounded-control px-3 text-sm font-semibold text-brand-600 underline"
+                onClick={() => setHoursOpen(true)}
+              >
+                {t(locale, 'edit')}
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              className={secondaryButton}
+              onClick={() => {
+                void startDay()
+              }}
+            >
+              {t(locale, 'startDay')}
+            </button>
+          )}
+        </section>
+      )}
+
+      {hoursOpen && (
+        <HoursSheet
+          date={today}
+          startTime={todayDay?.startTime ?? null}
+          endTime={todayDay?.endTime ?? null}
+          suggestion={null}
+          onClose={() => setHoursOpen(false)}
+        />
       )}
 
       <section className="flex flex-col gap-2 pb-16">
