@@ -36,8 +36,11 @@ async function startSay(page: Page, overrides: Record<string, unknown> = {}): Pr
   await page.goto('./#/say')
 }
 
+/** The jobs box is the first text box; the ChatGPT answer box comes after it. */
+const jobsBox = (page: Page): Locator => page.locator('textarea').first()
+
 async function sayText(page: Page, text: string, makeName = 'Make turns'): Promise<void> {
-  await page.locator('textarea').fill(text)
+  await jobsBox(page).fill(text)
   await page.getByRole('button', { name: makeName, exact: true }).click()
 }
 
@@ -153,10 +156,10 @@ test('Save writes every draft on the chosen day, and nothing before', async ({ p
 
 test('the text and drafts survive leaving and coming back', async ({ page }) => {
   await startSay(page)
-  await page.locator('textarea').fill('Manicure 30')
+  await jobsBox(page).fill('Manicure 30')
   await page.getByRole('button', { name: 'Close' }).click()
   await page.getByRole('link', { name: 'Say your turns' }).click()
-  await expect(page.locator('textarea')).toHaveValue('Manicure 30')
+  await expect(jobsBox(page)).toHaveValue('Manicure 30')
 })
 
 test('Remove drops a card and the total follows', async ({ page }) => {
@@ -204,12 +207,12 @@ test('a draft opens in the Add turn form; cancelling changes nothing, Done keeps
 
 test('the number pad setting does not touch the Say box', async ({ page }) => {
   await startSay(page, { numberPad: true })
-  await page.locator('textarea').click()
+  await jobsBox(page).click()
 
   await expect(page.getByTestId('number-pad')).toHaveCount(0)
-  await expect(page.locator('textarea')).not.toHaveAttribute('inputmode', /.+/)
+  await expect(jobsBox(page)).not.toHaveAttribute('inputmode', /.+/)
   await page.keyboard.type('Manicure thirty')
-  await expect(page.locator('textarea')).toHaveValue('Manicure thirty')
+  await expect(jobsBox(page)).toHaveValue('Manicure thirty')
 })
 
 test('a service with no price blocks Save until it is fixed', async ({ page }) => {
@@ -270,7 +273,9 @@ test('the Add turn form saves a turn exactly as before', async ({ page }) => {
   ])
 })
 
-test('the Say and Check screens make no request outside the app', async ({ page }) => {
+test('the Say and Check screens make no request outside the app', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write'])
+  await recordOpens(page)
   await startSay(page)
   const urls: string[] = []
   page.on('request', (request) => urls.push(request.url()))
@@ -281,5 +286,186 @@ test('the Say and Check screens make no request outside the app', async ({ page 
   await page.getByRole('button', { name: 'Done', exact: true }).click()
   await expect(cards(page)).toHaveCount(2)
 
+  // The ChatGPT choice is the one thing that goes out, and only as a tab the person opens.
+  await page.getByRole('button', { name: 'Back' }).click()
+  await page.getByRole('button', { name: 'Use ChatGPT instead' }).click()
+  await expect(page.getByText('Instructions copied.')).toBeVisible()
+  await page.getByLabel("Paste ChatGPT's answer").fill(answer(GOOD_TURN))
+  await page.getByRole('button', { name: 'Check the answer' }).click()
+  await expect(cards(page)).toHaveCount(1)
+
   for (const url of urls) expect(url, url).toMatch(/^http:\/\/localhost:4173\/|^blob:|^data:/)
+})
+
+// ---------------------------------------------------------------------------
+// Use ChatGPT instead
+// ---------------------------------------------------------------------------
+
+const GOOD_TURN =
+  '{"services":[{"id":"gel-manicure","price":"45.00"}],"cashTip":"10.00","cardTip":"0","request":false}'
+const answer = (...turns: string[]) => `{"turns":[${turns.join(',')}]}`
+
+/** Replaces window.open with a recorder, so no tab opens and the call can be read back. */
+async function recordOpens(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    const opened: unknown[][] = []
+    ;(window as unknown as { __opened: unknown[][] }).__opened = opened
+    window.open = (...args: unknown[]) => {
+      opened.push(args)
+      return null
+    }
+  })
+}
+
+const opens = (page: Page) => page.evaluate(() => (window as unknown as { __opened: unknown[][] }).__opened)
+
+test('Use ChatGPT instead copies the instructions with the services and the reply format', async ({
+  page,
+  context,
+}) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write'])
+  await recordOpens(page)
+  await startSay(page)
+
+  await page.getByRole('button', { name: 'Use ChatGPT instead' }).click()
+  await expect(page.getByText('Instructions copied.')).toBeVisible()
+
+  const copied = await page.evaluate(() => navigator.clipboard.readText())
+  expect(copied).toContain('- gel-manicure: Gel Manicure / Sơn gel tay')
+  expect(copied).toContain('- pedicure: Pedicure / Làm móng chân')
+  expect(copied).toContain(
+    '{"turns":[{"services":[{"id":"gel-manicure","price":"45.00"}],"cashTip":"10.00","cardTip":"0","request":false}]}',
+  )
+  expect(copied).toContain('You reply: ')
+  // Copied fine, so there is no box to copy by hand.
+  await expect(page.getByLabel('Instructions for ChatGPT')).toHaveCount(0)
+})
+
+test('Use ChatGPT instead opens ChatGPT in a new tab', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write'])
+  await recordOpens(page)
+  await startSay(page)
+
+  await page.getByRole('button', { name: 'Use ChatGPT instead' }).click()
+
+  await expect.poll(() => opens(page)).toEqual([['https://chatgpt.com', '_blank', 'noopener,noreferrer']])
+})
+
+test('when the clipboard fails the instructions are shown to copy by hand', async ({ page }) => {
+  await recordOpens(page)
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, 'clipboard', {
+      value: { writeText: () => Promise.reject(new DOMException('no', 'NotAllowedError')) },
+    })
+  })
+  await startSay(page)
+
+  await page.getByRole('button', { name: 'Use ChatGPT instead' }).click()
+
+  const box = page.getByLabel('Instructions for ChatGPT')
+  await expect(box).toBeVisible()
+  await expect(box).toHaveAttribute('readonly', '')
+  await expect(box).toHaveValue(/- gel-manicure: Gel Manicure \/ Sơn gel tay/)
+  await expect(page.getByText('Instructions copied.')).toHaveCount(0)
+  // The person is still here to copy it: ChatGPT opens only when they ask.
+  expect(await opens(page)).toEqual([])
+
+  await page.getByRole('button', { name: 'Select all' }).click()
+  const selected = await page.evaluate(() => {
+    const area = document.activeElement as HTMLTextAreaElement
+    return area.value.slice(area.selectionStart, area.selectionEnd)
+  })
+  expect(selected).toBe(await box.inputValue())
+
+  await page.getByRole('button', { name: 'Open ChatGPT' }).click()
+  expect(await opens(page)).toHaveLength(1)
+})
+
+test('a good ChatGPT answer becomes cards and saves', async ({ page }) => {
+  await startSay(page)
+  await page.getByRole('button', { name: 'Yesterday' }).click()
+  const reply = [
+    'Here you go:',
+    '```json',
+    answer(
+      GOOD_TURN,
+      '{"services":[{"id":"pedicure","price":null}],"cashTip":"0","cardTip":"8.50","request":true,"extra":1}',
+    ),
+    '```',
+    'Anything else?',
+  ].join('\n')
+  await page.getByLabel("Paste ChatGPT's answer").fill(reply)
+  await page.getByRole('button', { name: 'Check the answer' }).click()
+
+  await expect(page.getByRole('heading', { level: 1, name: 'Check 2 turns' })).toBeVisible()
+  await expect(cards(page).nth(0)).toContainText('Gel Manicure')
+  await expect(cards(page).nth(0)).toContainText('$45')
+  await expect(cards(page).nth(0)).toContainText('+$10 cash tip')
+  await expect(cards(page).nth(1)).toContainText('Pedicure')
+  await expect(cards(page).nth(1)).toContainText('+$8.50 card tip')
+  await expect(cards(page).nth(1)).toContainText('Request')
+  // No price said and no usual price yet: the card is marked and Save waits for a price.
+  await expect(cards(page).nth(1)).toContainText('Check this: No price heard for Pedicure: enter the price')
+  expect(await rows(page, 'turns')).toHaveLength(0)
+
+  await cards(page).nth(1).click()
+  await page.getByLabel('Service amount').fill('35')
+  await page.getByRole('button', { name: 'Done', exact: true }).click()
+  await page.getByRole('button', { name: 'Save 2 turns' }).click()
+  await expect(page.getByRole('status').filter({ hasText: 'Saved 2 turns' })).toBeVisible()
+
+  const turns = await rows(page, 'turns')
+  expect(turns).toHaveLength(2)
+  expect(turns.every((turn) => turn.localWorkDate === '2026-11-03')).toBe(true)
+  // At 60%: $27 + $10, then $21 + $8.50.
+  expect(turns.reduce((sum, turn) => sum + (turn.earnedTotalCents as number), 0)).toBe(
+    2700 + 1000 + 2100 + 850,
+  )
+})
+
+test('a ChatGPT answer that cannot be checked shows Not understood and is never saved', async ({ page }) => {
+  await startSay(page)
+  await page
+    .getByLabel("Paste ChatGPT's answer")
+    .fill(
+      answer('{"services":[{"id":"manicure","price":"forty-ish"}]}', '{"services":[{"id":"nails","price":"20"}]}'),
+    )
+  await page.getByRole('button', { name: 'Check the answer' }).click()
+
+  await expect(
+    page.getByText('Not understood: turn 1 has a price that is not dollars and cents (forty-ish)'),
+  ).toBeVisible()
+  await expect(
+    page.getByText('Not understood: turn 2 has a service that is not on your list (nails)'),
+  ).toBeVisible()
+  await expect(cards(page)).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Save 0 turns' })).toBeDisabled()
+  expect(await rows(page, 'turns')).toHaveLength(0)
+
+  // Text that is not an answer at all is refused too, and never put into the page as markup.
+  await page.getByRole('button', { name: 'Back' }).click()
+  await page.getByLabel("Paste ChatGPT's answer").fill('<img src=x onerror="document.title=\'hacked\'"> sorry')
+  await page.getByRole('button', { name: 'Check the answer' }).click()
+  await expect(page.getByText('Not understood: no JSON block was found in the answer')).toBeVisible()
+  await expect(page.locator('img[src="x"]')).toHaveCount(0)
+  expect(await page.title()).not.toBe('hacked')
+})
+
+test('the ChatGPT labels and reasons are in Vietnamese', async ({ page }) => {
+  await page.clock.setFixedTime(NOON)
+  await seedSettings(page)
+  await page.goto('./')
+  await page.evaluate(() => {
+    const saved = JSON.parse(localStorage.getItem('nail-tracker.settings') ?? '{}')
+    localStorage.setItem('nail-tracker.settings', JSON.stringify({ ...saved, locale: 'vi' }))
+  })
+  await page.goto('./#/say')
+  await page.reload()
+
+  await expect(page.getByRole('button', { name: 'Dùng ChatGPT thay thế' })).toBeVisible()
+  await page.getByLabel('Dán câu trả lời của ChatGPT').fill(answer('{"services":[{"id":"x"}]}'))
+  await page.getByRole('button', { name: 'Kiểm tra câu trả lời' }).click()
+  await expect(
+    page.getByText('Không hiểu: turn 1 có dịch vụ không có trong danh sách của bạn (x)'),
+  ).toBeVisible()
 })

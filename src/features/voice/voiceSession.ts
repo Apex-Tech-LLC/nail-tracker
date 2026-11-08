@@ -25,6 +25,8 @@ export interface DraftCard {
 
 export interface VoiceSession {
   text: string
+  // What the person pasted from ChatGPT, kept like the text above.
+  answerText: string
   // null means today, whichever day today is when it is read.
   date: IsoDate | null
   cards: DraftCard[]
@@ -33,7 +35,7 @@ export interface VoiceSession {
   made: boolean
 }
 
-const EMPTY: VoiceSession = { text: '', date: null, cards: [], notUnderstood: [], made: false }
+const EMPTY: VoiceSession = { text: '', answerText: '', date: null, cards: [], notUnderstood: [], made: false }
 
 let session: VoiceSession = EMPTY
 const listeners = new Set<() => void>()
