@@ -141,7 +141,7 @@ export function CheckPanel({ summary }: Props) {
             <button
               type="button"
               onClick={() => void toggleChecked()}
-              className="min-h-11 self-start rounded-control px-3 text-sm font-semibold text-brand-600 underline"
+              className="min-h-11 self-start rounded-control px-3 text-sm font-semibold text-brand-ink underline"
             >
               {t(locale, 'uncheck')}
             </button>

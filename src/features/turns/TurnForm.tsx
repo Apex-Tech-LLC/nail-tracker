@@ -169,7 +169,7 @@ interface SaveResult {
 
 const TIP_VALUES = [500, 1000, 1500, 2000] as const
 const REPEAT_CHIP =
-  'flex min-h-11 flex-none items-center gap-1 whitespace-nowrap rounded-control bg-brand-50 px-3 py-2 text-[13px] font-semibold text-brand-800'
+  'flex min-h-11 flex-none items-center gap-1 whitespace-nowrap rounded-control bg-brand-50 px-3 py-2 text-[13px] font-semibold text-brand-ink-strong'
 
 function comboLabel(lines: readonly QuickPickLine[]): string {
   const total = lines.reduce((sum, line) => sum + line.priceCents, 0)
@@ -217,7 +217,7 @@ export function TurnForm({ turnId, copyId, onDone, onClose }: Props) {
     return (
       <>
         <p>{t(locale, 'entryNotFound')}</p>
-        <Link href={paths.today} replace className="text-brand-600 underline">
+        <Link href={paths.today} replace className="text-brand-ink underline">
           {t(locale, 'backToToday')}
         </Link>
       </>
@@ -990,7 +990,7 @@ function TurnFormFields({ presets, existing, quick, copy, onDone, onClose }: Fie
               onClick={() => updateSettings({ tipButtonsTarget: target })}
               className={`min-h-11 px-2.5 text-sm font-semibold ${
                 tipButtonsTarget === target
-                  ? 'bg-brand-50 text-brand-800'
+                  ? 'bg-brand-50 text-brand-ink-strong'
                   : 'bg-surface text-text-secondary'
               }${target === 'cash' ? ' border-r-[1.5px] border-border-strong' : ''}`}
             >

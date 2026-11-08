@@ -779,7 +779,7 @@ function PayRulesForm({ initial, today, periodStart }: FormProps) {
                     setStartError(false)
                   }
                 }}
-                className="w-full rounded-control border-[1.5px] border-border-strong bg-surface px-3.5 py-3 text-base focus:border-brand-600 focus:outline-none"
+                className="w-full rounded-control border-[1.5px] border-border-strong bg-surface px-3.5 py-3 text-base focus:border-brand-ink focus:outline-none"
               />
             </div>
           )}
@@ -907,7 +907,7 @@ function RulesList({ rules, today }: { rules: PayRules[]; today: IsoDate }) {
               <span className="flex items-center gap-2">
                 <span>{ruleStartText(rule.startDate, locale)}</span>
                 {rule.id === currentId && (
-                  <span className="rounded-full bg-brand-50 px-2 py-0.5 text-xs text-brand-900">
+                  <span className="rounded-full bg-brand-50 px-2 py-0.5 text-xs text-brand-ink-strong">
                     {t(locale, 'ruleNow')}
                   </span>
                 )}

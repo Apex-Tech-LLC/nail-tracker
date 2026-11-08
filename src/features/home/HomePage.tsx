@@ -475,14 +475,14 @@ export function HomePage() {
                 <span
                   className={`relative block h-[100px] w-[30px] overflow-hidden rounded-[10px_10px_12px_12px] bg-surface ${
                     day.isToday
-                      ? 'border-2 border-brand-600'
+                      ? 'border-2 border-brand-ink'
                       : 'border-[1.5px] border-border-strong'
                   }`}
                 >
                   <span
                     className={`week-fill absolute inset-x-0 bottom-0 ${
                       day.isFuture
-                        ? 'bg-[#ecd9d1]'
+                        ? 'bg-bottle-future'
                         : 'bg-gradient-to-b from-brand-400 via-brand-600 to-brand-800'
                     }`}
                     style={{ height: `${fillPercent(bottleCents(day), weekMax)}%` }}
@@ -496,7 +496,7 @@ export function HomePage() {
               <span
                 aria-hidden="true"
                 className={`text-[12px] font-semibold ${
-                  day.isToday ? 'text-brand-600' : 'text-text-muted'
+                  day.isToday ? 'text-brand-ink' : 'text-text-muted'
                 }`}
               >
                 {formatWeekdayShort(day.date, locale)}
@@ -512,7 +512,7 @@ export function HomePage() {
           {t(locale, 'homeThisWeekLegend')}
         </span>
         <span>
-          <span aria-hidden="true" className="mr-1 inline-block h-[9px] w-[9px] rounded-[3px] bg-[#ecd9d1]" />
+          <span aria-hidden="true" className="mr-1 inline-block h-[9px] w-[9px] rounded-[3px] bg-bottle-future" />
           {t(locale, 'homeLastWeekLegend')}
         </span>
       </div>
@@ -552,7 +552,7 @@ export function HomePage() {
               </p>
               <button
                 type="button"
-                className="min-h-11 shrink-0 rounded-control px-3 text-sm font-semibold text-brand-600 underline"
+                className="min-h-11 shrink-0 rounded-control px-3 text-sm font-semibold text-brand-ink underline"
                 onClick={() => setHoursOpen(true)}
               >
                 {t(locale, 'edit')}
@@ -608,7 +608,7 @@ export function HomePage() {
             </div>
             <Link
               href={paths.history}
-              className="text-sm font-semibold text-brand-600 underline"
+              className="text-sm font-semibold text-brand-ink underline"
             >
               {t(locale, 'seeAll')}
             </Link>
@@ -676,7 +676,7 @@ function GoalBar({
     return (
       <Link
         href={paths.goals}
-        className="mt-3 inline-block text-sm font-semibold text-brand-600 underline"
+        className="mt-3 inline-block text-sm font-semibold text-brand-ink underline"
       >
         {t(locale, 'setAGoal')}
       </Link>
@@ -690,7 +690,7 @@ function GoalBar({
         href={paths.goals}
         data-testid="goal-progress"
         data-fill={progress.fillPercent}
-        className="block rounded-control focus-visible:outline-2 focus-visible:outline-brand-600"
+        className="block rounded-control focus-visible:outline-2 focus-visible:outline-brand-ink"
       >
         <span className="block h-2 overflow-hidden rounded-full bg-surface-subtle">
           <span

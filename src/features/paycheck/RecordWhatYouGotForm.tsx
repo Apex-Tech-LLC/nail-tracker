@@ -78,7 +78,7 @@ export function RecordWhatYouGotForm({ periodId, onDone }: Props) {
     return (
       <>
         <p>{t(locale, 'entryNotFound')}</p>
-        <Link href={paths.payday} replace className="text-brand-600 underline">
+        <Link href={paths.payday} replace className="text-brand-ink underline">
           {t(locale, 'paydayTitle')}
         </Link>
       </>

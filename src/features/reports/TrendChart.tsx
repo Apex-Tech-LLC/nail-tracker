@@ -67,7 +67,7 @@ export function TrendChart({
                   aria-pressed={selectedIndex === index}
                   aria-label={`${formatRange(bar.start, bar.end, locale)}: ${formatUsd(bar.earnedCents)}`}
                   onClick={() => onSelect(index)}
-                  className="flex h-full min-w-0 flex-1 items-end justify-center rounded-sm focus-visible:outline-2 focus-visible:outline-brand-600"
+                  className="flex h-full min-w-0 flex-1 items-end justify-center rounded-sm focus-visible:outline-2 focus-visible:outline-brand-ink"
                 >
                   <span
                     aria-hidden="true"
@@ -108,7 +108,7 @@ export function TrendChart({
               <button
                 type="button"
                 onClick={() => onOpen(selected)}
-                className="mt-1 min-h-11 font-semibold text-brand-600 underline"
+                className="mt-1 min-h-11 font-semibold text-brand-ink underline"
               >
                 {t(locale, 'reportOpen')}
               </button>

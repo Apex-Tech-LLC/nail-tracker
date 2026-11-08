@@ -265,7 +265,7 @@ function StorageStatus() {
     <section>
       <h2 className="mb-2 text-xs text-text-secondary">{t(locale, 'storage')}</h2>
       <div className="flex gap-3 rounded-card border border-border bg-surface p-3">
-        <Icon size={20} aria-hidden="true" className={`mt-0.5 flex-none ${safe ? 'text-brand-600' : 'text-warning-text'}`} />
+        <Icon size={20} aria-hidden="true" className={`mt-0.5 flex-none ${safe ? 'text-brand-ink' : 'text-warning-text'}`} />
         <div>
           <p className="text-sm">{t(locale, safe ? 'storagePersisted' : 'storageAtRisk')}</p>
           <p className="text-xs text-text-secondary">{t(locale, safe ? 'storagePersistedHint' : 'storageAtRiskHint')}</p>

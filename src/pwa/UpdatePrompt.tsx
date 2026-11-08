@@ -31,10 +31,10 @@ export function UpdatePrompt({ visible }: { visible: boolean }) {
   if (!needRefresh || !visible) return null
 
   return (
-    <div className="flex items-center gap-2 rounded-card border border-brand-400 bg-brand-50 p-3 text-sm text-brand-900">
-      <IconRefresh size={18} aria-hidden="true" className="flex-none text-brand-600" />
+    <div className="flex items-center gap-2 rounded-card border border-brand-400 bg-brand-50 p-3 text-sm text-brand-ink-strong">
+      <IconRefresh size={18} aria-hidden="true" className="flex-none text-brand-ink" />
       <span className="flex-1">{t(locale, 'updateReady')}</span>
-      <button type="button" onClick={() => setNeedRefresh(false)} className="px-2 py-1 text-xs text-brand-800">
+      <button type="button" onClick={() => setNeedRefresh(false)} className="px-2 py-1 text-xs text-brand-ink-strong">
         {t(locale, 'later')}
       </button>
       {/* Activates the waiting worker; the page reloads once it takes over. */}

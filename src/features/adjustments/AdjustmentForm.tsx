@@ -60,7 +60,7 @@ export function AdjustmentForm({ adjustmentId, onDone }: Props) {
     return (
       <>
         <p>{t(locale, 'entryNotFound')}</p>
-        <Link href={paths.today} replace className="text-brand-600 underline">
+        <Link href={paths.today} replace className="text-brand-ink underline">
           {t(locale, 'backToToday')}
         </Link>
       </>

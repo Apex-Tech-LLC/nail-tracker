@@ -56,7 +56,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         <div
           role="status"
           aria-live="polite"
-          className="fixed z-50 flex items-center justify-between gap-3 rounded-[14px] bg-text px-4 py-[13px] text-sm text-white"
+          className="fixed z-50 flex items-center justify-between gap-3 rounded-[14px] bg-inverse px-4 py-[13px] text-sm text-on-inverse"
           style={{
             left: 16,
             right: 16,
@@ -71,7 +71,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                 <button
                   key={index}
                   type="button"
-                  className="min-h-11 rounded-control px-3 text-sm font-bold text-[#ffb3cd]"
+                  className="min-h-11 rounded-control px-3 text-sm font-bold text-toast-link"
                   onClick={() => {
                     dismiss()
                     action.onClick()
