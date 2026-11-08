@@ -10,11 +10,16 @@ import { setDayOff } from './workDays.ts'
 interface Props {
   date: IsoDate
   dayOff: boolean
+  /** Only shown when hours tracking is on. */
+  hoursOn: boolean
+  /** "9:45 AM – 7:00 PM · 9 h 15 min" when the day has hours. */
+  hoursText: string | null
+  onEditHours: () => void
   onClose: () => void
 }
 
-/** A small bottom sheet: mark the day off, or undo that. */
-export function DayOffSheet({ date, dayOff, onClose }: Props) {
+/** A small bottom sheet: mark the day off, or undo that, and edit the day's hours. */
+export function DayOffSheet({ date, dayOff, hoursOn, hoursText, onEditHours, onClose }: Props) {
   const { locale } = useSettings()
   const firstButton = useRef<HTMLButtonElement | null>(null)
   const dayText = formatDayLong(date, locale)
@@ -48,6 +53,13 @@ export function DayOffSheet({ date, dayOff, onClose }: Props) {
         onClick={(event) => event.stopPropagation()}
       >
         <p className="px-1 text-sm font-bold">{dayText}</p>
+        {hoursOn && (
+          <button type="button" className={secondaryButton} onClick={onEditHours}>
+            {hoursText === null
+              ? t(locale, 'addHours')
+              : `${t(locale, 'hoursTitle')} ${hoursText}`}
+          </button>
+        )}
         <button
           ref={firstButton}
           type="button"

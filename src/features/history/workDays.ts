@@ -10,8 +10,32 @@ export function dayOffDates(workDays: readonly WorkDay[]): Set<IsoDate> {
 }
 
 /**
+ * Saves one day's start and end time. Nulls clear the hours; the day off
+ * answer and the day's first-saved moment stay as they were.
+ */
+export async function setWorkHours(
+  db: NailDb,
+  date: IsoDate,
+  startTime: string | null,
+  endTime: string | null,
+  now: number = Date.now(),
+): Promise<void> {
+  await db.transaction('rw', db.workDays, async () => {
+    const existing = await db.workDays.get(date)
+    await db.workDays.put({
+      date,
+      dayOff: existing?.dayOff ?? false,
+      startTime,
+      endTime,
+      createdAt: existing?.createdAt ?? now,
+      updatedAt: now,
+    })
+  })
+}
+
+/**
  * Marks a day off or normal again. A day with turns can be off too, so the
- * turns are left alone; hours from later tasks are kept.
+ * turns are left alone; hours from hours tracking are kept.
  */
 export async function setDayOff(
   db: NailDb,
