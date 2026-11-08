@@ -57,6 +57,18 @@ opens the pull request, waits for checks, merges, updates this file. Product: `d
 |---|---|---|
 | V21 | Light and dark mode: Same as phone, Light, Dark; share pictures and printing stay light | ✅ |
 
+## Release 2.6: Voice options
+
+Say the day's jobs once and get the turns to check. Plan: `docs/voice-options-spec.md`; picture:
+`docs/design/voice-options-mockup.html`. Waits for Bay's go-ahead and five real days said in Vietnamese.
+
+| Task | What | Status |
+|---|---|---|
+| V22 | The reader: spoken or typed text into draft turns, English and Vietnamese, on the phone | waiting |
+| V23 | Say and Check screens, entry buttons, save | waiting |
+| V24 | ChatGPT by copy and paste | waiting |
+| V25 | Own AI key (later, if people ask) | waiting |
+
 Briefs for 2.3 and 2.4 are written when the release before them is merged, so they match the code as it is then.
 
 Build order for 2.4: V19 beside V15, then V18 beside V17, then V16 (it shares the V11 paycheck result and the V17 year

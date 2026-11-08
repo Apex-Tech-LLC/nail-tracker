@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Voice options</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1d1822; --ink-2: #5d5566; --ink-3: #8a8292;
+    --base: #f7f4f8; --card: #ffffff; --line: #ebe5ee; --line-2: #d6ccdb;
+    --lacquer: #a3164d; --lacquer-soft: #fbe7ef;
+    --money: #0d7a57; --money-soft: #e3f4ec;
+    --short: #b4441b; --short-soft: #fdeee6;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Be Vietnam Pro', system-ui, sans-serif; background: #e9e4ec; color: var(--ink); padding: 32px 24px 48px; }
+  .intro { max-width: 1300px; margin: 0 auto 28px; }
+  .intro h1 { font-size: 26px; font-weight: 700; letter-spacing: -0.02em; }
+  .intro p { color: var(--ink-2); margin-top: 6px; max-width: 75ch; line-height: 1.5; }
+  .row { display: flex; gap: 28px; flex-wrap: wrap; max-width: 1300px; margin: 0 auto; }
+  figure { width: 390px; }
+  figcaption { font-size: 14px; color: var(--ink-2); margin-top: 14px; line-height: 1.45; }
+  figcaption b { color: var(--ink); }
+  .phone { width: 390px; height: 844px; background: var(--base); border-radius: 44px; overflow: hidden; position: relative;
+    box-shadow: 0 0 0 10px #1d1822, 0 30px 60px -20px rgba(29,24,34,.45); font-variant-numeric: tabular-nums; }
+  .scroll { height: 100%; overflow: hidden; padding: 54px 18px 120px; }
+  .bar { display: flex; align-items: center; justify-content: space-between; font-weight: 700; font-size: 17px; }
+  .bar .x { font-size: 22px; font-weight: 400; color: var(--ink-2); }
+  .pills { display: flex; gap: 8px; margin-top: 18px; }
+  .pill { font-size: 14px; font-weight: 600; padding: 8px 14px; border-radius: 12px; border: 1px solid var(--line-2); background: var(--card); }
+  .pill.on { border-color: var(--lacquer); background: var(--lacquer-soft); color: var(--lacquer); }
+  .hint { font-size: 14px; color: var(--ink-2); margin-top: 18px; line-height: 1.45; }
+  .box { margin-top: 10px; background: var(--card); border: 2px solid var(--lacquer); border-radius: 16px; padding: 14px; min-height: 190px;
+    font-size: 17px; line-height: 1.5; }
+  .caret { display: inline-block; width: 2px; height: 20px; background: var(--lacquer); vertical-align: -4px; }
+  .btn { display: block; text-align: center; font-weight: 700; font-size: 17px; border-radius: 16px; padding: 15px; margin-top: 14px; }
+  .btn.main { background: var(--lacquer); color: #fff; box-shadow: 0 10px 24px -8px rgba(163,22,77,.6); }
+  .btn.line { border: 1.5px solid var(--ink); background: var(--card); }
+  .link { display: block; text-align: center; margin-top: 14px; font-size: 14px; font-weight: 600; color: var(--lacquer); }
+  .kb { position: absolute; left: 0; right: 0; bottom: 0; height: 290px; background: #d2d0d6; padding: 8px 4px 30px; }
+  .kb .keys { display: grid; grid-template-columns: repeat(10, 1fr); gap: 6px 5px; }
+  .kb .keys span { background: #fff; border-radius: 5px; height: 42px; display: flex; align-items: center; justify-content: center; font-size: 19px; box-shadow: 0 1px 0 #898a8d; }
+  .kb .bottom { display: flex; gap: 6px; margin-top: 8px; }
+  .kb .bottom span { background: #aeb2bb; border-radius: 5px; height: 42px; display: flex; align-items: center; justify-content: center; font-size: 15px; }
+  .kb .space { flex: 1; background: #fff !important; }
+  .kb .mic { width: 52px; background: var(--lacquer) !important; color: #fff; font-size: 20px; box-shadow: 0 0 0 4px rgba(163,22,77,.25); }
+  .callout { position: absolute; right: 14px; bottom: 300px; background: var(--ink); color: #fff; font-size: 13px; font-weight: 600;
+    padding: 8px 12px; border-radius: 10px; }
+  .callout::after { content: ''; position: absolute; right: 30px; bottom: -7px; border: 7px solid transparent; border-bottom: 0; border-top-color: var(--ink); }
+
+  .sub { font-size: 14px; color: var(--ink-2); margin-top: 6px; }
+  .cards { margin-top: 14px; display: flex; flex-direction: column; gap: 10px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 12px 14px; }
+  .card.warn { border-color: #f0c2ab; }
+  .card .top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+  .card .svc { font-weight: 700; font-size: 16px; }
+  .card .amt { font-weight: 800; font-size: 17px; }
+  .card .meta { font-size: 13px; color: var(--ink-2); margin-top: 3px; display: flex; justify-content: space-between; }
+  .card .tip { color: var(--money); font-weight: 700; }
+  .card .heard { font-size: 12.5px; color: var(--ink-3); margin-top: 7px; font-style: italic; }
+  .flag { display: inline-block; margin-top: 8px; font-size: 12.5px; font-weight: 600; color: var(--short); background: var(--short-soft); border-radius: 8px; padding: 4px 8px; }
+  .lost { margin-top: 12px; font-size: 13px; color: var(--ink-2); background: var(--card); border: 1px dashed var(--line-2); border-radius: 14px; padding: 10px 12px; }
+  .lost b { color: var(--lacquer); }
+  .total { display: flex; justify-content: space-between; margin-top: 14px; font-size: 15px; }
+  .total b { font-size: 20px; font-weight: 800; color: var(--money); }
+  .foot { position: absolute; left: 18px; right: 18px; bottom: 30px; }
+
+  .steps { margin-top: 16px; display: flex; flex-direction: column; gap: 10px; }
+  .step { display: flex; gap: 12px; background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 12px 14px; font-size: 14.5px; line-height: 1.4; }
+  .step i { flex: none; width: 26px; height: 26px; border-radius: 99px; background: var(--lacquer-soft); color: var(--lacquer); font-style: normal; font-weight: 800;
+    display: flex; align-items: center; justify-content: center; font-size: 14px; }
+  .step .btn { margin-top: 8px; padding: 10px; font-size: 15px; }
+  .paste { margin-top: 8px; background: var(--base); border-radius: 12px; padding: 10px; font-family: ui-monospace, monospace; font-size: 11.5px; color: var(--ink-2); line-height: 1.4; }
+  .note { font-size: 12.5px; color: var(--ink-3); margin-top: 14px; line-height: 1.45; }
+</style>
+</head>
+<body>
+<div class="intro">
+  <h1>Voice options: say your turns</h1>
+  <p>At the end of the day the technician says all her jobs once, with the mic on her phone's keyboard, and the app makes the turns. She checks them and saves. Free, works offline, nothing leaves the phone. ChatGPT is an optional extra.</p>
+</div>
+<div class="row">
+
+<figure>
+  <div class="phone"><div class="scroll">
+    <div class="bar"><span class="x">✕</span><span>Say your turns</span><span style="width:22px"></span></div>
+    <div class="pills"><span class="pill">Today</span><span class="pill on">Yesterday</span><span class="pill">Pick a day</span></div>
+    <p class="hint">Tap the mic on your keyboard and say each job: service, price, tip.</p>
+    <div class="box">Three jobs. Gel manicure 45, 10 tip cash. Pedicure. Acrylic fill 50, 8 tip on card, she asked for me. Then gel X and dip 90<span class="caret"></span></div>
+    <span class="btn main">Make turns</span>
+  </div>
+  <div class="callout">Tap the mic and talk</div>
+  <div class="kb">
+    <div class="keys"><span>q</span><span>w</span><span>e</span><span>r</span><span>t</span><span>y</span><span>u</span><span>i</span><span>o</span><span>p</span>
+      <span style="grid-column: span 1">a</span><span>s</span><span>d</span><span>f</span><span>g</span><span>h</span><span>j</span><span>k</span><span>l</span><span>⌫</span></div>
+    <div class="bottom"><span style="width:52px">123</span><span style="width:44px">🌐</span><span class="space">space</span><span style="width:70px">return</span><span class="mic">🎙</span></div>
+  </div></div>
+  <figcaption><b>1. Say.</b> Pick the day (end of day from the paper list is the main use), tap the keyboard's mic and talk, in English or Vietnamese. Typing works too.</figcaption>
+</figure>
+
+<figure>
+  <div class="phone"><div class="scroll">
+    <div class="bar"><span class="x">‹</span><span>Check 4 turns</span><span style="width:22px"></span></div>
+    <p class="sub">Yesterday, Fri Nov 6. Tap a turn to fix it.</p>
+    <div class="cards">
+      <div class="card"><div class="top"><span class="svc">Gel Manicure</span><span class="amt">$45</span></div>
+        <div class="meta"><span>9:00 · Walk-in</span><span class="tip">+$10 cash tip</span></div>
+        <div class="heard">"Gel manicure 45, 10 tip cash"</div></div>
+      <div class="card warn"><div class="top"><span class="svc">Pedicure</span><span class="amt">$35</span></div>
+        <div class="meta"><span>9:45 · Walk-in</span><span></span></div>
+        <span class="flag">Check this: no price heard, used your usual $35</span></div>
+      <div class="card"><div class="top"><span class="svc">Acrylic Fill</span><span class="amt">$50</span></div>
+        <div class="meta"><span>10:30 · Asked for you</span><span class="tip">+$8 card tip</span></div>
+        <div class="heard">"Acrylic fill 50, 8 tip on card, she asked for me"</div></div>
+      <div class="card warn"><div class="top"><span class="svc">Gel-X + Dip Powder</span><span class="amt">$90</span></div>
+        <div class="meta"><span>11:15 · Walk-in</span><span></span></div>
+        <span class="flag">Check this: one price for two services, split $55 + $35</span></div>
+    </div>
+    <div class="lost">Said "three jobs" but heard four. <b>Looks right?</b></div>
+    <div class="total"><span>You earn from these</span><b>$150.00</b></div>
+    <div class="foot"><span class="btn main">Save 4 turns</span></div>
+  </div></div>
+  <figcaption><b>2. Check.</b> One card per turn, with what was heard underneath. Anything unsure is orange with the reason. Nothing is saved until <b>Save</b>.</figcaption>
+</figure>
+
+<figure>
+  <div class="phone"><div class="scroll">
+    <div class="bar"><span class="x">‹</span><span>Use ChatGPT</span><span style="width:22px"></span></div>
+    <p class="sub">Optional. Works with any ChatGPT plan, even free.</p>
+    <div class="steps">
+      <div class="step"><i>1</i><div>Copy the instructions and open ChatGPT. They list your services so it knows your words.
+        <span class="btn line">Copy and open ChatGPT</span></div></div>
+      <div class="step"><i>2</i><div>Talk to ChatGPT about your day, by voice or typing. When it answers, tap its copy button.</div></div>
+      <div class="step"><i>3</i><div>Come back and paste. You check the turns the same way.
+        <div class="paste">{"turns":[{"services":[{"name":"Gel Manicure","price":45}],"cashTip":10}, …]}</div>
+        <span class="btn main">Paste ChatGPT's answer</span></div></div>
+    </div>
+    <p class="note">The app itself sends nothing. You choose what to tell ChatGPT. Anything the app can't check shows as "Not understood" and is never saved.</p>
+  </div></div>
+  <figcaption><b>3. Or ChatGPT (optional).</b> For messy days or long stories. Using a ChatGPT subscription to sign in directly isn't open to apps like ours yet, so copy and paste is the bridge.</figcaption>
+</figure>
+
+</div>
+</body>
+</html>
