@@ -579,6 +579,26 @@ const strings = {
     deleteAllWord: 'DELETE',
     deleteAllInput: 'Type the word here',
 
+    // Taxes
+    taxes: 'Taxes',
+    taxesTitle: 'Taxes and year summary',
+    taxNotAdvice: 'This is a record to help with your taxes, not tax advice.',
+    taxYearTotals: 'Year totals',
+    taxPaidByCheck: 'Salon pay by check',
+    taxPaidByCash: 'Salon pay by cash',
+    taxOtherPayments: 'Other payments',
+    taxTipsForYear: 'Tips for the year',
+    taxTipDeductionNote: 'The federal tip deduction (2025 to 2028) counts tips on a tax form or reported by you. A daily record like this one helps.',
+    taxSetAside: 'Set aside for taxes',
+    taxSetAsidePercent: 'Percent to set aside',
+    taxSetAsideSoFar: 'Set aside so far this year: {amount}',
+    taxNotSet: 'Not set',
+    taxSetAsideSummary: 'Set aside {rate}',
+    taxQuarterDue: 'Due {date}',
+    taxSaveCsv: 'Save CSV',
+    taxPrint: 'Print',
+    reminderTaxDue: 'Estimated tax is due {date}: about {amount} for {quarter}.',
+
     // CSV column headers
     csvType: 'Type',
     csvDate: 'Date',
@@ -1169,6 +1189,26 @@ const strings = {
     deleteAllBody: 'Xóa rồi không lấy lại được. Hãy sao lưu trước. Gõ {word} để xác nhận.',
     deleteAllWord: 'XÓA',
     deleteAllInput: 'Gõ từ đó vào đây',
+
+    // Taxes
+    taxes: 'Thuế',
+    taxesTitle: 'Thuế và tổng kết năm',
+    taxNotAdvice: 'Đây là bản ghi để giúp việc khai thuế, không phải lời khuyên về thuế.',
+    taxYearTotals: 'Tổng cộng cả năm',
+    taxPaidByCheck: 'Lương trả bằng séc',
+    taxPaidByCash: 'Lương trả bằng tiền mặt',
+    taxOtherPayments: 'Các khoản trả khác',
+    taxTipsForYear: 'Tip cả năm',
+    taxTipDeductionNote: 'Khoản giảm trừ tip liên bang (2025 đến 2028) chỉ tính tip có trên hồ sơ thuế hoặc do bạn tự khai. Ghi chép hằng ngày như app này sẽ giúp ích.',
+    taxSetAside: 'Để dành đóng thuế',
+    taxSetAsidePercent: 'Phần trăm để dành',
+    taxSetAsideSoFar: 'Để dành đến nay trong năm: {amount}',
+    taxNotSet: 'Chưa đặt',
+    taxSetAsideSummary: 'Để dành {rate}',
+    taxQuarterDue: 'Đến hạn {date}',
+    taxSaveCsv: 'Lưu CSV',
+    taxPrint: 'In',
+    reminderTaxDue: 'Thuế tạm nộp đến hạn {date}: khoảng {amount} cho {quarter}.',
 
     // CSV column headers
     csvType: 'Loại',

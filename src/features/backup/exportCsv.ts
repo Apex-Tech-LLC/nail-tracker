@@ -7,7 +7,7 @@ import { ADJUSTMENT_LABEL } from '../adjustments/adjustmentLabels.ts'
 
 // Excel only reads a CSV as UTF-8 (and so shows Vietnamese correctly) when
 // the file starts with a byte order mark.
-const BOM = '\uFEFF'
+export const BOM = '\uFEFF'
 
 /**
  * Quotes a cell when needed, and defuses text a spreadsheet would run as a
@@ -20,7 +20,7 @@ export function csvCell(value: string | number): string {
 }
 
 /** A money value: plain digits for spreadsheets, never treated as a possible formula. */
-const moneyCell = (cents: number): string => centsToInput(cents)
+export const moneyCell = (cents: number): string => centsToInput(cents)
 
 const HEADER_KEYS = [
   'csvType',

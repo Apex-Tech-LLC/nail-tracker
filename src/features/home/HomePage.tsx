@@ -20,16 +20,20 @@ import {
   addDays,
   diffDays,
   formatDayLong,
+  formatDayShort,
+  formatMonthShort,
   formatRange,
   formatWeekdayLong,
   formatWeekdayShort,
   monthRange,
+  parseIsoDate,
   weekRange,
   type IsoDate,
 } from '../../domain/dates.ts'
 import { goalMessageKey, goalProgress, type GoalKind } from '../../domain/goals.ts'
 import { formatUsd, formatUsdShort } from '../../domain/money.ts'
 import { dueReminder } from '../../domain/reminders.ts'
+import { nextTaxQuarter } from '../../domain/taxes.ts'
 import { numberTurns, sumTotals } from '../../domain/totals.ts'
 import { t, tf, type StringKey } from '../../lib/i18n.ts'
 import { OfflineBadge } from '../../pwa/OfflineBadge.tsx'
@@ -106,6 +110,7 @@ export function HomePage() {
     dismissedReminders,
     weeklyGoalCents,
     monthlyGoalCents,
+    taxSetAsideBp,
   } = useSettings()
   const today = useToday()
   const backupBusy = useRef(false)
@@ -123,6 +128,11 @@ export function HomePage() {
   const week = weekRange(today, weekStartDay)
   // Last week and this week together, so future bottles can show last week's fill.
   const weekLoadStart = addDays(week.start, -7)
+  // The quarter whose tax date is next, read with its own indexed range. On
+  // January 1 to 15 this is September to December of the year before.
+  const taxQuarter = nextTaxQuarter(today)
+  const taxStart = taxQuarter?.start ?? today
+  const taxEnd = taxQuarter?.end ?? today
 
   useEffect(() => {
     void ensurePayPeriods(
@@ -133,15 +143,26 @@ export function HomePage() {
   }, [payPeriodType, payPeriodAnchorDate, today])
 
   const data = useLiveQuery(async () => {
-    const [current, previousData, todayData, weekData, firstTurn] = await Promise.all([
+    const [current, previousData, todayData, weekData, firstTurn, taxData] = await Promise.all([
       loadRange(db, span.start, span.end),
       loadRange(db, previous.start, previous.end),
       loadRange(db, today, today),
       loadRange(db, weekLoadStart, week.end),
       db.turns.orderBy('localWorkDate').first(),
+      loadRange(db, taxStart, taxEnd),
     ])
-    return { current, previousData, todayData, weekData, firstTurn }
-  }, [span.start, span.end, previous.start, previous.end, today, weekLoadStart, week.end])
+    return { current, previousData, todayData, weekData, firstTurn, taxData }
+  }, [
+    span.start,
+    span.end,
+    previous.start,
+    previous.end,
+    today,
+    weekLoadStart,
+    week.end,
+    taxStart,
+    taxEnd,
+  ])
 
   const summaries = useLiveQuery(() => loadPeriodSummaries(db))
 
@@ -161,6 +182,16 @@ export function HomePage() {
       hasTurns: summary.statement.turns > 0,
       checkedDate: summary.record?.checkedDate ?? null,
     })),
+    taxSetAsideBp,
+    taxDue:
+      taxQuarter === null
+        ? null
+        : {
+            dueDate: taxQuarter.dueDate,
+            start: taxQuarter.start,
+            end: taxQuarter.end,
+            earnedCents: sumTotals(data.taxData.turns, data.taxData.adjustments).earnedCents,
+          },
   })
   const reminderStart = lastBackupDate ?? data.firstTurn?.localWorkDate ?? null
   const reminderDays = reminderStart === null ? 0 : diffDays(today, reminderStart)
@@ -271,6 +302,25 @@ export function HomePage() {
                   className="mt-2 inline-flex min-h-11 items-center rounded-control bg-brand-600 px-4 text-sm font-semibold text-white"
                 >
                   {t(locale, 'checkNow')}
+                </Link>
+              </>
+            ) : reminder.id === 'tax' && reminder.dueDate && reminder.quarter ? (
+              <>
+                <p data-testid="tax-reminder" className="text-sm">
+                  {tf(locale, 'reminderTaxDue', {
+                    date: formatDayShort(reminder.dueDate, locale),
+                    amount: formatUsdShort(reminder.amountCents ?? 0),
+                    quarter: `${formatMonthShort(reminder.quarter.start, locale)}–${formatMonthShort(
+                      reminder.quarter.end,
+                      locale,
+                    )}`,
+                  })}
+                </p>
+                <Link
+                  href={paths.taxes(parseIsoDate(reminder.quarter.start).year)}
+                  className="mt-2 inline-flex min-h-11 items-center rounded-control bg-brand-600 px-4 text-sm font-semibold text-white"
+                >
+                  {t(locale, 'taxes')}
                 </Link>
               </>
             ) : (

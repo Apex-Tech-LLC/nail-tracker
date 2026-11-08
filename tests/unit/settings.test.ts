@@ -32,6 +32,7 @@ describe('resolveSettings', () => {
     dismissedReminders: {},
     weeklyGoalCents: null,
     monthlyGoalCents: null,
+    taxSetAsideBp: null,
   }
 
   it('uses English defaults when nothing is saved', () => {
@@ -68,6 +69,12 @@ describe('resolveSettings', () => {
       lastBackupDate: '2026-11-04',
       dismissedReminders: { 'backup:2026-10-01': '2026-11-04' },
     })
+  })
+
+  it('keeps a saved tax set-aside percent and refuses a bad one', () => {
+    expect(resolveSettings(JSON.stringify({ taxSetAsideBp: 2000 }), []).taxSetAsideBp).toBe(2000)
+    expect(resolveSettings(JSON.stringify({ taxSetAsideBp: 20000 }), []).taxSetAsideBp).toBeNull()
+    expect(resolveSettings(JSON.stringify({ taxSetAsideBp: '20%' }), []).taxSetAsideBp).toBeNull()
   })
 
   it('falls back when the backup reminder settings are malformed', () => {

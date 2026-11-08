@@ -30,6 +30,8 @@ export interface Settings {
   weeklyGoalCents: number | null
   /** What the person wants to earn in a month, or null for no goal. */
   monthlyGoalCents: number | null
+  /** Part of earned money to keep for taxes, in whole basis points. null: off. */
+  taxSetAsideBp: number | null
 }
 
 const STORAGE_KEY = 'nail-tracker.settings'
@@ -82,6 +84,7 @@ export function resolveSettings(saved: string | null, languages: readonly string
     dismissedReminders: isDismissedMap(parsed.dismissedReminders) ? parsed.dismissedReminders : {},
     weeklyGoalCents: isGoalCents(parsed.weeklyGoalCents) ? parsed.weeklyGoalCents : null,
     monthlyGoalCents: isGoalCents(parsed.monthlyGoalCents) ? parsed.monthlyGoalCents : null,
+    taxSetAsideBp: isRate(parsed.taxSetAsideBp) ? parsed.taxSetAsideBp : null,
   }
 }
 

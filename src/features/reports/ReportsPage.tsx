@@ -1,7 +1,9 @@
 import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useId, useRef, useState } from 'react'
+import { Link } from 'wouter'
 import { PageHeader } from '../../app/PageHeader.tsx'
+import { paths } from '../../app/navigation.ts'
 import { useSettings } from '../../app/settings.ts'
 import { useToday } from '../../app/useToday.ts'
 import { db } from '../../db/schema.ts'
@@ -14,6 +16,7 @@ import {
   formatMonthYear,
   formatRange,
   formatWeekday,
+  parseIsoDate,
   todayIso,
   type DateLocale,
   type IsoDate,
@@ -394,6 +397,15 @@ export function ReportsPage() {
             showDetails={showDetails}
             onToggleDetails={() => setShowDetails((open) => !open)}
           />
+
+          {choice === 'year' && (
+            <Link
+              href={paths.taxes(parseIsoDate(start).year)}
+              className={`${secondaryButton} block text-center`}
+            >
+              {t(locale, 'taxesTitle')}
+            </Link>
+          )}
 
           <section className={card}>
             <h2 className="mb-2 text-base font-semibold">{t(locale, 'reportTrend')}</h2>
