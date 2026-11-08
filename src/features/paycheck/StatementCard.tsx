@@ -4,18 +4,22 @@ import { paths } from '../../app/navigation.ts'
 import { useSettings } from '../../app/settings.ts'
 import type { PayPeriod } from '../../db/schema.ts'
 import { formatDayShort, formatRange } from '../../domain/dates.ts'
-import { formatRate, formatUsd, formatUsdShort } from '../../domain/money.ts'
-import type { PayRules } from '../../domain/payRules.ts'
+import { formatUsd } from '../../domain/money.ts'
 import type { PayStateName } from '../../domain/payday.ts'
 import type { Statement } from '../../domain/statement.ts'
-import { t, tf } from '../../lib/i18n.ts'
+import { t } from '../../lib/i18n.ts'
 import { card, secondaryButton } from '../../ui/styles.ts'
 import { PAY_STATE_COLOR, PAY_STATE_LABEL } from '../payday/payStateLabels.ts'
+import {
+  daysWorkedLabel,
+  statementItems,
+  type StatementEndRules,
+} from './statementLines.ts'
 
 interface Props {
   period: PayPeriod
   statement: Statement
-  endRules: Omit<PayRules, 'id' | 'createdAt' | 'updatedAt'>
+  endRules: StatementEndRules
   status: PayStateName
 }
 
@@ -24,74 +28,8 @@ export function StatementCard({ period, statement, endRules, status }: Props) {
   const [showByDay, setShowByDay] = useState(false)
   const tableId = useId()
 
-  const daysWorked =
-    statement.daysWorked === 1
-      ? t(locale, 'daysWorkedOne')
-      : tf(locale, 'daysWorked', { n: statement.daysWorked })
-
-  let supplyFeeLabel: string | null = null
-  if (endRules.supplyFee.kind === 'perService') {
-    supplyFeeLabel = tf(
-      locale,
-      statement.services === 1
-        ? 'statementSupplyFeePerServiceOne'
-        : 'statementSupplyFeePerService',
-      { amount: formatUsdShort(endRules.supplyFee.cents), n: statement.services },
-    )
-  } else if (endRules.supplyFee.kind === 'percent') {
-    supplyFeeLabel = tf(locale, 'statementSupplyFeePercent', {
-      rate: formatRate(endRules.supplyFee.bp),
-    })
-  }
-
-  const shareLabel =
-    statement.tierRates !== null
-      ? tf(locale, 'statementShareWithTiers', {
-          rates: statement.tierRates.map(formatRate).join(' / '),
-          base: formatUsd(statement.shareBaseCents),
-        })
-      : statement.shareRateBp !== null && statement.supplyFeeWhen !== 'afterSplit'
-        ? tf(locale, 'statementShareWithRate', {
-            rate: formatRate(statement.shareRateBp),
-            base: formatUsd(statement.shareBaseCents),
-          })
-        : t(locale, 'statementShare')
-
-  const guarantee = endRules.guarantee
-  let guaranteeLabel: string | null = null
-  if (guarantee.kind !== 'none') {
-    const days = statement.guaranteeDays
-    if (guarantee.minDays !== null && days < guarantee.minDays) {
-      guaranteeLabel = tf(locale, 'statementGuaranteeMinDays', {
-        needed: guarantee.minDays,
-        days,
-      })
-    } else if (guarantee.kind === 'perPeriod') {
-      const total = formatUsdShort(guarantee.cents)
-      guaranteeLabel =
-        statement.guaranteeTopUpCents > 0
-          ? tf(locale, 'statementGuaranteePeriod', { total })
-          : tf(locale, 'statementGuaranteePeriodNotNeeded', { total })
-    } else {
-      const amount = formatUsdShort(guarantee.cents)
-      const total = formatUsdShort(guarantee.cents * days)
-      guaranteeLabel =
-        statement.guaranteeTopUpCents > 0
-          ? tf(locale, days === 1 ? 'statementGuaranteeTopUpOne' : 'statementGuaranteeTopUp', {
-              amount,
-              days,
-              total,
-            })
-          : tf(
-              locale,
-              days === 1 ? 'statementGuaranteeNotNeededOne' : 'statementGuaranteeNotNeeded',
-              { amount, days, total },
-            )
-    }
-  }
-
-  const checkBp = endRules.checkBp
-  const cashBp = checkBp === null ? null : 10_000 - checkBp
+  const daysWorked = daysWorkedLabel(locale, statement.daysWorked)
+  const items = statementItems(locale, statement, endRules)
 
   return (
     <div className={card}>
@@ -114,84 +52,20 @@ export function StatementCard({ period, statement, endRules, status }: Props) {
       </Link>
 
       <div className="mt-3">
-        <StatementRow
-          label={
-            statement.services === 1 && statement.turns === 1
-              ? t(locale, 'statementServicesLineOne')
-              : tf(locale, 'statementServicesLine', {
-                  services: statement.services,
-                  turns: statement.turns,
-                })
-          }
-          value={formatUsd(statement.servicesTotalCents)}
-        />
-        {supplyFeeLabel !== null && (
-          <StatementRow
-            label={supplyFeeLabel}
-            value={`− ${formatUsd(statement.supplyFeeCents)}`}
-          />
-        )}
-        <StatementRow label={shareLabel} value={formatUsd(statement.shareCents)} />
-        <StatementRow label={t(locale, 'cardTips')} value={formatUsd(statement.cardTipsCents)} />
-        {endRules.cardTipFeeBp > 0 && (
-          <StatementRow
-            label={tf(locale, 'statementCardTipFee', {
-              rate: formatRate(endRules.cardTipFeeBp),
-            })}
-            value={`− ${formatUsd(statement.cardTipFeeCents)}`}
-          />
-        )}
-        {statement.cashTipsHeldCents > 0 && (
-          <StatementRow
-            label={t(locale, 'cashTipsSalonHolds')}
-            value={formatUsd(statement.cashTipsHeldCents)}
-          />
-        )}
-        {statement.adjustmentsCents !== 0 && (
-          <StatementRow
-            label={t(locale, 'adjustments')}
-            value={formatUsd(statement.adjustmentsCents)}
-          />
-        )}
-        {guaranteeLabel !== null && (
-          <StatementRow
-            label={guaranteeLabel}
-            value={formatUsd(statement.guaranteeTopUpCents)}
-          />
-        )}
-
-        <div className="my-1 border-t-2 border-text" />
-
-        <StatementRow
-          label={t(locale, 'salonShouldPay')}
-          value={formatUsd(statement.salonPaysCents)}
-          strong
-          large
-        />
-        {checkBp !== null && cashBp !== null && (
-          <>
+        {items.map((item, index) =>
+          item.kind === 'rule' ? (
+            <div key={`rule-${index}`} className="my-1 border-t-2 border-text" />
+          ) : (
             <StatementRow
-              label={tf(locale, 'statementAsCheck', { rate: formatRate(checkBp) })}
-              value={formatUsd(statement.checkCents ?? 0)}
-              indent
+              key={`line-${index}`}
+              label={item.line.label}
+              value={item.line.value}
+              strong={item.line.strong}
+              large={item.line.large}
+              indent={item.line.indent}
             />
-            <StatementRow
-              label={tf(locale, 'statementAsCash', { rate: formatRate(cashBp) })}
-              value={formatUsd(statement.cashCents ?? 0)}
-              indent
-            />
-          </>
+          ),
         )}
-        {statement.cashTipsInHandCents > 0 && (
-          <StatementRow
-            label={t(locale, 'cashTipsAlreadyHave')}
-            value={formatUsd(statement.cashTipsInHandCents)}
-          />
-        )}
-        <StatementRow
-          label={t(locale, 'earnedInTotal')}
-          value={formatUsd(statement.earnedTotalCents)}
-        />
       </div>
 
       <button

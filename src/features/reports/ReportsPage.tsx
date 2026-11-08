@@ -10,7 +10,6 @@ import { db } from '../../db/schema.ts'
 import {
   addDays,
   diffDays,
-  formatDayLong,
   formatDayShort,
   formatMonthShortYear,
   formatMonthYear,
@@ -37,9 +36,12 @@ import {
 import { backupFileName, download } from '../backup/backupFormat.ts'
 import { exportCsv } from '../backup/exportCsv.ts'
 import { durationText } from '../hours/hoursText.ts'
+import { sharePicture } from '../share/shareCanvas.ts'
+import { reportPictureInput } from '../share/reportPicture.ts'
 import { loadRange } from '../turns/turnStore.ts'
 import { loadReport, type ReportData, type TrendPoint } from './reportsData.ts'
 import { rangeOf, stepDate, type ReportChoice } from './reportsRange.ts'
+import { changeText, previousLabel, rangeLabel, turnsAverage } from './reportText.ts'
 import { TrendChart } from './TrendChart.tsx'
 
 const CHOICES: { value: ReportChoice; key: StringKey }[] = [
@@ -59,57 +61,6 @@ const TREND_TITLE_KEYS: Record<ReportChoice, StringKey> = {
 }
 
 const DAYS_IN_WEEK = 7
-
-function rangeLabel(
-  choice: Exclude<ReportChoice, 'custom'>,
-  date: IsoDate,
-  start: IsoDate,
-  end: IsoDate,
-  locale: DateLocale,
-): string {
-  switch (choice) {
-    case 'day':
-      return formatDayLong(date, locale)
-    case 'week':
-      return formatRange(start, end, locale)
-    case 'month':
-      return formatMonthYear(date, locale)
-    case 'year':
-      return start.slice(0, 4)
-  }
-}
-
-function previousLabel(choice: ReportChoice, locale: DateLocale): string {
-  switch (choice) {
-    case 'day':
-      return t(locale, 'reportSpanSameDayLastWeek')
-    case 'week':
-      return t(locale, 'reportSpanLastWeek')
-    case 'month':
-      return t(locale, 'reportSpanLastMonth')
-    case 'year':
-      return t(locale, 'reportSpanLastYear')
-    case 'custom':
-      return t(locale, 'reportSpanDaysBefore')
-  }
-}
-
-function changeText(
-  locale: DateLocale,
-  differenceCents: number,
-  percent: number | null,
-  span: string,
-): string {
-  if (differenceCents === 0) return tf(locale, 'reportChangeSame', { span })
-  const amount = formatUsd(Math.abs(differenceCents))
-  const percentText = percent === null ? '' : ` (${percent}%)`
-  const key: StringKey = differenceCents > 0 ? 'reportChangeUp' : 'reportChangeDown'
-  return tf(locale, key, { amount, percent: percentText, span })
-}
-
-function turnsAverage(tenths: number): string {
-  return `${Math.trunc(tenths / 10)}.${Math.abs(tenths % 10)}`
-}
 
 function Stat({ labelText, value, testId }: { labelText: string; value: string; testId: string }) {
   return (
@@ -276,6 +227,7 @@ export function ReportsPage() {
 
   // A quick double tap runs the download twice before React can re-render.
   const exportInFlight = useRef(false)
+  const shareInFlight = useRef(false)
 
   async function exportRange() {
     if (exportInFlight.current) return
@@ -289,6 +241,20 @@ export function ReportsPage() {
       )
     } finally {
       exportInFlight.current = false
+    }
+  }
+
+  async function shareSummary() {
+    if (shareInFlight.current || data === undefined || data === null) return
+    shareInFlight.current = true
+    try {
+      await sharePicture(
+        reportPictureInput({ data, choice, date, start, end, locale }),
+        backupFileName('report', 'png', todayIso()),
+        t(locale, 'shareSummary'),
+      )
+    } finally {
+      shareInFlight.current = false
     }
   }
 
@@ -616,9 +582,14 @@ export function ReportsPage() {
             </section>
           )}
 
-          <button type="button" onClick={exportRange} className={secondaryButton}>
-            {t(locale, 'exportCsvRange')}
-          </button>
+          <div className="grid grid-cols-2 gap-2">
+            <button type="button" onClick={() => void shareSummary()} className={secondaryButton}>
+              {t(locale, 'shareSummary')}
+            </button>
+            <button type="button" onClick={exportRange} className={secondaryButton}>
+              {t(locale, 'exportCsvRange')}
+            </button>
+          </div>
         </>
       )}
     </>

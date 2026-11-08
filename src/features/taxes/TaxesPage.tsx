@@ -1,6 +1,6 @@
 import { IconChevronLeft, IconChevronRight, IconX } from '@tabler/icons-react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { useId, useState } from 'react'
+import { useId, useRef, useState } from 'react'
 import { useLocation } from 'wouter'
 import { paths } from '../../app/navigation.ts'
 import { updateSettings, useSettings } from '../../app/settings.ts'
@@ -19,7 +19,9 @@ import { setAsideCents, taxQuarterLines, taxYearSummary } from '../../domain/tax
 import { t, tf } from '../../lib/i18n.ts'
 import { Row } from '../../ui/Row.tsx'
 import { card, field, label, secondaryButton } from '../../ui/styles.ts'
-import { download } from '../backup/backupFormat.ts'
+import { download, yearFileName } from '../backup/backupFormat.ts'
+import { sharePicture } from '../share/shareCanvas.ts'
+import { yearPictureInput } from '../share/yearPicture.ts'
 import { loadRange } from '../turns/turnStore.ts'
 import { taxCsv } from './taxCsv.ts'
 
@@ -40,6 +42,7 @@ export function TaxesPage({ year: yearParam, onDone }: { year: string; onDone: (
   const today = useToday()
   const [, navigate] = useLocation()
   const percentId = useId()
+  const sharing = useRef(false)
   const [year, setYear] = useState(() => yearFromParam(yearParam, parseIsoDate(today).year))
   const [percentText, setPercentText] = useState(() =>
     taxSetAsideBp === null ? '' : rateToInput(taxSetAsideBp),
@@ -76,7 +79,21 @@ export function TaxesPage({ year: yearParam, onDone }: { year: string; onDone: (
   }
 
   function saveCsv() {
-    download(taxCsv(year, summary), `nail-tracker-taxes-${year}.csv`, 'text/csv')
+    download(taxCsv(year, summary), yearFileName('taxes', 'csv', year), 'text/csv')
+  }
+
+  async function shareYear() {
+    if (sharing.current) return
+    sharing.current = true
+    try {
+      await sharePicture(
+        yearPictureInput(year, summary),
+        yearFileName('year', 'png', year),
+        t(locale, 'shareYear'),
+      )
+    } finally {
+      sharing.current = false
+    }
   }
 
   return (
@@ -187,9 +204,14 @@ export function TaxesPage({ year: yearParam, onDone }: { year: string; onDone: (
         <button type="button" onClick={saveCsv} className={secondaryButton}>
           {t(locale, 'taxSaveCsv')}
         </button>
-        <button type="button" onClick={() => window.print()} className={secondaryButton}>
-          {t(locale, 'taxPrint')}
-        </button>
+        <div className="grid grid-cols-2 gap-2">
+          <button type="button" onClick={() => void shareYear()} className={secondaryButton}>
+            {t(locale, 'shareYear')}
+          </button>
+          <button type="button" onClick={() => window.print()} className={secondaryButton}>
+            {t(locale, 'taxPrint')}
+          </button>
+        </div>
       </div>
     </>
   )
