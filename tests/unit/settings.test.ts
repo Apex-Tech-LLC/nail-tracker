@@ -16,6 +16,7 @@ describe('detectLocale', () => {
 describe('resolveSettings', () => {
   const defaults = {
     locale: 'en',
+    theme: 'system',
     defaultCommissionRateBp: 6000,
     perServiceRates: false,
     weekStartDay: 0,

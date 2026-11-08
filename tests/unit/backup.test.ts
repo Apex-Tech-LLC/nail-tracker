@@ -16,6 +16,7 @@ import { addTurn, updateTurn, type TurnInput } from '../../src/features/turns/tu
 
 const settings: Settings = {
   locale: 'vi',
+  theme: 'dark',
   defaultCommissionRateBp: 6250,
   perServiceRates: true,
   weekStartDay: 1,

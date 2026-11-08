@@ -5,7 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Nail Tracker</title>
     <meta name="description" content="Track your turns, tips and pay. Private, works offline, no account." />
-    <meta name="theme-color" content="#f7f4f8" />
+    <meta name="theme-color" content="#f7f4f8" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#17131f" media="(prefers-color-scheme: dark)" />
+    <script>
+      // Before the first paint, so a chosen theme never shows a white flash.
+      // Anything unreadable or unexpected leaves the phone's own choice alone.
+      try {
+        var saved = JSON.parse(localStorage.getItem('nail-tracker.settings') || 'null')
+        if (saved && (saved.theme === 'light' || saved.theme === 'dark')) {
+          document.documentElement.setAttribute('data-theme', saved.theme)
+        }
+      } catch (error) {}
+    </script>
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="Nail Tracker" />
