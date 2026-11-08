@@ -18,7 +18,7 @@ interface Copy {
   delete: string
   turnDeleted: string
   history: string
-  earnings: string
+  reports: string
   payday: string
   period: string
   recordPayment: string
@@ -40,7 +40,7 @@ const TEXT: Record<Locale, Copy> = {
     delete: 'Delete',
     turnDeleted: 'Turn deleted',
     history: 'History',
-    earnings: 'Earnings',
+    reports: 'Reports',
     payday: 'Paycheck',
     period: 'Nov 1 – Nov 7',
     recordPayment: 'Record payment',
@@ -65,7 +65,7 @@ const TEXT: Record<Locale, Copy> = {
     delete: 'Xóa',
     turnDeleted: 'Đã xóa turn',
     history: 'Lịch sử',
-    earnings: 'Thu nhập',
+    reports: 'Báo cáo',
     payday: 'Lương',
     period: '1 thg 11 – 7 thg 11',
     recordPayment: 'Ghi khoản đã nhận',
@@ -212,10 +212,10 @@ for (const locale of LOCALES) {
       await expectScreen(page, text.history)
     })
 
-    test('earnings', async ({ page }) => {
+    test('reports', async ({ page }) => {
       await start(page, locale)
       await page.goto('./#/earnings')
-      await expectScreen(page, text.earnings)
+      await expectScreen(page, text.reports)
     })
 
     test('payday list', async ({ page }) => {

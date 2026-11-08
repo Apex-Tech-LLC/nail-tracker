@@ -7,7 +7,7 @@ test('all five tabs open, and the language choice survives a reload', async ({ p
   const nav = page.getByRole('navigation')
   for (const [tab, heading] of [
     ['History', 'History'],
-    ['Earnings', 'Earnings'],
+    ['Reports', 'Reports'],
     ['Paycheck', 'Paycheck'],
     ['Settings', 'Settings'],
     ['Home', 'Nail Tracker'],
