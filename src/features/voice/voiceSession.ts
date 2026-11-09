@@ -24,6 +24,8 @@ export interface DraftCard {
   reviewed: boolean
   // The words the reader was unsure of, to remember if the person saves this card with another service. null: nothing to learn.
   learnFrom: LearnFrom | null
+  // A tip chip on the Check screen filled the tip, so the chips stay to take it back.
+  tipPicked?: boolean
 }
 
 export interface VoiceSession {
@@ -49,6 +51,13 @@ export function getVoiceSession(): VoiceSession {
 export function updateVoiceSession(change: Partial<VoiceSession>): void {
   session = { ...session, ...change }
   for (const listener of listeners) listener()
+}
+
+/** Replaces the one card with this key by what `change` makes of it, and saves. A missing card changes nothing. */
+export function updateCard(key: string, change: (card: DraftCard) => DraftCard): void {
+  const current = getVoiceSession()
+  if (!current.cards.some((card) => card.key === key)) return
+  updateVoiceSession({ cards: current.cards.map((card) => (card.key === key ? change(card) : card)) })
 }
 
 export function clearVoiceSession(): void {

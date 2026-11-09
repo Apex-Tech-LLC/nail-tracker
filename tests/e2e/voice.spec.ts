@@ -133,7 +133,7 @@ test('words the reader cannot place become a card that is fixed and saved with t
   await expect(cards(page).nth(1)).toContainText('"blah blah"')
   await expect(page.getByRole('button', { name: 'Save 2 turns' })).toBeDisabled()
 
-  await cards(page).nth(1).click()
+  await cards(page).nth(1).getByRole('button').first().click()
   await page.getByRole('button', { name: 'Pedicure', exact: true }).click()
   await page.getByLabel('Service amount').fill('40')
   await page.getByRole('button', { name: 'Done', exact: true }).click()
@@ -168,7 +168,7 @@ test('a said time shows on its card and is saved', async ({ page }) => {
   await expect(cards(page).nth(3)).toContainText('Check this: Is that morning or evening?')
 
   // Opening the guessed card shows the time box already open.
-  await cards(page).nth(3).click()
+  await cards(page).nth(3).getByRole('button').first().click()
   await expect(page.getByLabel('Time')).toHaveValue('19:00')
   await page.getByLabel('Time').fill('07:00')
   await page.getByRole('button', { name: 'Done', exact: true }).click()
@@ -288,7 +288,7 @@ test('a draft opens in the Add turn form; cancelling changes nothing, Done keeps
   await startSay(page)
   await sayText(page, 'Manicure 30, 5 tip cash')
 
-  await cards(page).first().click()
+  await cards(page).first().getByRole('button').first().click()
   await expect(page.getByRole('heading', { level: 1, name: 'Fix this turn' })).toBeVisible()
   await expect(page.getByLabel('Service amount')).toHaveValue('30.00')
   await expect(page.getByLabel('Cash tip')).toHaveValue('5.00')
@@ -302,7 +302,7 @@ test('a draft opens in the Add turn form; cancelling changes nothing, Done keeps
   await expect(cards(page).first()).toContainText('$30')
   await expect(page.getByTestId('voice-total')).toHaveText('$23.00')
 
-  await cards(page).first().click()
+  await cards(page).first().getByRole('button').first().click()
   await page.getByLabel('Service amount').fill('50')
   await page.getByRole('button', { name: 'Done', exact: true }).click()
   await expect(page.getByRole('heading', { level: 1, name: 'Check 1 turn' })).toBeVisible()
@@ -331,7 +331,7 @@ test('a service with no price blocks Save until it is fixed', async ({ page }) =
   await expect(page.getByRole('button', { name: 'Save 2 turns' })).toBeDisabled()
   await expect(page.getByText('Fix or remove the orange turns first.')).toBeVisible()
 
-  await cards(page).nth(1).click()
+  await cards(page).nth(1).getByRole('button').first().click()
   await page.getByLabel('Service amount').fill('40')
   await page.getByRole('button', { name: 'Done', exact: true }).click()
 
@@ -389,7 +389,7 @@ test('the Say and Check screens make no request outside the app', async ({ page,
 
   await sayText(page, 'Manicure 30. Pedicure 40.')
   await expect(cards(page)).toHaveCount(2)
-  await cards(page).first().click()
+  await cards(page).first().getByRole('button').first().click()
   await page.getByRole('button', { name: 'Done', exact: true }).click()
   await expect(cards(page)).toHaveCount(2)
 
@@ -625,7 +625,7 @@ test('a good ChatGPT answer becomes cards and saves', async ({ page }) => {
   await expect(cards(page).nth(1)).toContainText('Check this: No price heard for Pedicure: enter the price')
   expect(await rows(page, 'turns')).toHaveLength(0)
 
-  await cards(page).nth(1).click()
+  await cards(page).nth(1).getByRole('button').first().click()
   await page.getByLabel('Service amount').fill('35')
   await page.getByRole('button', { name: 'Done', exact: true }).click()
   await page.getByRole('button', { name: 'Save 2 turns' }).click()
@@ -820,12 +820,12 @@ test('a guessed card fixed to another service is learned too, and one fixed to n
   await startSay(page)
   await sayText(page, 'Joe X 65')
   // Opened and saved with the same service the reader chose: nothing to learn.
-  await cards(page).first().click()
+  await cards(page).first().getByRole('button').first().click()
   await page.getByRole('button', { name: 'Done', exact: true }).click()
   await expect(cards(page)).toHaveCount(1)
   await expect.poll(() => learnedWords(page)).toEqual({})
 
-  await cards(page).first().click()
+  await cards(page).first().getByRole('button').first().click()
   await selectServices(page, ['Gel Pedicure'])
   await page.getByLabel('Service amount').fill('65')
   await page.getByRole('button', { name: 'Done', exact: true }).click()

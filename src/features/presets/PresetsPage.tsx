@@ -9,7 +9,7 @@ import type { Locale } from '../../lib/locale.ts'
 import { card, pill, secondaryButton } from '../../ui/styles.ts'
 import { PresetEditor } from './PresetEditor.tsx'
 import { PriceSheet } from './PriceSheet.tsx'
-import { movePreset } from './presetStore.ts'
+import { movePreset, updatePreset } from './presetStore.ts'
 
 function presetName(preset: ServicePreset, locale: Locale): string {
   return locale === 'vi' ? preset.nameVi : preset.nameEn
@@ -119,8 +119,16 @@ export function PresetsPage({ onDone }: { onDone: () => void }) {
 
       {pricing && (
         <PriceSheet
-          preset={pricing}
+          priceCents={pricing.defaultPriceCents ?? null}
           name={presetName(pricing, locale)}
+          onSave={(cents) =>
+            updatePreset(db, pricing.id, {
+              nameEn: pricing.nameEn,
+              nameVi: pricing.nameVi,
+              defaultPriceCents: cents,
+              defaultCommissionRateBp: pricing.defaultCommissionRateBp,
+            })
+          }
           onClose={() => setPricing(null)}
         />
       )}

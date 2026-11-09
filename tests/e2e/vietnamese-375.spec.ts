@@ -369,9 +369,11 @@ test('every screen fits in Vietnamese at 375 pixels', async ({ page }) => {
   await page.keyboard.press('Escape')
   await expect(page.getByRole('dialog')).toHaveCount(0)
 
-  await page.locator('textarea').first().fill('Gel manicure 45, 10 tip cash\nPedicure\nblah blah')
+  await page.locator('textarea').first().fill('Gel manicure 45, 10 tip cash\nPedicure\nManicure 30 tip\nblah blah')
   await page.getByRole('button', { name: 'Tạo turn', exact: true }).click()
   await expect(page.getByTestId('draft-card').first()).toBeVisible()
+  // A flagged card shows its quick fixes, so they are part of the fit check.
+  await expect(page.getByRole('group', { name: 'Sửa nhanh' }).first()).toBeVisible()
   await checkScreen(page, 'say-check')
 
   await page.getByTestId('draft-card').first().getByRole('button').first().click()
