@@ -8,9 +8,9 @@ import type { PayPeriodType, ThemeChoice } from '../../app/settings.ts'
 import { updateSettings, useSettings } from '../../app/settings.ts'
 import { db } from '../../db/schema.ts'
 import { isIsoDate, parseIsoDate, todayIso, weekRange } from '../../domain/dates.ts'
-import { centsToInput, formatRate, formatUsdShort, parseCents } from '../../domain/money.ts'
+import { centsToInput, parseCents } from '../../domain/money.ts'
 import { rulesOn } from '../../domain/payRules.ts'
-import { t, tf } from '../../lib/i18n.ts'
+import { t } from '../../lib/i18n.ts'
 import type { Locale } from '../../lib/locale.ts'
 import { usePersistState } from '../../pwa/persistStorage.ts'
 import { MoneyField } from '../../ui/MoneyField.tsx'
@@ -19,27 +19,13 @@ import { TileGroup } from '../../ui/TileGroup.tsx'
 import { card, field, label, secondaryButton } from '../../ui/styles.ts'
 import { BackupSection } from '../backup/BackupSection.tsx'
 import { DeleteAllSection } from '../backup/DeleteAllSection.tsx'
+import { GoalFields, PAD_HEIGHT } from './GoalFields.tsx'
 import { LearnedWordsSection } from './LearnedWordsSection.tsx'
 import { payRulesSummary } from '../payRules/payRulesSummary.ts'
+import { TaxSetAsideChips } from './TaxSetAsideChips.tsx'
 import { TipHandlingFields } from './TipHandlingFields.tsx'
 
 type WeekStartChoice = 'sunday' | 'monday'
-
-/** "$1,000 a week · $4,000 a month", whichever goals are set, or "Not set". */
-function goalSummary(
-  locale: Locale,
-  weeklyGoalCents: number | null,
-  monthlyGoalCents: number | null,
-): string {
-  const parts: string[] = []
-  if (weeklyGoalCents !== null) {
-    parts.push(tf(locale, 'goalSummaryWeek', { amount: formatUsdShort(weeklyGoalCents) }))
-  }
-  if (monthlyGoalCents !== null) {
-    parts.push(tf(locale, 'goalSummaryMonth', { amount: formatUsdShort(monthlyGoalCents) }))
-  }
-  return parts.length === 0 ? t(locale, 'goalNotSet') : parts.join(' · ')
-}
 
 export function SettingsPage() {
   const {
@@ -50,23 +36,19 @@ export function SettingsPage() {
     weekStartDay,
     payPeriodType,
     payPeriodAnchorDate,
-    weeklyGoalCents,
-    monthlyGoalCents,
-    taxSetAsideBp,
     hoursOn,
     minimumWageCents,
   } = useSettings()
   const anchorId = useId()
   const numberPadHintId = useId()
+  const goalsTitleId = useId()
+  const taxTitleId = useId()
+  const [goalPadOpen, setGoalPadOpen] = useState(false)
   const [wageText, setWageText] = useState(() =>
     minimumWageCents === null ? '' : centsToInput(minimumWageCents),
   )
   const rules = useLiveQuery(() => db.payRules.toArray())
   const summary = payRulesSummary(locale, rate, rulesOn(rules ?? [], todayIso()))
-  const taxSummary =
-    taxSetAsideBp === null
-      ? t(locale, 'taxNotSet')
-      : tf(locale, 'taxSetAsideSummary', { rate: formatRate(taxSetAsideBp) })
 
   // A weekly or biweekly schedule counts from the first day of a period, so
   // start it on the first day of the week the person is working in.
@@ -127,15 +109,12 @@ export function SettingsPage() {
         <p className="mt-1 text-sm text-text-secondary">{summary}</p>
       </Link>
 
-      <Link href={paths.goals} className={`${card} block`}>
-        <div className="flex items-center justify-between gap-2">
-          <span className="font-medium">{t(locale, 'goals')}</span>
-          <IconChevronRight size={18} aria-hidden="true" className="flex-none text-text-secondary" />
-        </div>
-        <p className="mt-1 text-sm text-text-secondary">
-          {goalSummary(locale, weeklyGoalCents, monthlyGoalCents)}
-        </p>
-      </Link>
+      <section aria-labelledby={goalsTitleId} className={`${card} flex flex-col gap-3`}>
+        <h2 id={goalsTitleId} className="font-medium">
+          {t(locale, 'goals')}
+        </h2>
+        <GoalFields onPadChange={setGoalPadOpen} />
+      </section>
 
       <div>
         <label className="flex items-center gap-3 py-2">
@@ -204,13 +183,19 @@ export function SettingsPage() {
 
       <TipHandlingFields />
 
-      <Link href={paths.taxes(parseIsoDate(todayIso()).year)} className={`${card} block`}>
-        <div className="flex items-center justify-between gap-2">
-          <span className="font-medium">{t(locale, 'taxes')}</span>
+      <section aria-labelledby={taxTitleId} className={`${card} flex flex-col gap-3`}>
+        <h2 id={taxTitleId} className="font-medium">
+          {t(locale, 'taxSetAside')}
+        </h2>
+        <TaxSetAsideChips labelledBy={taxTitleId} />
+        <Link
+          href={paths.taxes(parseIsoDate(todayIso()).year)}
+          className="flex min-h-11 items-center justify-between gap-2 text-sm font-semibold text-brand-ink"
+        >
+          {t(locale, 'taxYearTableLink')}
           <IconChevronRight size={18} aria-hidden="true" className="flex-none text-text-secondary" />
-        </div>
-        <p className="mt-1 text-sm text-text-secondary">{taxSummary}</p>
-      </Link>
+        </Link>
+      </section>
       <section className={`${card} flex flex-col gap-3`}>
         <h2 className="font-medium">{t(locale, 'hoursTitle')}</h2>
         <div>
@@ -253,6 +238,8 @@ export function SettingsPage() {
       <p className="mt-auto text-center text-xs text-text-muted">
         {t(locale, 'version')} <span dir="ltr">{__BUILD_ID__} · {__BUILD_DATE__}</span>
       </p>
+      {/* The goal boxes' pad is fixed over the bottom: leave room to scroll them above it. */}
+      {goalPadOpen && <div style={{ height: PAD_HEIGHT }} aria-hidden="true" />}
     </>
   )
 }

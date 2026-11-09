@@ -1,4 +1,3 @@
-import { IconChevronLeft } from '@tabler/icons-react'
 import { useState } from 'react'
 import { useLocation } from 'wouter'
 import { paths } from '../../app/navigation.ts'
@@ -6,12 +5,11 @@ import type { PayPeriodType, Settings } from '../../app/settings.ts'
 import { getSettings, updateSettings, useSettings } from '../../app/settings.ts'
 import { todayIso, weekRange } from '../../domain/dates.ts'
 import { parseRateBp, rateToInput } from '../../domain/money.ts'
-import { t, tf } from '../../lib/i18n.ts'
+import { t } from '../../lib/i18n.ts'
 import type { Locale } from '../../lib/locale.ts'
 import { PercentField } from '../../ui/PercentField.tsx'
 import { TileGroup } from '../../ui/TileGroup.tsx'
-import { primaryButton, secondaryButton } from '../../ui/styles.ts'
-import { TipHandlingFields } from '../settings/TipHandlingFields.tsx'
+import { primaryButton } from '../../ui/styles.ts'
 import type { TipChoice } from './onboardingChoices.ts'
 import { tipSettings } from './onboardingChoices.ts'
 
@@ -39,7 +37,6 @@ export function OnboardingPage() {
   const settings = useSettings()
   const { locale, defaultCommissionRateBp: rate } = settings
   const [, navigate] = useLocation()
-  const [step, setStep] = useState(1)
   const [payChoice, setPayChoice] = useState<PayChoice>(() => initialPayChoice(rate))
   const [customText, setCustomText] = useState(() => rateToInput(rate))
   const [customError, setCustomError] = useState(false)
@@ -53,12 +50,9 @@ export function OnboardingPage() {
     navigate(paths.today, { replace: true })
   }
 
-  function next() {
-    if (step === 4) {
-      finish()
-      return
-    }
-    if (step === 2 && payChoice === 'custom') {
+  /** A custom commission that cannot be read stops here; every other answer is already saved. */
+  function start() {
+    if (payChoice === 'custom') {
       const bp = parseRateBp(customText)
       if (bp === null) {
         setCustomError(true)
@@ -66,15 +60,7 @@ export function OnboardingPage() {
       }
       updateSettings({ defaultCommissionRateBp: bp })
     }
-    setStep(step + 1)
-  }
-
-  function skip() {
-    if (step === 4) {
-      finish()
-      return
-    }
-    setStep(step + 1)
+    finish()
   }
 
   function choosePay(choice: PayChoice) {
@@ -109,116 +95,94 @@ export function OnboardingPage() {
   }
 
   return (
-    <>
-      <div className="flex items-center gap-1">
-        {step > 1 && (
-          <button
-            type="button"
-            onClick={() => setStep(step - 1)}
-            className="flex min-h-11 min-w-11 items-center justify-center gap-1 rounded-control px-2 text-sm text-text-secondary"
-          >
-            <IconChevronLeft size={20} aria-hidden="true" />
-            {t(locale, 'back')}
-          </button>
-        )}
-        <p className="text-sm text-text-secondary">{tf(locale, 'onboardingStep', { n: step })}</p>
-      </div>
+    <div className="flex flex-col gap-3">
+      <h1 className="sr-only">{t(locale, 'onboardingTitle')}</h1>
 
-      {step === 1 && (
-        <>
-          <h1 className="text-lg font-medium">{t(locale, 'onboardingLanguage')}</h1>
-          {/* Language names stay in their own language so anyone can find theirs. No flags. */}
-          <TileGroup<Locale>
-            stacked
-            legend={t(locale, 'language')}
-            name="onboarding-language"
-            value={locale}
-            onChange={(value) => updateSettings({ locale: value })}
-            options={[
-              { value: 'vi', glyph: 'Vi', label: 'Tiếng Việt', lang: 'vi' },
-              { value: 'en', glyph: 'Aa', label: 'English', lang: 'en' },
-            ]}
-          />
-          <p className="text-sm text-text-secondary">{t(locale, 'onboardingNoAccount')}</p>
-        </>
-      )}
-
-      {step === 2 && (
-        <>
-          <h1 className="text-lg font-medium">{t(locale, 'onboardingPay')}</h1>
-          <TileGroup<PayChoice>
-            stacked
-            legend={t(locale, 'defaultCommission')}
-            name="onboarding-pay"
-            value={payChoice}
-            onChange={choosePay}
-            options={[
-              { value: '6000', label: t(locale, 'onboardingPay60') },
-              { value: '5000', label: t(locale, 'onboardingPay50') },
-              { value: 'custom', label: t(locale, 'onboardingPayCustom') },
-              { value: 'other', label: t(locale, 'onboardingPayOther') },
-            ]}
-          />
-          {payChoice === 'custom' && (
-            <PercentField
-              label={t(locale, 'customRateLabel')}
-              value={customText}
-              onChange={changeCustomRate}
-              error={customError ? t(locale, 'errorRate') : undefined}
-            />
-          )}
-          {payChoice === 'other' && (
-            <p className="text-sm text-text-secondary">{t(locale, 'onboardingPayOtherHint')}</p>
-          )}
-        </>
-      )}
-
-      {step === 3 && (
-        <>
-          <h1 className="text-lg font-medium">{t(locale, 'onboardingTips')}</h1>
-          <TileGroup<TipChoice>
-            stacked
-            legend={t(locale, 'totalTips')}
-            name="onboarding-tips"
-            value={tipChoice}
-            onChange={chooseTips}
-            options={[
-              { value: 'standard', label: t(locale, 'onboardingTipsStandard') },
-              { value: 'allPayday', label: t(locale, 'onboardingTipsAllPayday') },
-              { value: 'custom', label: t(locale, 'onboardingTipsCustom') },
-            ]}
-          />
-          {tipChoice === 'custom' && <TipHandlingFields />}
-        </>
-      )}
-
-      {step === 4 && (
-        <>
-          <h1 className="text-lg font-medium">{t(locale, 'onboardingPayday')}</h1>
-          <TileGroup<PaydayChoice>
-            stacked
-            legend={t(locale, 'paydaySchedule')}
-            name="onboarding-payday"
-            value={paydayChoice}
-            onChange={choosePayday}
-            options={[
-              { value: 'weekly', label: t(locale, 'onboardingPaydayWeekly') },
-              { value: 'biweekly', label: t(locale, 'onboardingPaydayBiweekly') },
-              { value: 'custom', label: t(locale, 'onboardingPaydayCustom') },
-              { value: 'none', label: t(locale, 'onboardingPaydaySkip') },
-            ]}
-          />
-        </>
-      )}
+      {/* Language names stay in their own language so anyone can find theirs. No flags. */}
+      <TileGroup<Locale>
+        compact
+        legend={t(locale, 'language')}
+        name="onboarding-language"
+        value={locale}
+        onChange={(value) => updateSettings({ locale: value })}
+        options={[
+          { value: 'vi', label: 'Tiếng Việt', lang: 'vi' },
+          { value: 'en', label: 'English', lang: 'en' },
+        ]}
+      />
 
       <div className="flex flex-col gap-2">
-        <button type="button" onClick={next} className={primaryButton}>
-          {t(locale, step === 4 ? 'onboardingDone' : 'next')}
-        </button>
-        <button type="button" onClick={skip} className={secondaryButton}>
+        <TileGroup<PayChoice>
+          compact
+          legend={t(locale, 'defaultCommission')}
+          name="onboarding-pay"
+          value={payChoice}
+          onChange={choosePay}
+          options={[
+            { value: '6000', label: t(locale, 'onboardingPay60') },
+            { value: '5000', label: t(locale, 'onboardingPay50') },
+            { value: 'custom', label: t(locale, 'onboardingPayCustom') },
+            { value: 'other', label: t(locale, 'onboardingPayOther') },
+          ]}
+        />
+        {payChoice === 'custom' && (
+          <PercentField
+            label={t(locale, 'customRateLabel')}
+            value={customText}
+            onChange={changeCustomRate}
+            error={customError ? t(locale, 'errorRate') : undefined}
+          />
+        )}
+        {payChoice === 'other' && (
+          <p className="text-sm text-text-secondary">{t(locale, 'onboardingPayOtherHint')}</p>
+        )}
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <TileGroup<TipChoice>
+          compact
+          stacked
+          legend={t(locale, 'totalTips')}
+          name="onboarding-tips"
+          value={tipChoice}
+          onChange={chooseTips}
+          options={[
+            { value: 'standard', label: t(locale, 'onboardingTipsStandard') },
+            { value: 'allPayday', label: t(locale, 'onboardingTipsAllPayday') },
+            { value: 'custom', label: t(locale, 'onboardingTipsCustom') },
+          ]}
+        />
+        {tipChoice === 'custom' && (
+          <p className="text-sm text-text-secondary">{t(locale, 'onboardingTipsCustomHint')}</p>
+        )}
+      </div>
+
+      <TileGroup<PaydayChoice>
+        compact
+        legend={t(locale, 'paydaySchedule')}
+        name="onboarding-payday"
+        value={paydayChoice}
+        onChange={choosePayday}
+        options={[
+          { value: 'weekly', label: t(locale, 'onboardingPaydayWeekly') },
+          { value: 'biweekly', label: t(locale, 'onboardingPaydayBiweekly') },
+          { value: 'custom', label: t(locale, 'onboardingPaydayCustom') },
+          { value: 'none', label: t(locale, 'onboardingPaydaySkip') },
+        ]}
+      />
+
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={finish}
+          className="min-h-14 flex-none rounded-button px-4 text-base font-semibold text-text-secondary focus-visible:outline-2 focus-visible:outline-brand-ink"
+        >
           {t(locale, 'skip')}
         </button>
+        <button type="button" onClick={start} className={`${primaryButton} flex-1`}>
+          {t(locale, 'onboardingDone')}
+        </button>
       </div>
-    </>
+    </div>
   )
 }

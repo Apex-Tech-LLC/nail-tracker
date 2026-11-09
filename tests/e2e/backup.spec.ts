@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { expect, test, type FileChooser, type Locator, type Page } from '@playwright/test'
-import { addTurn, seedSettings } from './helpers.ts'
+import { addTurn, seedSettings, skipOnboarding } from './helpers.ts'
 
 // Noon on 2026-11-04 in the browser's America/Chicago timezone.
 const NOON = new Date('2026-11-04T12:00:00')
@@ -51,9 +51,7 @@ async function deleteAll(page: Page): Promise<void> {
   await dialog.getByLabel('Type the word here').fill('DELETE')
   await dialog.getByRole('button', { name: 'Delete all data' }).click()
   await expect(page).toHaveURL(/#\/onboarding/)
-  for (let step = 0; step < 4; step += 1) {
-    await page.getByRole('button', { name: 'Skip', exact: true }).click()
-  }
+  await skipOnboarding(page)
 }
 
 test('a backup round trip brings the turn back', async ({ page }, testInfo) => {
@@ -212,9 +210,7 @@ test('a double tap on delete all data deletes once', async ({ page }) => {
   await expect(page).toHaveURL(/#\/onboarding/)
   // Eleven tables are cleared once; a second delete would clear eleven more.
   expect(await storeClears(page)).toBe(before + 11)
-  for (let step = 0; step < 4; step += 1) {
-    await page.getByRole('button', { name: 'Skip', exact: true }).click()
-  }
+  await skipOnboarding(page)
   await expect(page.getByText('Your turns today will show here.')).toBeVisible()
 })
 

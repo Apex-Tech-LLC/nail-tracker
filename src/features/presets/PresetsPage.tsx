@@ -6,8 +6,9 @@ import { db, type ServicePreset } from '../../db/schema.ts'
 import { formatRate, formatUsd } from '../../domain/money.ts'
 import { t } from '../../lib/i18n.ts'
 import type { Locale } from '../../lib/locale.ts'
-import { card, secondaryButton } from '../../ui/styles.ts'
+import { card, pill, secondaryButton } from '../../ui/styles.ts'
 import { PresetEditor } from './PresetEditor.tsx'
+import { PriceSheet } from './PriceSheet.tsx'
 import { movePreset } from './presetStore.ts'
 
 function presetName(preset: ServicePreset, locale: Locale): string {
@@ -15,8 +16,9 @@ function presetName(preset: ServicePreset, locale: Locale): string {
 }
 
 export function PresetsPage({ onDone }: { onDone: () => void }) {
-  const { locale } = useSettings()
+  const { locale, numberPad } = useSettings()
   const [editing, setEditing] = useState<ServicePreset | 'new' | null>(null)
+  const [pricing, setPricing] = useState<ServicePreset | null>(null)
   const presets = useLiveQuery(() =>
     db.servicePresets
       .orderBy('sortOrder')
@@ -53,20 +55,27 @@ export function PresetsPage({ onDone }: { onDone: () => void }) {
       <div className="flex flex-col gap-2">
         {presets.map((preset, index) => {
           const name = presetName(preset, locale)
-          const details = [
-            preset.defaultPriceCents != null ? formatUsd(preset.defaultPriceCents) : '',
-            preset.defaultCommissionRateBp != null
-              ? formatRate(preset.defaultCommissionRateBp)
-              : '',
-          ].filter(Boolean)
+          const priceText =
+            preset.defaultPriceCents != null ? formatUsd(preset.defaultPriceCents) : null
 
           return (
             <div key={preset.id} className={`${card} flex items-center gap-2`}>
               <div className="min-w-0 flex-1">
                 <p className="break-words">{name}</p>
-                {details.length > 0 && (
-                  <p className="text-sm text-text-secondary">{details.join(' · ')}</p>
-                )}
+                <div className="flex flex-wrap items-center gap-x-2 text-sm text-text-secondary">
+                  {/* With the number pad off, the full editor is the only way to type a price. */}
+                  <button
+                    type="button"
+                    aria-label={`${t(locale, priceText === null ? 'presetSetPrice' : 'presetChangePrice')}: ${name}${priceText === null ? '' : ` ${priceText}`}`}
+                    onClick={() => (numberPad ? setPricing(preset) : setEditing(preset))}
+                    className={`${pill} ${priceText === null ? 'text-brand-ink' : ''}`}
+                  >
+                    {priceText ?? t(locale, 'presetSetPrice')}
+                  </button>
+                  {preset.defaultCommissionRateBp != null && (
+                    <span>{formatRate(preset.defaultCommissionRateBp)}</span>
+                  )}
+                </div>
               </div>
               <button
                 type="button"
@@ -107,6 +116,14 @@ export function PresetsPage({ onDone }: { onDone: () => void }) {
         <IconPlus size={20} aria-hidden="true" />
         {t(locale, 'addPreset')}
       </button>
+
+      {pricing && (
+        <PriceSheet
+          preset={pricing}
+          name={presetName(pricing, locale)}
+          onClose={() => setPricing(null)}
+        />
+      )}
     </>
   )
 }
