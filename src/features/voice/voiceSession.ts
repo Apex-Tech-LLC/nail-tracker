@@ -1,4 +1,4 @@
-// What the Say and Check screens hold between screens: the words typed, the
+// What the Say and Check screens hold between screens: the words typed or pasted, the
 // chosen day and the draft turns. It lives in memory only, so it survives
 // opening and closing a draft turn, or leaving Say and coming back, for as long
 // as the app is open. Nothing here is written to the database.
@@ -27,9 +27,8 @@ export interface DraftCard {
 }
 
 export interface VoiceSession {
+  // The one Say box: dictated words, or a ChatGPT answer pasted in.
   text: string
-  // What the person pasted from ChatGPT, kept like the text above.
-  answerText: string
   // null means today, whichever day today is when it is read.
   date: IsoDate | null
   cards: DraftCard[]
@@ -38,7 +37,7 @@ export interface VoiceSession {
   made: boolean
 }
 
-const EMPTY: VoiceSession = { text: '', answerText: '', date: null, cards: [], notUnderstood: [], made: false }
+const EMPTY: VoiceSession = { text: '', date: null, cards: [], notUnderstood: [], made: false }
 
 let session: VoiceSession = EMPTY
 const listeners = new Set<() => void>()

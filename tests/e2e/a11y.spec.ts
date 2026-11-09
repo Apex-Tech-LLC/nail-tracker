@@ -24,6 +24,8 @@ interface Copy {
   sayYourTurns: string
   sayHowToOpen: string
   sayHowToGotIt: string
+  useChatGpt: string
+  chatGptPromptLabel: string
   makeTurns: string
   addService: string
   moreOptions: string
@@ -52,6 +54,8 @@ const TEXT: Record<Locale, Copy> = {
     sayYourTurns: 'Say your turns',
     sayHowToOpen: 'How it works',
     sayHowToGotIt: 'Got it',
+    useChatGpt: 'Use ChatGPT instead',
+    chatGptPromptLabel: 'Instructions for ChatGPT',
     makeTurns: 'Make turns',
     addService: 'Add service',
     moreOptions: 'More options',
@@ -83,6 +87,8 @@ const TEXT: Record<Locale, Copy> = {
     sayYourTurns: 'Nói turn trong ngày',
     sayHowToOpen: 'Cách dùng',
     sayHowToGotIt: 'Hiểu rồi',
+    useChatGpt: 'Dùng ChatGPT',
+    chatGptPromptLabel: 'Hướng dẫn cho ChatGPT',
     makeTurns: 'Tạo turn',
     addService: 'Thêm dịch vụ',
     moreOptions: 'Thêm tùy chọn',
@@ -123,6 +129,15 @@ async function audit(page: Page) {
 async function noSidewaysScroll(page: Page) {
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
   expect(overflow).toBeLessThanOrEqual(0)
+}
+
+/** A phone that refuses to copy, so the ChatGPT instructions come up in a sheet. */
+async function refuseClipboard(page: Page) {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, 'clipboard', {
+      value: { writeText: () => Promise.reject(new DOMException('no', 'NotAllowedError')) },
+    })
+  })
 }
 
 /** Keeps a full-page picture of a dark screen for a person to look at. */
@@ -275,6 +290,15 @@ for (const scheme of SCHEMES) {
           await expectScreen(page, scheme, `${locale}-say-how-to`, text.sayYourTurns)
         })
 
+        test('say your turns, ChatGPT instructions sheet open', async ({ page }) => {
+          await refuseClipboard(page)
+          await start(page, locale, false)
+          await page.goto('./#/say')
+          await page.getByRole('button', { name: text.useChatGpt, exact: true }).click()
+          await expect(page.getByRole('dialog', { name: text.chatGptPromptLabel })).toBeVisible()
+          await expectScreen(page, scheme, `${locale}-say-chatgpt-sheet`, text.sayYourTurns)
+        })
+
         test('check the drafts', async ({ page }) => {
           await start(page, locale)
           await openCheck(page, text)
@@ -372,6 +396,10 @@ for (const scheme of SCHEMES) {
             await expect(page.getByRole('dialog', { name: text.sayYourTurns })).toBeVisible()
             expect(await smallTapTargets(page)).toEqual([])
             await page.getByRole('button', { name: text.sayHowToGotIt, exact: true }).click()
+            await page.getByRole('button', { name: text.useChatGpt, exact: true }).click()
+            await expect(page.getByRole('dialog', { name: text.chatGptPromptLabel })).toBeVisible()
+            expect(await smallTapTargets(page)).toEqual([])
+            await page.keyboard.press('Escape')
           })
 
           await test.step('Check the drafts', async () => {
