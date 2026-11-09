@@ -5,6 +5,7 @@ import {
   formatRate,
   formatUsd,
   formatUsdShort,
+  formatUsdWhole,
   padAmount,
   parseCents,
   parseRateBp,
@@ -70,6 +71,21 @@ describe('formatUsd', () => {
     [-123456, '-$1,234.56'],
   ])('formats %d as %s', (cents, expected) => {
     expect(formatUsd(cents)).toBe(expected)
+  })
+})
+
+describe('formatUsdWhole', () => {
+  it.each([
+    [0, '$0'],
+    [21200, '$212'],
+    [21250, '$213'],
+    [21249, '$212'],
+    [123456, '$1,235'],
+    [-500, '-$5'],
+    [-20, '$0'],
+    [49, '$0'],
+  ])('formats %d as %s', (cents, expected) => {
+    expect(formatUsdWhole(cents)).toBe(expected)
   })
 })
 

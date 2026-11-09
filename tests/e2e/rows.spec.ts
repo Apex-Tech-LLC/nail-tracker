@@ -101,6 +101,8 @@ test('a long-press opens Copy, Edit and Delete, and Escape closes it', async ({ 
   })
 
   const row = turnRow(page, 1)
+  // The chart box pushes the row toward the docked buttons; centre it first.
+  await row.evaluate((element) => element.scrollIntoView({ block: 'center' }))
   const box = await row.boundingBox()
   if (!box) throw new Error('The row is not visible')
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)

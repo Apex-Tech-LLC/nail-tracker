@@ -10,11 +10,9 @@ import { db } from '../../db/schema.ts'
 import {
   compare,
   currentSpan,
-  fillPercent,
   previousSpan,
   weekDays,
   type HomePeriod,
-  type WeekDay,
 } from '../../domain/comparisons.ts'
 import {
   addDays,
@@ -22,9 +20,9 @@ import {
   formatDayLong,
   formatDayShort,
   formatMonthShort,
+  formatMonthYear,
   formatRange,
   formatWeekdayLong,
-  formatWeekdayShort,
   monthRange,
   parseIsoDate,
   timeOf,
@@ -44,10 +42,19 @@ import { list, primaryButton, secondaryButton } from '../../ui/styles.ts'
 import { saveBackupFile } from '../backup/saveBackup.ts'
 import { durationText } from '../hours/hoursText.ts'
 import { HoursSheet } from '../hours/HoursSheet.tsx'
-import { loadWorkDays, setWorkHours } from '../history/workDays.ts'
+import { dayOffDates, loadWorkDays, setWorkHours } from '../history/workDays.ts'
 import { ensurePayPeriods, loadPeriodPresence, loadPeriodSummary } from '../payday/periodStore.ts'
 import { loadRange, loadTurnDates, servicesByTurn } from '../turns/turnStore.ts'
 import { TurnRow } from '../turns/TurnRow.tsx'
+import {
+  ChartBox,
+  MonthGrid,
+  TodayBars,
+  TodayLegend,
+  WeekBottles,
+  WeekLegend,
+  type TurnBar,
+} from './HomeCharts.tsx'
 
 const RECENT_LIMIT = 10
 const PERIOD_KEY = 'nail-tracker.home-period'
@@ -74,6 +81,12 @@ const COMPARISON_KEYS: Record<
 }
 
 const PERIODS: HomePeriod[] = ['today', 'week', 'month']
+
+// Room kept for the comparison pill (one line) and the goal bar, whose met
+// message takes the place of its text line, so no period moves what sits below
+// them. Kept tight so the chart box stays above the docked Add/Say bar.
+const COMPARISON_SLOT = 'mt-1.5 h-[28px]'
+const GOAL_SLOT = 'mt-1 h-9'
 
 function readStoredPeriod(key: string): HomePeriod {
   try {
@@ -141,6 +154,7 @@ export function HomePage() {
   const taxQuarter = nextTaxQuarter(today)
   const taxStart = taxQuarter?.start ?? today
   const taxEnd = taxQuarter?.end ?? today
+  const month = monthRange(today)
 
   useEffect(() => {
     void ensurePayPeriods(
@@ -152,8 +166,17 @@ export function HomePage() {
 
   const data = useLiveQuery(async () => {
     startLoad('load:home')
-    const [current, previousData, todayData, weekData, firstTurn, taxData, workDays, presence] =
-      await Promise.all([
+    const [
+      current,
+      previousData,
+      todayData,
+      weekData,
+      firstTurn,
+      taxData,
+      workDays,
+      monthWorkDays,
+      presence,
+    ] = await Promise.all([
         loadTurnDates(db, span.start, span.end),
         loadTurnDates(db, previous.start, previous.end),
         loadRange(db, today, today),
@@ -161,6 +184,8 @@ export function HomePage() {
         db.turns.orderBy('localWorkDate').first(),
         loadTurnDates(db, taxStart, taxEnd),
         loadWorkDays(db, addDays(today, -1), today),
+        // Only the month grid shows days off, so no other period reads them.
+        period === 'month' ? loadWorkDays(db, month.start, month.end) : Promise.resolve([]),
         loadPeriodPresence(db),
       ])
     // Only the period being worked in needs its statement; the rest of the
@@ -180,6 +205,7 @@ export function HomePage() {
       firstTurn,
       taxData,
       workDays,
+      monthWorkDays,
       presence,
       currentPayPeriod,
     }
@@ -193,6 +219,9 @@ export function HomePage() {
     week.end,
     taxStart,
     taxEnd,
+    period,
+    month.start,
+    month.end,
   ])
 
   if (data === undefined) return null
@@ -255,9 +284,10 @@ export function HomePage() {
     weekStartDay,
     earnedByDate(data.weekData.turns, data.weekData.adjustments),
   )
-  const weekMax = Math.max(
-    0,
-    ...days.map((day) => Math.max(day.earnedCents, day.lastWeekEarnedCents)),
+  // The goal bar always measures the week, so Today shows the week's progress too.
+  const weekTotals = sumTotals(
+    data.weekData.turns.filter((turn) => turn.localWorkDate >= week.start),
+    data.weekData.adjustments.filter((adjustment) => adjustment.localWorkDate >= week.start),
   )
 
   const currentPayPeriod = data.currentPayPeriod
@@ -270,6 +300,15 @@ export function HomePage() {
   const todayTotals = sumTotals(data.todayData.turns, data.todayData.adjustments)
   const todayGroups = servicesByTurn(data.todayData.services)
   const todayNumbers = numberTurns(data.todayData.turns)
+  const turnBars: TurnBar[] = [...data.todayData.turns]
+    .sort((a, b) => a.occurredAt - b.occurredAt || a.createdAt - b.createdAt)
+    .map((turn) => ({
+      id: turn.id,
+      number: todayNumbers.get(turn.id) ?? null,
+      occurredAt: turn.occurredAt,
+      commissionCents: turn.commissionTotalCents,
+      tipCents: turn.cashTipCents + turn.cardTipCents,
+    }))
   const todayTurns = [...data.todayData.turns]
     .sort((a, b) => b.occurredAt - a.occurredAt || b.createdAt - a.createdAt)
     .slice(0, RECENT_LIMIT)
@@ -415,109 +454,83 @@ export function HomePage() {
         })}
       </div>
 
-      <section className="mt-[18px]">
-        <p className="text-[15px] text-text-secondary">{t(locale, EARNED_KEYS[period])}</p>
-        <p
-          data-testid="hero-earned"
-          className="mt-0.5 text-[52px] font-extrabold leading-[1.05] tracking-[-0.035em]"
-        >
-          {earnedWhole}
-          <span className="text-[28px] font-bold text-text-muted">{earnedCents}</span>
-        </p>
-        <p
-          className={`mt-2.5 inline-flex items-center gap-1.5 rounded-full px-[11px] py-[5px] text-sm font-semibold ${
-            comparison.kind === 'more'
-              ? 'bg-positive-bg text-positive-text'
-              : 'bg-surface-subtle text-text-secondary'
-          }`}
-        >
-          {comparisonText}
-        </p>
-        {period !== 'today' && (
+      <section className="mt-2">
+        <div className="flex items-end justify-between gap-3">
+          <p className="min-w-0 pb-1 text-[15px] leading-tight text-text-secondary">
+            {t(locale, EARNED_KEYS[period])}
+          </p>
+          <p
+            data-testid="hero-earned"
+            className="shrink-0 text-[40px] font-extrabold leading-none tracking-[-0.035em]"
+          >
+            {earnedWhole}
+            <span className="text-[22px] font-bold text-text-muted">{earnedCents}</span>
+          </p>
+        </div>
+        <div className={COMPARISON_SLOT}>
+          <p
+            className={`inline-flex max-w-full items-center gap-1.5 whitespace-nowrap rounded-full px-[11px] py-[5px] text-[13px] font-semibold ${
+              comparison.kind === 'more'
+                ? 'bg-positive-bg text-positive-text'
+                : 'bg-surface-subtle text-text-secondary'
+            }`}
+          >
+            {comparisonText}
+          </p>
+        </div>
+        <div className={GOAL_SLOT}>
           <GoalBar
-            kind={period}
-            earnedCents={totals.earnedCents}
-            goalCents={period === 'week' ? weeklyGoalCents : monthlyGoalCents}
-            periodStart={period === 'week' ? week.start : monthRange(today).start}
+            kind={period === 'month' ? 'month' : 'week'}
+            earnedCents={period === 'month' ? totals.earnedCents : weekTotals.earnedCents}
+            goalCents={period === 'month' ? monthlyGoalCents : weeklyGoalCents}
+            periodStart={period === 'month' ? month.start : week.start}
             today={today}
           />
-        )}
+        </div>
       </section>
 
-      <ul
-        aria-label={t(locale, 'homeWeekList')}
-        className="mt-5 grid h-[150px] grid-cols-7 items-end gap-2"
+      {period === 'today' && (
+        <ChartBox
+          testId="today-chart-box"
+          title={t(locale, 'chartTodayTitle')}
+          hint={t(locale, 'chartTapTurn')}
+          footer={<TodayLegend locale={locale} />}
+        >
+          <TodayBars bars={turnBars} today={today} locale={locale} />
+        </ChartBox>
+      )}
+
+      {period === 'week' && (
+        <ChartBox
+          testId="week-chart-box"
+          title={t(locale, 'homeWeekList')}
+          hint={t(locale, 'chartTapDay')}
+          footer={<WeekLegend locale={locale} />}
+        >
+          <WeekBottles days={days} locale={locale} listLabel={t(locale, 'homeWeekList')} />
+        </ChartBox>
+      )}
+
+      {period === 'month' && (
+        <ChartBox
+          testId="month-chart-box"
+          title={formatMonthYear(month.start, locale)}
+          hint={t(locale, 'chartTapDay')}
+        >
+          <MonthGrid
+            today={today}
+            weekStart={weekStartDay}
+            locale={locale}
+            earnedByDate={earnedByDate(data.current.turns, data.current.adjustments)}
+            offDates={dayOffDates(data.monthWorkDays)}
+          />
+        </ChartBox>
+      )}
+
+      <div
+        data-testid="stats-strip"
+        className="grid grid-cols-3 overflow-hidden rounded-card border border-border bg-surface"
       >
-        {days.map((day) => (
-          <li key={day.date} className="flex h-full items-end justify-center">
-            <Link
-              data-testid="week-bottle"
-              href={paths.historyDay(day.date)}
-              className="flex min-h-11 flex-col items-center justify-end gap-1.5"
-            >
-              {/* The visible amount and weekday read as one name for assistive tech. */}
-              <span className="sr-only">
-                {day.isFuture
-                  ? tf(locale, 'homeDayLastWeek', {
-                      weekday: formatWeekdayLong(day.date, locale),
-                      amount: formatUsdShort(day.lastWeekEarnedCents),
-                    })
-                  : tf(locale, 'homeDayEarned', {
-                      weekday: formatWeekdayLong(day.date, locale),
-                      amount: formatUsdShort(day.earnedCents),
-                    })}
-              </span>
-              <span aria-hidden="true" className="min-h-4 text-[11px] font-semibold text-text-secondary">
-                {day.isFuture ? '' : formatUsdShort(day.earnedCents)}
-              </span>
-              <span aria-hidden="true" className="flex flex-col items-center">
-                <span className="h-3.5 w-3.5 rounded-[4px_4px_2px_2px] bg-text" />
-                <span
-                  className={`relative block h-[100px] w-[30px] overflow-hidden rounded-[10px_10px_12px_12px] bg-surface ${
-                    day.isToday
-                      ? 'border-2 border-brand-ink'
-                      : 'border-[1.5px] border-border-strong'
-                  }`}
-                >
-                  <span
-                    className={`week-fill absolute inset-x-0 bottom-0 ${
-                      day.isFuture
-                        ? 'bg-bottle-future'
-                        : 'bg-gradient-to-b from-brand-400 via-brand-600 to-brand-800'
-                    }`}
-                    style={{ height: `${fillPercent(bottleCents(day), weekMax)}%` }}
-                  >
-                    {!day.isFuture && (
-                      <span className="absolute bottom-1.5 left-[5px] top-1.5 w-1 rounded-sm bg-white/35" />
-                    )}
-                  </span>
-                </span>
-              </span>
-              <span
-                aria-hidden="true"
-                className={`text-[12px] font-semibold ${
-                  day.isToday ? 'text-brand-ink' : 'text-text-muted'
-                }`}
-              >
-                {formatWeekdayShort(day.date, locale)}
-              </span>
-            </Link>
-          </li>
-        ))}
-      </ul>
-
-      <div className="mt-4 flex gap-[14px] text-[12px] text-text-muted">
-        <span>
-          <span aria-hidden="true" className="mr-1 inline-block h-[9px] w-[9px] rounded-[3px] bg-brand-600" />
-          {t(locale, 'homeThisWeekLegend')}
-        </span>
-        <span>
-          <span aria-hidden="true" className="mr-1 inline-block h-[9px] w-[9px] rounded-[3px] bg-bottle-future" />
-          {t(locale, 'homeLastWeekLegend')}
-        </span>
-      </div>
-
-      <div className="grid grid-cols-3 overflow-hidden rounded-card border border-border bg-surface">
         <Stat value={String(totals.turns)} label={t(locale, 'turns')} edge={false} />
         <Stat value={formatUsdShort(totals.tipsCents)} label={t(locale, 'homeTips')} edge />
         <Stat value={formatUsdShort(salonOwesCents)} label={t(locale, 'homeSalonOwes')} edge />
@@ -638,11 +651,6 @@ export function HomePage() {
   )
 }
 
-/** What a day's glass measures: this week's fill, or last week's when the day is still ahead. */
-function bottleCents(day: WeekDay): number {
-  return day.isFuture ? day.lastWeekEarnedCents : day.earnedCents
-}
-
 /**
  * The slim goal bar under the hero. A met goal says so once per period: the
  * key is written in dismissedReminders the first time it is shown, so leaving
@@ -683,7 +691,7 @@ function GoalBar({
     return (
       <Link
         href={paths.goals}
-        className="mt-3 inline-block text-sm font-semibold text-brand-ink underline"
+        className="-my-1 inline-flex min-h-11 items-center text-sm font-semibold text-brand-ink underline"
       >
         {t(locale, 'setAGoal')}
       </Link>
@@ -692,7 +700,7 @@ function GoalBar({
 
   const met = earnedCents >= goalCents
   return (
-    <div className="mt-3">
+    <div>
       <Link
         href={paths.goals}
         data-testid="goal-progress"
@@ -707,32 +715,41 @@ function GoalBar({
           />
         </span>
         <span
-          data-testid="goal-progress-text"
-          className="mt-1.5 block text-sm text-text-secondary"
+          className={`mt-1.5 items-baseline justify-between gap-2 text-sm text-text-secondary ${
+            showMessage ? 'hidden' : 'flex'
+          }`}
         >
-          {met
-            ? tf(locale, 'goalReached', {
-                earned: formatUsdShort(earnedCents),
-                goal: formatUsdShort(goalCents),
-              })
-            : tf(locale, 'goalProgress', {
-                earned: formatUsdShort(earnedCents),
-                goal: formatUsdShort(goalCents),
-                toGo: formatUsdShort(progress.toGoCents),
-              })}
+          <span className="shrink-0 font-semibold">
+            {t(locale, kind === 'week' ? 'goalWeekly' : 'goalMonthly')}
+          </span>
+          <span data-testid="goal-progress-text" className="min-w-0 text-right">
+            {met
+              ? tf(locale, 'goalReached', {
+                  earned: formatUsdShort(earnedCents),
+                  goal: formatUsdShort(goalCents),
+                })
+              : tf(locale, 'goalProgress', {
+                  earned: formatUsdShort(earnedCents),
+                  goal: formatUsdShort(goalCents),
+                  toGo: formatUsdShort(progress.toGoCents),
+                })}
+          </span>
         </span>
       </Link>
 
       {showMessage && (
-        <div className="mt-2 flex items-start gap-2 rounded-control bg-positive-bg p-2">
-          <p className="min-w-0 flex-1 text-sm text-positive-text">
+        <div
+          data-testid="goal-message"
+          className="mt-1 flex h-7 items-center gap-2 rounded-control bg-positive-bg pl-2"
+        >
+          <p className="min-w-0 flex-1 text-[13px] leading-tight text-positive-text">
             {t(locale, kind === 'week' ? 'goalHitWeek' : 'goalHitMonth')}
           </p>
           <button
             type="button"
             aria-label={t(locale, 'dismiss')}
             onClick={() => setMessageHidden(true)}
-            className="-mr-1 -mt-1 flex size-9 flex-none items-center justify-center text-positive-text"
+            className="flex size-7 flex-none items-center justify-center text-positive-text"
           >
             <IconX size={16} aria-hidden="true" />
           </button>
