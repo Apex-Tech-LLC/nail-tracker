@@ -11,19 +11,24 @@ import { centsToInput, padAmount, parseCents } from '../../domain/money.ts'
 import { t } from '../../lib/i18n.ts'
 import { MoneyField } from '../../ui/MoneyField.tsx'
 import { NumberPad } from '../../ui/NumberPad.tsx'
+import { WorkDateField } from '../../ui/WorkDateField.tsx'
 import {
   chip,
   chipOff,
   chipOn,
   errorText,
-  field,
   label,
   primaryButton,
   secondaryButton,
 } from '../../ui/styles.ts'
-import { addPayment } from '../payday/paymentStore.ts'
 import { loadPeriodSummary, type PeriodSummary } from '../payday/periodStore.ts'
-import { loadPaycheckRecord, saveStub } from './paycheckStore.ts'
+import { ExactPayButton } from './ExactPayButton.tsx'
+import {
+  addPeriodPayments,
+  loadPaycheckRecord,
+  saveStub,
+  type PeriodPaymentPart,
+} from './paycheckStore.ts'
 
 const OTHER_METHODS: PaymentMethod[] = ['zelle', 'directDeposit', 'other']
 
@@ -88,6 +93,7 @@ export function RecordWhatYouGotForm({ periodId, onDone }: Props) {
   return (
     <RecordFields
       periodId={periodId}
+      summary={loaded.summary}
       record={loaded.record}
       onDone={onDone}
     />
@@ -96,11 +102,12 @@ export function RecordWhatYouGotForm({ periodId, onDone }: Props) {
 
 interface FieldsProps {
   periodId: string
+  summary: PeriodSummary
   record: PaycheckRecord | null
   onDone: () => void
 }
 
-function RecordFields({ periodId, record, onDone }: FieldsProps) {
+function RecordFields({ periodId, summary, record, onDone }: FieldsProps) {
   const { locale, numberPad } = useSettings()
   const id = useId()
   const [date, setDate] = useState<IsoDate>(todayIso())
@@ -242,7 +249,7 @@ function RecordFields({ periodId, record, onDone }: FieldsProps) {
       return
     }
 
-    const payments: { method: PaymentMethod; cents: number }[] = []
+    const payments: PeriodPaymentPart[] = []
     if (check.cents !== null && check.cents > 0) payments.push({ method: 'check', cents: check.cents })
     if (cash.cents !== null && cash.cents > 0) payments.push({ method: 'cash', cents: cash.cents })
     if (other.cents !== null && other.cents > 0) {
@@ -252,14 +259,7 @@ function RecordFields({ periodId, record, onDone }: FieldsProps) {
     setErrors({})
     saveInFlight.current = true
     try {
-      for (const payment of payments) {
-        await addPayment(db, {
-          paymentDate: date,
-          amountCents: payment.cents,
-          paymentMethod: payment.method,
-          allocations: [{ payPeriodId: periodId, amountCents: payment.cents }],
-        })
-      }
+      await addPeriodPayments(db, periodId, date, payments)
       await saveStub(db, periodId, {
         servicesCents: stubServices.cents,
         tipsCents: stubTips.cents,
@@ -301,28 +301,18 @@ function RecordFields({ periodId, record, onDone }: FieldsProps) {
           <span className="w-11" />
         </header>
 
-        <div>
-          <label htmlFor={`${id}-date`} className={label}>
-            {t(locale, 'paymentDate')}
-          </label>
-          <input
-            id={`${id}-date`}
-            type="date"
-            value={date}
-            onChange={(event) => {
-              setDate(event.target.value)
-              clearError('date')
-            }}
-            aria-invalid={!!errors.date}
-            aria-describedby={errors.date ? `${id}-date-error` : undefined}
-            className={field}
-          />
-          {errors.date && (
-            <p id={`${id}-date-error`} className={errorText}>
-              {errors.date}
-            </p>
-          )}
-        </div>
+        <ExactPayButton summary={summary} onRecorded={onDone} />
+
+        <WorkDateField
+          label={t(locale, 'paymentDate')}
+          inputLabel={t(locale, 'paymentDate')}
+          value={date}
+          onChange={(value) => {
+            setDate(value)
+            clearError('date')
+          }}
+          error={errors.date}
+        />
 
         <MoneyField
           label={t(locale, 'checkAmount')}

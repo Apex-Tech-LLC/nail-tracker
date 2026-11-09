@@ -30,6 +30,7 @@ import {
   primaryButton,
   secondaryButton,
 } from '../../ui/styles.ts'
+import { WorkDateField } from '../../ui/WorkDateField.tsx'
 import { PAYMENT_METHOD_LABEL } from './payStateLabels.ts'
 import { addPayment, deletePayment, updatePayment, type PaymentInput } from './paymentStore.ts'
 import { loadPeriodSummaries, type PeriodSummary } from './periodStore.ts'
@@ -333,30 +334,16 @@ function PaymentFormFields({
         )}
       </header>
 
-      <div>
-        <label htmlFor={`${id}-date`} className={label}>
-          {t(locale, 'paymentDate')}
-        </label>
-        <input
-          id={`${id}-date`}
-          type="date"
-          value={date}
-          onChange={(event) => {
-            setDate(event.target.value)
-            setErrors((previous) =>
-              previous.date ? { ...previous, date: undefined } : previous,
-            )
-          }}
-          aria-invalid={!!errors.date}
-          aria-describedby={errors.date ? `${id}-date-error` : undefined}
-          className={field}
-        />
-        {errors.date && (
-          <p id={`${id}-date-error`} className={errorText}>
-            {errors.date}
-          </p>
-        )}
-      </div>
+      <WorkDateField
+        label={t(locale, 'paymentDate')}
+        inputLabel={t(locale, 'paymentDate')}
+        value={date}
+        onChange={(value) => {
+          setDate(value)
+          setErrors((previous) => (previous.date ? { ...previous, date: undefined } : previous))
+        }}
+        error={errors.date}
+      />
 
       <MoneyField
         label={t(locale, 'paymentAmount')}
