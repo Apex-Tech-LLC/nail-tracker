@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
-import { addTurn, formSave, openCommission, openDateChoices, seedSettings } from './helpers.ts'
+import { addTurn, formSave, openCommission, seedSettings } from './helpers.ts'
 
 // 3pm on Wednesday 2026-11-04 in the browser's America/Chicago timezone. The
 // offset is explicit so a machine running in UTC cannot move the fixed day.
@@ -12,8 +12,6 @@ test.beforeEach(async ({ page }) => {
 /** Saves one turn on a chosen day with a 100% rate, so earned equals the amount. */
 async function addEarnedOn(page: Page, date: string, amount: string): Promise<void> {
   await page.goto('./#/add')
-  await openDateChoices(page)
-  await page.getByRole('button', { name: 'Other day' }).click()
   await page.getByLabel('Work date').fill(date)
   await page.getByLabel('Service amount').fill(amount)
   await openCommission(page)
@@ -190,6 +188,10 @@ test.describe('at 375 by 740', () => {
         await expect(chart).toBeVisible()
         tops.push((await strip.boundingBox())!.y)
         heights.push((await chart.boundingBox())!.height)
+        // The whole chart box sits above the docked Add/Say bar, with no scrolling.
+        const chartBox = (await chart.boundingBox())!
+        const addBar = (await page.locator('a[href="#/add"]').last().boundingBox())!
+        expect(chartBox.y + chartBox.height).toBeLessThanOrEqual(addBar.y)
       }
 
       expect(new Set(tops).size).toBe(1)

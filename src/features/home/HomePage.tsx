@@ -82,10 +82,11 @@ const COMPARISON_KEYS: Record<
 
 const PERIODS: HomePeriod[] = ['today', 'week', 'month']
 
-// Room kept for the comparison pill (two lines) and the goal bar with its
-// message, so no period moves what sits below them.
-const COMPARISON_SLOT = 'mt-2.5 h-[50px]'
-const GOAL_SLOT = 'mt-1 h-[76px]'
+// Room kept for the comparison pill (one line) and the goal bar, whose met
+// message takes the place of its text line, so no period moves what sits below
+// them. Kept tight so the chart box stays above the docked Add/Say bar.
+const COMPARISON_SLOT = 'mt-1.5 h-[28px]'
+const GOAL_SLOT = 'mt-1 h-9'
 
 function readStoredPeriod(key: string): HomePeriod {
   try {
@@ -453,18 +454,22 @@ export function HomePage() {
         })}
       </div>
 
-      <section className="mt-[18px]">
-        <p className="text-[15px] text-text-secondary">{t(locale, EARNED_KEYS[period])}</p>
-        <p
-          data-testid="hero-earned"
-          className="mt-0.5 text-[52px] font-extrabold leading-[1.05] tracking-[-0.035em]"
-        >
-          {earnedWhole}
-          <span className="text-[28px] font-bold text-text-muted">{earnedCents}</span>
-        </p>
+      <section className="mt-2">
+        <div className="flex items-end justify-between gap-3">
+          <p className="min-w-0 pb-1 text-[15px] leading-tight text-text-secondary">
+            {t(locale, EARNED_KEYS[period])}
+          </p>
+          <p
+            data-testid="hero-earned"
+            className="shrink-0 text-[40px] font-extrabold leading-none tracking-[-0.035em]"
+          >
+            {earnedWhole}
+            <span className="text-[22px] font-bold text-text-muted">{earnedCents}</span>
+          </p>
+        </div>
         <div className={COMPARISON_SLOT}>
           <p
-            className={`inline-flex items-center gap-1.5 rounded-full px-[11px] py-[5px] text-sm font-semibold ${
+            className={`inline-flex max-w-full items-center gap-1.5 whitespace-nowrap rounded-full px-[11px] py-[5px] text-[13px] font-semibold ${
               comparison.kind === 'more'
                 ? 'bg-positive-bg text-positive-text'
                 : 'bg-surface-subtle text-text-secondary'
@@ -686,7 +691,7 @@ function GoalBar({
     return (
       <Link
         href={paths.goals}
-        className="inline-flex min-h-11 items-center text-sm font-semibold text-brand-ink underline"
+        className="-my-1 inline-flex min-h-11 items-center text-sm font-semibold text-brand-ink underline"
       >
         {t(locale, 'setAGoal')}
       </Link>
@@ -709,7 +714,11 @@ function GoalBar({
             style={{ width: `${progress.fillPercent}%` }}
           />
         </span>
-        <span className="mt-1.5 flex items-baseline justify-between gap-2 text-sm text-text-secondary">
+        <span
+          className={`mt-1.5 items-baseline justify-between gap-2 text-sm text-text-secondary ${
+            showMessage ? 'hidden' : 'flex'
+          }`}
+        >
           <span className="shrink-0 font-semibold">
             {t(locale, kind === 'week' ? 'goalWeekly' : 'goalMonthly')}
           </span>
@@ -731,7 +740,7 @@ function GoalBar({
       {showMessage && (
         <div
           data-testid="goal-message"
-          className="mt-1.5 flex items-center gap-2 rounded-control bg-positive-bg py-0.5 pl-2"
+          className="mt-1 flex h-7 items-center gap-2 rounded-control bg-positive-bg pl-2"
         >
           <p className="min-w-0 flex-1 text-[13px] leading-tight text-positive-text">
             {t(locale, kind === 'week' ? 'goalHitWeek' : 'goalHitMonth')}
@@ -740,7 +749,7 @@ function GoalBar({
             type="button"
             aria-label={t(locale, 'dismiss')}
             onClick={() => setMessageHidden(true)}
-            className="flex size-8 flex-none items-center justify-center text-positive-text"
+            className="flex size-7 flex-none items-center justify-center text-positive-text"
           >
             <IconX size={16} aria-hidden="true" />
           </button>

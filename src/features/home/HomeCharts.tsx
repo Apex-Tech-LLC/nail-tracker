@@ -41,7 +41,7 @@ export function ChartBox({
   return (
     <section
       data-testid={testId}
-      className="flex h-[312px] flex-none flex-col rounded-card border border-border bg-surface px-2.5 pb-2 pt-2.5"
+      className="flex h-[300px] flex-none flex-col rounded-card border border-border bg-surface px-2.5 pb-2 pt-2.5"
     >
       <div className="flex items-baseline justify-between gap-2">
         <p className="min-w-0 text-[11.5px] font-bold uppercase tracking-[0.05em] text-text-secondary">
