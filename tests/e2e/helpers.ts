@@ -17,7 +17,7 @@ export async function installApp(page: Page): Promise<void> {
 export async function seedSettings(page: Page, overrides: Record<string, unknown> = {}): Promise<void> {
   await page.addInitScript((settings) => {
     if (!localStorage.getItem('nail-tracker.settings')) localStorage.setItem('nail-tracker.settings', JSON.stringify(settings))
-  }, { locale: 'en', onboardingDone: true, ...overrides })
+  }, { locale: 'en', onboardingDone: true, sayHowToSeen: true, ...overrides })
 }
 
 /**

@@ -1,7 +1,7 @@
 import { IconX } from '@tabler/icons-react'
 import { useId, useRef, useState } from 'react'
 import { paths, useAppLocation, useGoBack } from '../../app/navigation.ts'
-import { useSettings } from '../../app/settings.ts'
+import { updateSettings, useSettings } from '../../app/settings.ts'
 import { useToday } from '../../app/useToday.ts'
 import { db, type ServicePreset } from '../../db/schema.ts'
 import { todayIso } from '../../domain/dates.ts'
@@ -18,6 +18,7 @@ import {
   updateVoiceSession,
   useVoiceSession,
 } from './voiceSession.ts'
+import { SayHowToSheet } from './SayHowToSheet.tsx'
 
 const CHATGPT_URL = 'https://chatgpt.com'
 
@@ -34,7 +35,7 @@ function openChatGpt() {
 
 /** Pick the day, say or type the jobs, and make draft turns out of them. */
 export function SayPage() {
-  const { locale, defaultCommissionRateBp, cashTipHandling, cardTipHandling } = useSettings()
+  const { locale, defaultCommissionRateBp, cashTipHandling, cardTipHandling, sayHowToSeen } = useSettings()
   const goBack = useGoBack()
   const [, navigate] = useAppLocation()
   const session = useVoiceSession()
@@ -45,6 +46,9 @@ export function SayPage() {
   // 'copied': the prompt is on the clipboard. 'manual': the phone refused, so the prompt is shown to copy by hand.
   const [prompt, setPrompt] = useState<{ text: string; state: 'copied' | 'manual' } | null>(null)
   const promptBox = useRef<HTMLTextAreaElement>(null)
+  const textBox = useRef<HTMLTextAreaElement>(null)
+  // Opens by itself the first time; the link opens it again. Closing it any way counts as seen.
+  const [howToOpen, setHowToOpen] = useState(!sayHowToSeen)
   const date = session.date ?? today
 
   async function loadReaderContext() {
@@ -134,6 +138,16 @@ export function SayPage() {
         <span className="w-11" />
       </header>
 
+      <div className="-mt-3 flex justify-end">
+        <button
+          type="button"
+          onClick={() => setHowToOpen(true)}
+          className="min-h-11 px-2 text-sm font-semibold text-brand-ink underline focus-visible:outline-2 focus-visible:outline-brand-ink"
+        >
+          {t(locale, 'sayHowToOpen')}
+        </button>
+      </div>
+
       <WorkDateField value={date} onChange={(value) => updateVoiceSession({ date: value })} />
 
       <div>
@@ -145,6 +159,7 @@ export function SayPage() {
         </p>
         {/* A plain text box on purpose: the phone's own keyboard, with its mic, never the app's number pad. */}
         <textarea
+          ref={textBox}
           id={`${id}-text`}
           rows={9}
           value={session.text}
@@ -233,6 +248,15 @@ export function SayPage() {
           {t(locale, 'makeTurns')}
         </button>
       </div>
+      {howToOpen && (
+        <SayHowToSheet
+          fallbackFocus={textBox}
+          onClose={() => {
+            updateSettings({ sayHowToSeen: true })
+            setHowToOpen(false)
+          }}
+        />
+      )}
     </form>
   )
 }
