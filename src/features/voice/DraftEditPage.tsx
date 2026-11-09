@@ -1,12 +1,15 @@
 import { useEffect } from 'react'
 import { paths, useAppLocation, useGoBack } from '../../app/navigation.ts'
+import { useSettings } from '../../app/settings.ts'
 import { DraftTurnForm } from '../turns/TurnForm.tsx'
+import { learnFromFix } from './learnFromFix.ts'
 import { sessionDate, updateVoiceSession, useVoiceSession } from './voiceSession.ts'
 
 /** One draft turn in the usual Add turn form. Done hands the values back; nothing is saved. */
 export function DraftEditPage({ cardKey }: { cardKey: string }) {
   const session = useVoiceSession()
   const goBack = useGoBack()
+  const { locale } = useSettings()
   const [, navigate] = useAppLocation()
   const card = session.cards.find((item) => item.key === cardKey)
 
@@ -27,7 +30,8 @@ export function DraftEditPage({ cardKey }: { cardKey: string }) {
       draft={{
         initial: { ...card.values, date },
         moreOpen: !card.reviewed && (timeToFix || clientToFix),
-        onSave: (values) =>
+        onSave: (values) => {
+          void learnFromFix(card, values, locale)
           updateVoiceSession({
             cards: session.cards.map((item) =>
               item.key === card.key
@@ -39,7 +43,8 @@ export function DraftEditPage({ cardKey }: { cardKey: string }) {
                   }
                 : item,
             ),
-          }),
+          })
+        },
       }}
     />
   )

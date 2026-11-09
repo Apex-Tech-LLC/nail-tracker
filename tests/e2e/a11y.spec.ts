@@ -35,6 +35,7 @@ interface Copy {
   recordPayment: string
   newAdjustment: string
   settings: string
+  forgetLearnedWords: string
   servicePresets: string
   addPreset: string
   next: string
@@ -61,6 +62,7 @@ const TEXT: Record<Locale, Copy> = {
     recordPayment: 'Record payment',
     newAdjustment: 'New adjustment',
     settings: 'Settings',
+    forgetLearnedWords: 'Forget learned words',
     servicePresets: 'Service presets',
     addPreset: 'Add a service',
     next: 'Next',
@@ -90,6 +92,7 @@ const TEXT: Record<Locale, Copy> = {
     recordPayment: 'Ghi khoản đã nhận',
     newAdjustment: 'Điều chỉnh mới',
     settings: 'Cài đặt',
+    forgetLearnedWords: 'Quên các từ đã học',
     servicePresets: 'Danh sách dịch vụ',
     addPreset: 'Thêm dịch vụ',
     next: 'Tiếp',
@@ -163,7 +166,8 @@ async function addData(page: Page) {
 
 async function start(page: Page, locale: Locale, withData = true, overrides: Record<string, unknown> = {}) {
   await page.clock.setFixedTime(NOON)
-  await seedSettings(page, { ...weeklyPay, ...overrides })
+  // A learned word is seeded so the Forget learned words button on Settings is part of every audit.
+  await seedSettings(page, { ...weeklyPay, learnedWords: { 'joe x': 'gel-x' }, ...overrides })
   if (withData) await addData(page)
   else await page.goto('./')
   await switchLocale(page, locale)
@@ -320,6 +324,7 @@ for (const scheme of SCHEMES) {
         test('settings', async ({ page }) => {
           await start(page, locale)
           await page.goto('./#/settings')
+          await expect(page.getByRole('button', { name: text.forgetLearnedWords, exact: true })).toBeVisible()
           await expectScreen(page, scheme, `${locale}-settings`, text.settings)
         })
 
@@ -372,6 +377,7 @@ for (const scheme of SCHEMES) {
           await test.step('Settings', async () => {
             await page.goto('./#/settings')
             await expect(page.getByRole('heading', { level: 1, name: text.settings })).toBeVisible()
+            await expect(page.getByRole('button', { name: text.forgetLearnedWords, exact: true })).toBeVisible()
             expect(await smallTapTargets(page)).toEqual([])
           })
 
@@ -450,6 +456,7 @@ for (const scheme of SCHEMES) {
         await start(page, 'en')
         await page.goto('./#/settings')
         await expect(page.getByRole('group', { name: 'Appearance', exact: true })).toBeVisible()
+        await expect(page.getByRole('button', { name: 'Forget learned words', exact: true })).toBeVisible()
         await expectScreen(page, scheme, 'en-settings-appearance', 'Settings')
       })
     }

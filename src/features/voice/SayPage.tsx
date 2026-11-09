@@ -35,7 +35,7 @@ function openChatGpt() {
 
 /** Pick the day, say or type the jobs, and make draft turns out of them. */
 export function SayPage() {
-  const { locale, defaultCommissionRateBp, cashTipHandling, cardTipHandling, sayHowToSeen } = useSettings()
+  const { locale, defaultCommissionRateBp, cashTipHandling, cardTipHandling, sayHowToSeen, learnedWords } = useSettings()
   const goBack = useGoBack()
   const [, navigate] = useAppLocation()
   const session = useVoiceSession()
@@ -69,7 +69,13 @@ export function SayPage() {
     making.current = true
     try {
       const { presets, readerPresets, lastPrices } = await loadReaderContext()
-      const result = readVoice({ text: session.text, locale, presets: readerPresets, lastPrices })
+      const result = readVoice({
+        text: session.text,
+        locale,
+        presets: readerPresets,
+        lastPrices,
+        learned: new Map(Object.entries(learnedWords)),
+      })
       showCards(result, presets)
     } finally {
       making.current = false

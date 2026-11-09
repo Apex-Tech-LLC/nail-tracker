@@ -37,6 +37,7 @@ describe('resolveSettings', () => {
     weeklyGoalCents: null,
     monthlyGoalCents: null,
     taxSetAsideBp: null,
+    learnedWords: {},
   }
 
   it('uses English defaults when nothing is saved', () => {
@@ -94,6 +95,23 @@ describe('resolveSettings', () => {
     expect(resolveSettings(JSON.stringify({ taxSetAsideBp: 2000 }), []).taxSetAsideBp).toBe(2000)
     expect(resolveSettings(JSON.stringify({ taxSetAsideBp: 20000 }), []).taxSetAsideBp).toBeNull()
     expect(resolveSettings(JSON.stringify({ taxSetAsideBp: '20%' }), []).taxSetAsideBp).toBeNull()
+  })
+
+  it('keeps learned words that are text to text, and nothing else', () => {
+    expect(resolveSettings(JSON.stringify({ learnedWords: { 'joe x': 'gel-x' } }), []).learnedWords).toEqual({ 'joe x': 'gel-x' })
+    const mixed = { 'joe x': 'gel-x', '': 'gel-x', bad: 5, worse: null, 'gieo ich': '' }
+    expect(resolveSettings(JSON.stringify({ learnedWords: mixed }), []).learnedWords).toEqual({ 'joe x': 'gel-x' })
+    for (const bad of [[], 'joe x', 7, null]) {
+      expect(resolveSettings(JSON.stringify({ learnedWords: bad }), []).learnedWords).toEqual({})
+    }
+  })
+
+  it('keeps only the newest 200 learned words', () => {
+    const many = Object.fromEntries(Array.from({ length: 250 }, (_, index) => [`word ${'x'.repeat(index + 1)}`, 'gel-x']))
+    const kept = Object.keys(resolveSettings(JSON.stringify({ learnedWords: many }), []).learnedWords)
+    expect(kept).toHaveLength(200)
+    expect(kept[0]).toBe(`word ${'x'.repeat(51)}`)
+    expect(kept.at(-1)).toBe(`word ${'x'.repeat(250)}`)
   })
 
   it('falls back when the backup reminder settings are malformed', () => {

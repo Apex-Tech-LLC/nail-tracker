@@ -2,6 +2,7 @@ import { useSyncExternalStore } from 'react'
 import type { IsoDate } from '../domain/dates.ts'
 import type { Locale } from '../lib/locale.ts'
 import type { PayPeriodType } from '../domain/payPeriods.ts'
+import { LEARNED_WORDS_MAX } from '../domain/voiceLearning.ts'
 export type { PayPeriodType }
 
 export type TipHandling = 'inHand' | 'fromSalon'
@@ -40,6 +41,12 @@ export interface Settings {
   monthlyGoalCents: number | null
   /** Part of earned money to keep for taxes, in whole basis points. null: off. */
   taxSetAsideBp: number | null
+  /**
+   * Words the voice reader was taught by the person's fixes: folded words to the
+   * service id they meant, oldest first. Like every setting it comes back from a
+   * backup restore, and only into an empty app.
+   */
+  learnedWords: Record<string, string>
 }
 
 const STORAGE_KEY = 'nail-tracker.settings'
@@ -66,6 +73,15 @@ const isGoalCents = (value: unknown): value is number =>
 function isDismissedMap(value: unknown): value is Record<string, IsoDate> {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) return false
   return Object.values(value as Record<string, unknown>).every(isDateText)
+}
+
+/** Only text to text pairs survive, at most the newest 200. */
+function learnedWordsFrom(value: unknown): Record<string, string> {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) return {}
+  const pairs = Object.entries(value as Record<string, unknown>).filter(
+    (pair): pair is [string, string] => pair[0] !== '' && typeof pair[1] === 'string' && pair[1] !== '',
+  )
+  return Object.fromEntries(pairs.slice(-LEARNED_WORDS_MAX))
 }
 
 /** Saved choices win over defaults. Anything malformed in storage is ignored rather than trusted. */
@@ -100,6 +116,7 @@ export function resolveSettings(saved: string | null, languages: readonly string
     weeklyGoalCents: isGoalCents(parsed.weeklyGoalCents) ? parsed.weeklyGoalCents : null,
     monthlyGoalCents: isGoalCents(parsed.monthlyGoalCents) ? parsed.monthlyGoalCents : null,
     taxSetAsideBp: isRate(parsed.taxSetAsideBp) ? parsed.taxSetAsideBp : null,
+    learnedWords: learnedWordsFrom(parsed.learnedWords),
   }
 }
 

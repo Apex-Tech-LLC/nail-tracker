@@ -7,6 +7,7 @@ import { useSyncExternalStore } from 'react'
 import type { ServicePreset } from '../../db/schema.ts'
 import { todayIso, type IsoDate } from '../../domain/dates.ts'
 import { centsToInput } from '../../domain/money.ts'
+import { learnFromTurn, type LearnFrom } from '../../domain/voiceLearning.ts'
 import type { DraftTurn, ReaderResult } from '../../domain/voiceReader.ts'
 import type { LineState } from '../turns/ServiceLineFields.tsx'
 import type { TipHandling } from '../../app/settings.ts'
@@ -21,6 +22,8 @@ export interface DraftCard {
   values: TurnFormValues
   // The person opened and fixed this card, so the reader's doubts no longer apply.
   reviewed: boolean
+  // The words the reader was unsure of, to remember if the person saves this card with another service. null: nothing to learn.
+  learnFrom: LearnFrom | null
 }
 
 export interface VoiceSession {
@@ -107,6 +110,7 @@ export function cardFromTurn(
     key: crypto.randomUUID(),
     reader: turn,
     reviewed: false,
+    learnFrom: learnFromTurn(turn),
     values: {
       lines,
       cashText: turn.cashTipCents > 0 ? centsToInput(turn.cashTipCents) : '',
@@ -149,5 +153,5 @@ export function cardFromLeftover(
     startTime: null,
     checks: [{ code: 'noService', text: 'No service heard; choose one.' }],
   }
-  return cardFromTurn(turn, index, presets, defaults, date)
+  return { ...cardFromTurn(turn, index, presets, defaults, date), learnFrom: { words: heard, readAs: null } }
 }
