@@ -84,8 +84,8 @@ test('Home shows how close the week is to a $1,000 goal', async ({ page }) => {
   await addEarnedOn(page, '2026-11-02', '640')
 
   await page.goto('./')
-  // Today has no goal bar of its own.
-  await expect(page.getByTestId('goal-progress')).toHaveCount(0)
+  // Today shows the same weekly bar, so the box below it never moves.
+  await expect(page.getByTestId('goal-progress-text')).toHaveText('$640 of $1,000 · $360 to go')
 
   await page.getByRole('button', { name: 'This week', exact: true }).click()
   await expect(page.getByTestId('goal-progress-text')).toHaveText(
@@ -103,9 +103,10 @@ test('passing the goal shows the message once and keeps the bar full', async ({ 
   await seedSettings(page, { weeklyGoalCents: 100_000 })
   await page.clock.setFixedTime(NOON)
   await addEarnedOn(page, '2026-11-02', '640')
+  // Saving the turn that reaches the goal lands on Home, which says so.
   await addEarnedOn(page, '2026-11-03', '500')
 
-  await page.goto('./')
+  await expect(page.getByText('You hit your goal for this week.')).toBeVisible()
   await page.getByRole('button', { name: 'This week', exact: true }).click()
 
   await expect(page.getByTestId('goal-progress-text')).toHaveText('$1,140 of $1,000')

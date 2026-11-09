@@ -135,6 +135,7 @@ test('the week shows seven bottles and Wednesday opens History on that day', asy
   await fixClock(page)
   await addTurn(page, { amount: '45', cash: '10' })
 
+  await page.getByRole('button', { name: 'This week', exact: true }).click()
   await expect(page.getByTestId('week-bottle')).toHaveCount(7)
   const wednesday = page.getByRole('link', { name: /^Wednesday, \$\d+ earned$/ })
   await expect(wednesday).toBeVisible()

@@ -101,6 +101,14 @@ const strings = {
     homeSalonOwes: 'Salon owes',
     homeTodayTurns: "Today's turns",
     homeEmptyTurns: 'Your turns today will show here.',
+    chartTapDay: 'Tap a day',
+    chartTapTurn: 'Tap a turn to edit',
+    chartTodayTitle: 'Turns in order',
+    chartEmptyToday: 'No turns yet. Tap Add Turn below.',
+    chartTurnBar: 'Turn {n}, {amount}, {time}',
+    chartMoreTurns: '{n} more turns, {amount}',
+    chartMore: 'more',
+    chartBarNoNumber: 'Turn, {amount}, {time}',
     seeAll: 'See all',
 
     // Goals
@@ -838,6 +846,14 @@ const strings = {
     homeSalonOwes: 'Tiệm còn nợ',
     homeTodayTurns: 'Turn hôm nay',
     homeEmptyTurns: 'Turn hôm nay sẽ hiện ở đây.',
+    chartTapDay: 'Chạm vào ngày',
+    chartTapTurn: 'Chạm vào turn để sửa',
+    chartTodayTitle: 'Turn theo giờ',
+    chartEmptyToday: 'Chưa có turn nào. Bấm Thêm turn bên dưới.',
+    chartTurnBar: 'Turn {n}, {amount}, lúc {time}',
+    chartMoreTurns: 'Còn {n} turn nữa, {amount}',
+    chartMore: 'nữa',
+    chartBarNoNumber: 'Turn, {amount}, lúc {time}',
     seeAll: 'Xem tất cả',
 
     // Goals

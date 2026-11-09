@@ -18,6 +18,7 @@ const SHOT_DIR = 'screenshots/dark'
 
 interface Copy {
   appName: string
+  thisMonth: string
   addTurn: string
   editTurn: string
   sayYourTurns: string
@@ -45,6 +46,7 @@ interface Copy {
 const TEXT: Record<Locale, Copy> = {
   en: {
     appName: 'Nail Tracker',
+    thisMonth: 'This month',
     addTurn: 'Add Turn',
     editTurn: 'Edit Turn',
     sayYourTurns: 'Say your turns',
@@ -75,6 +77,7 @@ const TEXT: Record<Locale, Copy> = {
   },
   vi: {
     appName: 'Nail Tracker',
+    thisMonth: 'Tháng này',
     addTurn: 'Thêm turn',
     editTurn: 'Chỉnh sửa turn',
     sayYourTurns: 'Nói turn trong ngày',
@@ -214,6 +217,14 @@ for (const scheme of SCHEMES) {
           await start(page, locale, false)
           await page.goto('./')
           await expectScreen(page, scheme, `${locale}-today-empty`, text.appName)
+        })
+
+        test('home this month', async ({ page }) => {
+          await start(page, locale)
+          await page.goto('./')
+          await page.getByRole('button', { name: text.thisMonth, exact: true }).click()
+          await expect(page.getByTestId('month-day').first()).toBeVisible()
+          await expectScreen(page, scheme, `${locale}-home-month`, text.appName)
         })
 
         test('add turn', async ({ page }) => {

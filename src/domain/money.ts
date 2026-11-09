@@ -56,6 +56,12 @@ export function formatUsdShort(cents: number): string {
   return `${sign}$${dollarFormat.format(dollars)}.${String(rest).padStart(2, '0')}`
 }
 
+/** Whole dollars only, rounded to the nearest dollar: $212 for 21250. */
+export function formatUsdWhole(cents: number): string {
+  const whole = roundDiv(cents, 100)
+  return `${whole < 0 ? '-' : ''}$${dollarFormat.format(Math.abs(whole))}`
+}
+
 /**
  * Types one number-pad key into a money box. Digits append, one dot opens the
  * cents, and a key that would break the two-decimal shape or the cents limit is

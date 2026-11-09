@@ -336,13 +336,16 @@ test('every screen fits in Vietnamese at 375 pixels', async ({ page }) => {
   await expect(page.getByTestId('hero-earned')).toBeVisible()
   // Today has no hours yet, so the Start day button is showing.
   await expect(page.getByRole('button', { name: 'Bắt đầu', exact: true })).toBeVisible()
+  await expect(page.getByTestId('turn-bar').first()).toBeVisible()
   await checkScreen(page, 'home-today')
 
   await page.getByRole('button', { name: 'Tuần này', exact: true }).click()
   await expect(page.getByTestId('goal-progress')).toBeVisible()
+  await expect(page.getByTestId('week-bottle').first()).toContainText('CN')
   await checkScreen(page, 'home-week')
 
   await page.getByRole('button', { name: 'Tháng này', exact: true }).click()
+  await expect(page.getByTestId('month-day').first()).toBeVisible()
   await checkScreen(page, 'home-month')
 
   await page.goto('./#/say')

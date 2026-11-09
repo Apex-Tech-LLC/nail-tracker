@@ -109,6 +109,7 @@ test('a day opened from Home lets Back return to Home and does not stick to the 
 }) => {
   await seedTwoTurns(page)
   await page.goto('./')
+  await page.getByRole('button', { name: 'This week', exact: true }).click()
 
   // Monday has no turns, so History shows only that day.
   await page.locator('a[href$="day=2026-11-02"]').click()
