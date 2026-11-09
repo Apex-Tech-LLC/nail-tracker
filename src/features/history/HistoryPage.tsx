@@ -29,6 +29,7 @@ import {
   list,
   secondaryButton,
 } from '../../ui/styles.ts'
+import { useToast } from '../../ui/useToast.ts'
 import { AdjustmentRow } from '../adjustments/AdjustmentRow.tsx'
 import { dayHoursText } from '../hours/hoursText.ts'
 import { HoursSheet } from '../hours/HoursSheet.tsx'
@@ -45,10 +46,11 @@ import {
   NO_FILTERS,
   rangeFor,
   serviceNames,
+  topServiceNames,
   type Filters,
   type RangeChoice,
 } from './historyRange.ts'
-import { dayOffDates, loadWorkDays } from './workDays.ts'
+import { dayOffDates, loadWorkDays, setDayOff } from './workDays.ts'
 
 const CHOICES: { value: RangeChoice; key: StringKey }[] = [
   { value: 'today', key: 'rangeToday' },
@@ -57,6 +59,13 @@ const CHOICES: { value: RangeChoice; key: StringKey }[] = [
   { value: 'lastWeek', key: 'rangeLastWeek' },
   { value: 'custom', key: 'rangeCustom' },
 ]
+
+// How many of the range's most used services get a quick pill.
+const QUICK_SERVICES = 2
+
+function toggleIn<T>(values: readonly T[], value: T): T[] {
+  return values.includes(value) ? values.filter((item) => item !== value) : [...values, value]
+}
 
 type View = 'list' | 'calendar'
 
@@ -86,6 +95,7 @@ export function HistoryPage() {
   const { locale, weekStartDay, hoursOn } = useSettings()
   const today = useToday()
   const [, navigate] = useLocation()
+  const toast = useToast()
   // Home's week bottles open History on one day: /history?day=2026-11-04.
   const queryDay = new URLSearchParams(useSearch()).get('day')
   const openedDay = queryDay !== null && isIsoDate(queryDay) ? queryDay : null
@@ -182,8 +192,37 @@ export function HistoryPage() {
   const totalTurns = visibleTurns.reduce((sum, turn) => sum + turn.turnCount, 0)
   const totalEarnedCents = sumTotals(visibleTurns, visibleAdjustments).earnedCents
   const serviceOptions = data ? serviceNames(data.services) : []
+  const quickServices = data ? topServiceNames(data.services, QUICK_SERVICES) : []
+  const quickPills: { key: string; label: string; on: boolean; toggle: () => void }[] = [
+    {
+      key: 'request',
+      label: t(locale, 'clientRequest'),
+      on: filters.clients.includes('request'),
+      toggle: () => setFilters({ ...filters, clients: toggleIn(filters.clients, 'request') }),
+    },
+    {
+      key: 'cash',
+      label: t(locale, 'cashTip'),
+      on: filters.tips.includes('cash'),
+      toggle: () => setFilters({ ...filters, tips: toggleIn(filters.tips, 'cash') }),
+    },
+    {
+      key: 'card',
+      label: t(locale, 'cardTip'),
+      on: filters.tips.includes('card'),
+      toggle: () => setFilters({ ...filters, tips: toggleIn(filters.tips, 'card') }),
+    },
+    ...quickServices.map((name) => ({
+      key: `service:${name}`,
+      label: name,
+      on: filters.services.includes(name),
+      toggle: () => setFilters({ ...filters, services: toggleIn(filters.services, name) }),
+    })),
+  ]
+  // A filter with a quick pill is shown (and removed) there, not as a chip.
   const activeFilters: { key: string; label: string; remove: () => void }[] = []
   for (const name of filters.services) {
+    if (quickServices.includes(name)) continue
     activeFilters.push({
       key: `service:${name}`,
       label: name,
@@ -192,20 +231,19 @@ export function HistoryPage() {
     })
   }
   for (const type of filters.clients) {
+    if (type === 'request') continue
     activeFilters.push({
       key: `client:${type}`,
-      label: t(locale, type === 'request' ? 'clientRequest' : 'clientWalkIn'),
+      label: t(locale, 'clientWalkIn'),
       remove: () =>
         setFilters({ ...filters, clients: filters.clients.filter((item) => item !== type) }),
     })
   }
   for (const type of filters.tips) {
+    if (type === 'cash' || type === 'card') continue
     activeFilters.push({
       key: `tip:${type}`,
-      label: t(
-        locale,
-        type === 'cash' ? 'cashTip' : type === 'card' ? 'cardTip' : 'filterNoTip',
-      ),
+      label: t(locale, 'filterNoTip'),
       remove: () => setFilters({ ...filters, tips: filters.tips.filter((item) => item !== type) }),
     })
   }
@@ -238,6 +276,22 @@ export function HistoryPage() {
       : null
 
   const rangeError = invalidRange ? t(locale, 'errorRange') : undefined
+
+  /** One tap marks or clears the day; Undo puts it back the way it was. */
+  async function toggleDayOff(date: IsoDate, wasOff: boolean) {
+    await setDayOff(db, date, !wasOff)
+    toast.show({
+      message: t(locale, wasOff ? 'dayOffCleared' : 'dayOffMarked'),
+      actions: [
+        {
+          label: t(locale, 'undo'),
+          onClick: () => {
+            void setDayOff(db, date, wasOff)
+          },
+        },
+      ],
+    })
+  }
 
   function openDay(date: IsoDate) {
     setView('list')
@@ -355,19 +409,45 @@ export function HistoryPage() {
             />
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-2">
             <button
               type="button"
               aria-expanded={filterOpen}
               onClick={() => setFilterOpen(true)}
-              className={`${chip} ${filtersOn ? chipOn : chipOff} inline-flex items-center gap-1`}
+              className={`${chip} ${filtersOn ? chipOn : chipOff} inline-flex shrink-0 items-center gap-1`}
             >
               <IconFilter size={16} aria-hidden="true" />
               {t(locale, 'filter')}
             </button>
+            <div
+              role="group"
+              aria-label={t(locale, 'filterQuick')}
+              className="flex min-w-0 flex-1 gap-2 overflow-x-auto py-0.5 [scrollbar-width:none]"
+            >
+              {quickPills.map((pill) => (
+                <button
+                  key={pill.key}
+                  type="button"
+                  aria-pressed={pill.on}
+                  onClick={pill.toggle}
+                  className={`${chip} shrink-0 whitespace-nowrap ${pill.on ? chipOn : chipOff}`}
+                >
+                  {pill.label}
+                </button>
+              ))}
+              {filtersOn && (
+                <button
+                  type="button"
+                  onClick={() => setFilters(NO_FILTERS)}
+                  className={`${chip} ${chipOff} shrink-0 whitespace-nowrap`}
+                >
+                  {t(locale, 'filterClear')}
+                </button>
+              )}
+            </div>
           </div>
 
-          {filtersOn && (
+          {activeFilters.length > 0 && (
             <div className="flex flex-wrap items-center gap-2">
               {activeFilters.map((active) => (
                 <button
@@ -380,13 +460,6 @@ export function HistoryPage() {
                   <IconX size={14} aria-hidden="true" />
                 </button>
               ))}
-              <button
-                type="button"
-                onClick={() => setFilters(NO_FILTERS)}
-                className={`${chip} ${chipOff}`}
-              >
-                {t(locale, 'filterClear')}
-              </button>
             </div>
           )}
 
@@ -421,11 +494,6 @@ export function HistoryPage() {
                 <section key={group.date}>
                   <div className="mt-[18px] mb-[7px] flex items-center justify-between gap-2 px-1 text-sm font-bold">
                     <h2 className="min-w-0 flex-1">{formatDayLong(group.date, locale)}</h2>
-                    {offDates.has(group.date) && (
-                      <span className="shrink-0 rounded-full bg-surface-subtle px-2 py-0.5 text-[11px] font-bold text-text-secondary">
-                        {t(locale, 'dayOff')}
-                      </span>
-                    )}
                     <p className="shrink-0 font-semibold text-text-secondary">
                       {countText} · {formatUsdShort(group.earnedCents)}
                     </p>
@@ -440,11 +508,28 @@ export function HistoryPage() {
                       <IconDots size={20} aria-hidden="true" />
                     </button>
                   </div>
-                  {hoursTextByDate.get(group.date) !== undefined && (
-                    <p className="mb-1 px-1 text-sm text-text-secondary">
-                      {t(locale, 'hoursTitle')} {hoursTextByDate.get(group.date)}
-                    </p>
-                  )}
+                  <div className="mb-1 flex items-center gap-2 px-1">
+                    <button
+                      type="button"
+                      aria-pressed={offDates.has(group.date)}
+                      aria-label={tf(locale, 'dayOffFor', {
+                        day: formatDayLong(group.date, locale),
+                      })}
+                      onClick={() => {
+                        void toggleDayOff(group.date, offDates.has(group.date))
+                      }}
+                      className={`${chip} shrink-0 whitespace-nowrap rounded-full ${
+                        offDates.has(group.date) ? chipOn : chipOff
+                      }`}
+                    >
+                      {t(locale, 'dayOffToggle')}
+                    </button>
+                    {hoursTextByDate.get(group.date) !== undefined && (
+                      <p className="min-w-0 text-sm text-text-secondary">
+                        {t(locale, 'hoursTitle')} {hoursTextByDate.get(group.date)}
+                      </p>
+                    )}
+                  </div>
                   <div className={list}>
                     {group.turns.map((turn) => (
                       <TurnRow

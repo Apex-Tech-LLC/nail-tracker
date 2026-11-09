@@ -87,15 +87,15 @@ function SummaryCard({
   choice,
   locale,
   hoursOn,
-  showDetails,
-  onToggleDetails,
+  showMore,
+  onToggleMore,
 }: {
   data: ReportData
   choice: ReportChoice
   locale: DateLocale
   hoursOn: boolean
-  showDetails: boolean
-  onToggleDetails: () => void
+  showMore: boolean
+  onToggleMore: () => void
 }) {
   const { totals, averages } = data
   const previousText =
@@ -151,21 +151,24 @@ function SummaryCard({
         )}
       </div>
 
+      <div className="mt-3">
+        <Row label={t(locale, 'serviceRevenue')} value={formatUsd(totals.serviceRevenueCents)} />
+        <Row label={t(locale, 'commission')} value={formatUsd(totals.commissionCents)} />
+        <Row label={t(locale, 'cashTips')} value={formatUsd(totals.cashTipsCents)} />
+        <Row label={t(locale, 'cardTips')} value={formatUsd(totals.cardTipsCents)} />
+      </div>
+
       <button
         type="button"
-        aria-expanded={showDetails}
-        onClick={onToggleDetails}
-        className="mt-3 min-h-11 font-semibold text-brand-ink underline"
+        aria-expanded={showMore}
+        onClick={onToggleMore}
+        className="mt-1 min-h-11 font-semibold text-brand-ink underline"
       >
-        {t(locale, 'reportDetails')}
+        {t(locale, 'reportMore')}
       </button>
 
-      {showDetails && (
+      {showMore && (
         <div className="mt-1">
-          <Row label={t(locale, 'serviceRevenue')} value={formatUsd(totals.serviceRevenueCents)} />
-          <Row label={t(locale, 'commission')} value={formatUsd(totals.commissionCents)} />
-          <Row label={t(locale, 'cashTips')} value={formatUsd(totals.cashTipsCents)} />
-          <Row label={t(locale, 'cardTips')} value={formatUsd(totals.cardTipsCents)} />
           {totals.adjustmentsCents !== 0 && (
             <Row label={t(locale, 'adjustments')} value={formatUsd(totals.adjustmentsCents)} />
           )}
@@ -191,7 +194,7 @@ export function ReportsPage() {
   const [date, setDate] = useState<IsoDate>(today)
   const [customStart, setCustomStart] = useState<IsoDate>(today)
   const [customEnd, setCustomEnd] = useState<IsoDate>(today)
-  const [showDetails, setShowDetails] = useState(false)
+  const [showMore, setShowMore] = useState(false)
   const [showAllServices, setShowAllServices] = useState(false)
   const [chosen, setChosen] = useState<{ rangeKey: string; index: number } | null>(null)
   const id = useId()
@@ -396,8 +399,8 @@ export function ReportsPage() {
             choice={choice}
             locale={locale}
             hoursOn={hoursOn}
-            showDetails={showDetails}
-            onToggleDetails={() => setShowDetails((open) => !open)}
+            showMore={showMore}
+            onToggleMore={() => setShowMore((open) => !open)}
           />
 
           {choice === 'year' && (

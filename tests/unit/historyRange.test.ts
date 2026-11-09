@@ -8,6 +8,7 @@ import {
   NO_FILTERS,
   rangeFor,
   serviceNames,
+  topServiceNames,
   type Filters,
 } from '../../src/features/history/historyRange.ts'
 
@@ -183,6 +184,32 @@ describe('serviceNames', () => {
       'Gel-X',
       'Pedicure',
     ])
+  })
+})
+
+describe('topServiceNames', () => {
+  it('lists the most used services first and keeps only the limit', () => {
+    const lines = [
+      service('Pedicure'),
+      service('Gel-X'),
+      service('Gel-X'),
+      service('Gel-X'),
+      service('Pedicure'),
+      service('Fill'),
+    ]
+
+    expect(topServiceNames(lines, 2)).toEqual(['Gel-X', 'Pedicure'])
+  })
+
+  it('breaks ties A to Z', () => {
+    const lines = [service('Pedicure'), service('Manicure'), service('Fill')]
+
+    expect(topServiceNames(lines, 2)).toEqual(['Fill', 'Manicure'])
+  })
+
+  it('returns fewer names when the range used fewer, and none for none', () => {
+    expect(topServiceNames([service('Fill')], 2)).toEqual(['Fill'])
+    expect(topServiceNames([], 2)).toEqual([])
   })
 })
 

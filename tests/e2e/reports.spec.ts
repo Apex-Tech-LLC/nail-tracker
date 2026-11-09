@@ -49,10 +49,11 @@ test('shows the week figures for a turn with cash and card tips', async ({ page 
   await expect(page.getByText('Nov 1 – Nov 7')).toBeVisible()
   await expect(page.getByText('$85.00').first()).toBeVisible()
 
-  await page.getByRole('button', { name: 'Details', exact: true }).click()
+  // The four pay rows are open with no tap.
   await expect(page.getByText('$100.00', { exact: true })).toBeVisible()
   await expect(page.getByText('$60.00', { exact: true })).toBeVisible()
   await expect(page.getByText('$25.00', { exact: true }).first()).toBeVisible()
+  await page.getByRole('button', { name: 'More', exact: true }).click()
   // Commission $60 + card tip $15 still with the salon.
   await expect(page.getByText('$75.00', { exact: true })).toBeVisible()
 })
