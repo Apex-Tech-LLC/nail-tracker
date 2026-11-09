@@ -37,6 +37,7 @@ const settings: Settings = {
   weeklyGoalCents: 100_000,
   monthlyGoalCents: 400_000,
   taxSetAsideBp: 2000,
+  learnedWords: { 'joe x': 'gel-x' },
 }
 
 const opened: NailDb[] = []

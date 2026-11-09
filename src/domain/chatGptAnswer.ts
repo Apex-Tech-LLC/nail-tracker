@@ -185,7 +185,7 @@ function readTurn(
       if (priceCents === null) return fail('badPrice', short(item.price))
     }
     const usual = preset.defaultPriceCents ?? lastPrices?.get(preset.id) ?? null
-    services.push({ presetId: preset.id, priceCents, usualPriceCents: usual })
+    services.push({ presetId: preset.id, heard: '', priceCents, usualPriceCents: usual })
     if (priceCents === null) {
       const text =
         usual === null

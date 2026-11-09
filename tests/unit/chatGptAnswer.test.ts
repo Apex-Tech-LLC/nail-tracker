@@ -54,7 +54,7 @@ describe('readChatGptAnswer: good answers', () => {
 
   it('treats a null price as none said: the usual price and a noPrice check', () => {
     const { turns } = read(turn('{"services":[{"id":"pedicure","price":null}]}'))
-    expect(turns[0]?.services).toEqual([{ presetId: 'pedicure', priceCents: null, usualPriceCents: 3500 }])
+    expect(turns[0]?.services).toEqual([{ presetId: 'pedicure', heard: '', priceCents: null, usualPriceCents: 3500 }])
     expect(turns[0]?.checks.map((check) => check.code)).toEqual(['noPrice'])
     expect(turns[0]).toMatchObject({ cashTipCents: 0, cardTipCents: 0, request: false })
   })

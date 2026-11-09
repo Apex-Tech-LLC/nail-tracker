@@ -5,7 +5,9 @@
 // Plain TypeScript: no network, no database, no React.
 
 import { MAX_CENTS, formatUsdShort } from './money.ts'
+import { lettersOf, soundFits, soundNames, type SoundName } from './soundAlike.ts'
 import { foldText } from './textFold.ts'
+import { MISHEARD_FORMS } from './voiceMishearings.ts'
 
 export type ReaderLocale = 'en' | 'vi' | 'mixed'
 
@@ -24,6 +26,8 @@ export interface ReaderInput {
   lastPrices?: ReadonlyMap<string, number>
   // `mixed` text is read as Vietnamese.
   locale: ReaderLocale
+  // Words the person has fixed before, folded, to the preset id they meant. They match with no check.
+  learned?: ReadonlyMap<string, string>
 }
 
 export type CheckCode =
@@ -58,6 +62,8 @@ export interface DraftCheck {
 
 export interface DraftService {
   presetId: string
+  // The words this service was read from, as said; empty when it did not come from words.
+  heard: string
   // The price as heard, or null when none was heard or it could not be read.
   priceCents: number | null
   // The preset's own price, else the last price used, else null.
@@ -192,7 +198,8 @@ const UNCLEAR_SERVICES = [
 type Channel = 'cash' | 'card'
 
 type MarkerBody =
-  | { t: 'tip' | 'noTip' | 'request' | 'walkIn' | 'appointment' | 'join' | 'next' | 'same' | 'backRef' }
+  | { t: 'noTip' | 'request' | 'walkIn' | 'appointment' | 'join' | 'next' | 'same' | 'backRef' }
+  | { t: 'tip'; guessed?: boolean }
   | { t: 'correct' | 'priceWord' | 'total' | 'pay' | 'each' }
   | { t: 'channel'; channel: Channel; guessed: boolean }
 
@@ -841,8 +848,9 @@ interface Span {
 
 type AtomBody =
   | MarkerBody
-  | { t: 'service'; presetId: string; assumed: boolean; guessed: boolean }
-  | { t: 'unclear' }
+  // `priceFirst`: read only because a price came right before it, so that price is its price.
+  | { t: 'service'; presetId: string; assumed: boolean; guessed: boolean; priceFirst?: boolean }
+  | { t: 'unclear'; priceFirst?: boolean }
   | { t: 'money'; money: Money }
   | { t: 'time'; time: string | null; guessed: boolean }
   | { t: 'reduce' }
@@ -851,28 +859,41 @@ type AtomBody =
 
 type Atom = Span & AtomBody
 
+// Where a guessed form from the mishearing table may be read: a price or a tip
+// amount right next to it, or right after a tip amount as its channel.
+type Guard = 'price' | 'tipAmount' | 'afterTip'
+
 interface LexEntry {
   // Null: a phrase to skip.
   body: AtomBody | null
   // A price straight after it makes this a price change instead.
   unlessPriceFollows?: boolean
+  // Read only where this holds; otherwise the words are not understood, as before.
+  guard?: Guard
+  // A guess that a learned word may replace: the table and the older misheard lists.
+  soft?: boolean
 }
 
 interface Lexicon {
   folded: Map<string, LexEntry>
   strict: Map<string, LexEntry>
   maxWords: number
+  // What the person's own service names sound like.
+  sounds: SoundName[]
 }
 
-function buildLexicon(presets: readonly ReaderPreset[], locale: ReaderLocale): Lexicon {
-  const lexicon: Lexicon = { folded: new Map(), strict: new Map(), maxWords: 1 }
+function buildLexicon(presets: readonly ReaderPreset[], locale: ReaderLocale, learned?: ReadonlyMap<string, string>): Lexicon {
+  const lexicon: Lexicon = { folded: new Map(), strict: new Map(), maxWords: 1, sounds: [] }
 
-  const add = (phrase: string, entry: LexEntry, strict = false) => {
+  const keyOf = (phrase: string, strict = false): string | null => {
     const tokens = tokenize(normalize(phrase)).filter((token) => token.kind === 'word' || token.kind === 'number')
-    if (tokens.length === 0) return
-    const key = tokens.map((token) => (strict ? token.lo : token.fo)).join(' ')
+    return tokens.length === 0 ? null : tokens.map((token) => (strict ? token.lo : token.fo)).join(' ')
+  }
+  const add = (phrase: string, entry: LexEntry, strict = false) => {
+    const key = keyOf(phrase, strict)
+    if (key === null) return
     ;(strict ? lexicon.strict : lexicon.folded).set(key, entry)
-    lexicon.maxWords = Math.max(lexicon.maxWords, tokens.length)
+    lexicon.maxWords = Math.max(lexicon.maxWords, key.split(' ').length)
   }
 
   for (const phrase of UNCLEAR_SERVICES) add(phrase, { body: { t: 'unclear' } })
@@ -887,11 +908,33 @@ function buildLexicon(presets: readonly ReaderPreset[], locale: ReaderLocale): L
     if (!known.has(presetId)) continue
     for (const phrase of words.names) add(phrase, { body: { t: 'service', presetId, assumed: false, guessed: false } })
     for (const phrase of words.assumed ?? []) add(phrase, { body: { t: 'service', presetId, assumed: true, guessed: false } })
-    for (const phrase of words.misheard ?? []) add(phrase, { body: { t: 'service', presetId, assumed: false, guessed: true } })
+    for (const phrase of words.misheard ?? []) add(phrase, { body: { t: 'service', presetId, assumed: false, guessed: true }, soft: true })
     for (const phrase of words.unlessPriceFollows ?? []) {
       add(phrase, { body: { t: 'service', presetId, assumed: false, guessed: false }, unlessPriceFollows: true })
     }
   }
+
+  // Trust order: the clear words above, then the words this person fixed before,
+  // then the mishearing table, then sound-alikes (see `soundMatch`). Every table
+  // form is a guess: it never replaces a word that is already read, and it is read
+  // only where its guard holds. Both keyboard languages are loaded whatever the app's language.
+  for (const [phrase, presetId] of learned ?? []) {
+    const key = keyOf(phrase)
+    if (key === null || !known.has(presetId)) continue
+    // Never over a service name or a marker; only over a guess.
+    const existing = lexicon.folded.get(key)
+    if (existing && !existing.soft) continue
+    add(phrase, { body: { t: 'service', presetId, assumed: false, guessed: false } })
+  }
+  for (const [formKey, forms] of Object.entries(MISHEARD_FORMS)) {
+    const entry = tableEntry(formKey, known)
+    if (!entry) continue
+    for (const form of forms) {
+      const key = keyOf(form)
+      if (key !== null && !lexicon.folded.has(key)) add(form, entry)
+    }
+  }
+  lexicon.sounds = presets.flatMap((preset) => soundNames(preset.id, [preset.nameEn, preset.nameVi]))
 
   // The person's own names win over everything above: "Nail Art / Design",
   // "Bột nhúng (Dip)" give two names each.
@@ -906,15 +949,31 @@ function buildLexicon(presets: readonly ReaderPreset[], locale: ReaderLocale): L
   return lexicon
 }
 
-function lookup(tokens: readonly Token[], i: number, lexicon: Lexicon): { entry: LexEntry; length: number } | null {
+/** The entry a table key stands for, or null when it is for a service the person no longer has. */
+function tableEntry(key: string, known: ReadonlySet<string>): LexEntry | null {
+  if (key === 'tip') return { body: { t: 'tip', guessed: true }, guard: 'tipAmount', soft: true }
+  if (key === 'cash' || key === 'card') {
+    return { body: { t: 'channel', channel: key, guessed: true }, guard: 'afterTip', soft: true }
+  }
+  if (!known.has(key)) return null
+  return { body: { t: 'service', presetId: key, assumed: false, guessed: true }, guard: 'price', soft: true }
+}
+
+// `accept` can refuse a guarded entry; the next shorter phrase is then tried.
+function lookup(
+  tokens: readonly Token[],
+  i: number,
+  lexicon: Lexicon,
+  accept: (entry: LexEntry, length: number) => boolean = (entry) => entry.guard === undefined,
+): { entry: LexEntry; length: number } | null {
   for (let length = Math.min(lexicon.maxWords, tokens.length - i); length >= 1; length--) {
     const words = tokens.slice(i, i + length)
     if (words.some((token) => token.kind !== 'word' && token.kind !== 'number')) continue
 
     const strict = lexicon.strict.get(words.map((token) => token.lo).join(' '))
-    if (strict) return { entry: strict, length }
+    if (strict && accept(strict, length)) return { entry: strict, length }
     const folded = lexicon.folded.get(words.map((token) => token.fo).join(' '))
-    if (folded) return { entry: folded, length }
+    if (folded && accept(folded, length)) return { entry: folded, length }
   }
   return null
 }
@@ -929,6 +988,74 @@ function readCount(tokens: readonly Token[], i: number): { atom: AtomBody; end: 
   const after = tokens[lead.end + 1]
   if (after && after.kind !== 'comma' && after.kind !== 'colon' && after.kind !== 'stop') return null
   return { atom: { t: 'count', n: lead.whole, noun: noun.fo }, end: lead.end + 1 }
+}
+
+// A price right before a word counts for it only when it is not already the price or tip of what came before.
+const NOT_A_PRICE_BEFORE = new Set<AtomBody['t']>(['service', 'unclear', 'tip', 'channel', 'pay', 'total', 'priceWord', 'reduce', 'correct'])
+
+function priceBefore(tokens: readonly Token[], i: number, atoms: readonly Atom[]): boolean {
+  const money = atoms.at(-1)
+  if (money?.t !== 'money' || money.end !== tokens[i - 1]?.end) return false
+  const before = atoms.at(-2)
+  return !before || !NOT_A_PRICE_BEFORE.has(before.t)
+}
+
+// "tip 10 the", "10 tip the": the amount of a tip, then the word for how it was paid.
+function afterTipAmount(tokens: readonly Token[], i: number, atoms: readonly Atom[]): boolean {
+  const last = atoms.at(-1)
+  const before = atoms.at(-2)
+  if (!last || last.end !== tokens[i - 1]?.end) return false
+  return (last.t === 'money' && before?.t === 'tip') || (last.t === 'tip' && before?.t === 'money')
+}
+
+/** Whether a guessed form from the table may be read here. Forms that are not guarded always may. */
+function guardHolds(guard: Guard | undefined, tokens: readonly Token[], i: number, length: number, atoms: readonly Atom[]): boolean {
+  if (guard === undefined) return true
+  if (guard === 'afterTip') return afterTipAmount(tokens, i, atoms)
+  return readMoney(tokens, i + length) !== null || priceBefore(tokens, i, atoms)
+}
+
+const SOUND_SPAN_MAX = 3
+
+/**
+ * Words no list has, one to three of them, right next to a price: compared by
+ * sound with the person's own service names. Exactly one service must fit; two
+ * fits are left for the person as an unclear service, never guessed.
+ */
+function soundMatch(tokens: readonly Token[], i: number, atoms: readonly Atom[], lexicon: Lexicon): { body: AtomBody; length: number } | null {
+  if (lexicon.sounds.length === 0) return null
+  let run = 0
+  while (run < SOUND_SPAN_MAX && unplaced(tokens, i + run, lexicon)) run += 1
+
+  for (let length = run; length >= 1; length--) {
+    const priceAfter = readMoney(tokens, i + length) !== null
+    if (!priceAfter && !priceBefore(tokens, i, atoms)) continue
+
+    const fits = soundFits(tokens.slice(i, i + length).flatMap((token) => lettersOf(token.fo)), lexicon.sounds)
+    const priceFirst = !priceAfter || undefined
+    if (fits.length === 1) return { body: { t: 'service', presetId: fits[0], assumed: false, guessed: true, priceFirst }, length }
+    if (fits.length > 1) return { body: { t: 'unclear', priceFirst }, length }
+  }
+  return null
+}
+
+// A table form that also sounds like another service the person has (a custom
+// "Mini Mani" beside "mini cure" for Manicure) is left for the person to pick.
+function soundsLikeAnother(tokens: readonly Token[], i: number, length: number, presetId: string, lexicon: Lexicon): boolean {
+  const fits = soundFits(tokens.slice(i, i + length).flatMap((token) => lettersOf(token.fo)), lexicon.sounds)
+  return fits.some((id) => id !== presetId)
+}
+
+// A word the reader would otherwise leave as not understood.
+function unplaced(tokens: readonly Token[], k: number, lexicon: Lexicon): boolean {
+  const token = tokens[k]
+  return (
+    token?.kind === 'word' &&
+    !SKIPPED_WORDS.has(token.fo) &&
+    pieceAt(tokens, k) === null &&
+    lookup(tokens, k, lexicon) === null &&
+    readTime(tokens, k, false) === null
+  )
 }
 
 function scan(tokens: readonly Token[], lexicon: Lexicon): Atom[] {
@@ -973,16 +1100,29 @@ function scan(tokens: readonly Token[], lexicon: Lexicon): Atom[] {
       continue
     }
 
-    const hit = lookup(tokens, i, lexicon)
+    const hit = lookup(tokens, i, lexicon, (entry, length) => guardHolds(entry.guard, tokens, i, length, atoms))
     const money = readMoney(tokens, i)
     if (money && (!hit || money.end - i > hit.length)) {
       push({ t: 'money', money: money.money }, i, money.end)
       i = money.end
     } else if (hit) {
       if (hit.entry.unlessPriceFollows && readMoney(tokens, i + hit.length)) push({ t: 'reduce' }, i, i + hit.length)
-      else if (hit.entry.body) push(hit.entry.body, i, i + hit.length)
+      else if (hit.entry.body) {
+        // A guessed service read from the price before it takes that price.
+        const priceFirst = hit.entry.guard === 'price' && readMoney(tokens, i + hit.length) === null
+        const body = hit.entry.guard === 'price' && hit.entry.body.t === 'service' && soundsLikeAnother(tokens, i, hit.length, hit.entry.body.presetId, lexicon)
+          ? ({ t: 'unclear' } as AtomBody)
+          : hit.entry.body
+        push(priceFirst ? ({ ...body, priceFirst } as AtomBody) : body, i, i + hit.length)
+      }
       i += hit.length
     } else {
+      const sound = token.kind === 'word' ? soundMatch(tokens, i, atoms, lexicon) : null
+      if (sound) {
+        push(sound.body, i, i + sound.length)
+        i += sound.length
+        continue
+      }
       if (token.kind === 'word' && !SKIPPED_WORDS.has(token.fo)) push({ t: 'unknown' }, i, i + 1)
       i += 1
     }
@@ -1153,6 +1293,18 @@ function noteGuessedChannel(draft: Draft, ctx: Context, atom: Atom & { t: 'chann
   if (atom.guessed) check(draft, 'guessedWord', `Possible dictation error: "${heardOf(ctx, atom)}" matched to ${channelWord(atom.channel)}.`)
 }
 
+function noteGuessedTip(draft: Draft, ctx: Context, atom: Atom & { t: 'tip' }) {
+  if (atom.guessed) check(draft, 'guessedWord', `Possible dictation error: "${heardOf(ctx, atom)}" matched to tip.`)
+}
+
+/** A service read from the price said right before it takes that price, if nothing else has. */
+function takePriceBefore(draft: Draft, ctx: Context, before: Atom | undefined) {
+  const entry = draft.entries.at(-1)
+  if (!entry || before?.t !== 'money' || draft.loose.at(-1) !== before) return
+  draft.loose.pop()
+  setPrice(draft, ctx, entry, before)
+}
+
 function onMoney(draft: Draft, ctx: Context, atoms: readonly Atom[], i: number): number {
   const atom = atoms[i] as Atom & { t: 'money' }
 
@@ -1174,6 +1326,7 @@ function onMoney(draft: Draft, ctx: Context, atoms: readonly Atom[], i: number):
     let channel = lead?.channel ?? null
     if (lead) noteGuessedChannel(draft, ctx, lead)
     if (tipWord) {
+      noteGuessedTip(draft, ctx, word)
       j += 1
       const trailing = atoms[j]
       if (!channel && trailing?.t === 'channel') {
@@ -1265,6 +1418,7 @@ function onCorrectedMoney(draft: Draft, ctx: Context, atom: Atom & { t: 'money' 
 
 function onTip(draft: Draft, ctx: Context, atoms: readonly Atom[], i: number): number {
   draft.tipSeen = true
+  noteGuessedTip(draft, ctx, atoms[i] as Atom & { t: 'tip' })
   let channel: Channel | null = null
   const before = atoms[i - 1]
   if (before?.t === 'channel') {
@@ -1326,6 +1480,7 @@ function run(draft: Draft, ctx: Context, atoms: readonly Atom[]) {
       case 'service':
       case 'unclear':
         addEntry(draft, ctx, atom)
+        if (atom.priceFirst) takePriceBefore(draft, ctx, atoms[i - 1])
         break
       case 'money':
         i = skipTo(draft, atoms, i, onMoney(draft, ctx, atoms, i))
@@ -1458,7 +1613,7 @@ function finish(draft: Draft, ctx: Context, leftovers: string[]): DraftTurn {
     }
     const preset = ctx.presets.get(entry.presetId)
     const usual = preset?.defaultPriceCents ?? ctx.lastPrices?.get(entry.presetId) ?? null
-    services.push({ presetId: entry.presetId, priceCents: entry.priceCents, usualPriceCents: usual })
+    services.push({ presetId: entry.presetId, heard: entry.heard, priceCents: entry.priceCents, usualPriceCents: usual })
 
     if (!entry.priced) {
       const name = nameOf(ctx, entry.presetId)
@@ -1511,7 +1666,7 @@ export function readVoice(input: ReaderInput): ReaderResult {
     lastPrices: input.lastPrices,
   }
 
-  const atoms = scan(tokenize(text), buildLexicon(input.presets, locale))
+  const atoms = scan(tokenize(text), buildLexicon(input.presets, locale, input.learned))
   const notUnderstood: string[] = []
   for (let i = 0; i < atoms.length; i++) {
     if (atoms[i].t !== 'unknown') continue
@@ -1581,4 +1736,34 @@ export function readVoice(input: ReaderInput): ReaderResult {
   }
 
   return { turns, notUnderstood }
+}
+
+/** Words in the form the learned list keeps them: lower case, accents dropped, single spaces. */
+export function foldPhrase(phrase: string): string {
+  return tokenize(normalize(phrase))
+    .filter((token) => token.kind === 'word' || token.kind === 'number')
+    .map((token) => token.fo)
+    .join(' ')
+}
+
+/**
+ * Words the reader already owns, which a fix may never teach it to read
+ * differently: a service name, a marker such as tip or cash, or a number.
+ */
+export function isReservedPhrase(phrase: string, presets: readonly ReaderPreset[], locale: ReaderLocale): boolean {
+  const tokens = tokenize(normalize(phrase)).filter((token) => token.kind === 'word' || token.kind === 'number')
+  if (tokens.length === 0) return true
+  const lexicon = buildLexicon(presets, locale === 'mixed' ? 'vi' : locale)
+  const owned = (words: readonly Token[]) => {
+    const folded = lexicon.folded.get(words.map((token) => token.fo).join(' '))
+    const strict = lexicon.strict.get(words.map((token) => token.lo).join(' '))
+    return [folded, strict].some((entry) => entry !== undefined && !entry.soft && entry.body !== null && entry.body.t !== 'unclear')
+  }
+  if (owned(tokens)) return true
+  // A single word that is a marker (tip, cash, request...) or part of a number.
+  const marker = (token: Token) => {
+    const body = lexicon.folded.get(token.fo)?.body
+    return body != null && body.t !== 'service' && body.t !== 'unclear'
+  }
+  return tokens.some((token, index) => token.kind === 'number' || readQuantity(tokens, index) !== null || marker(token))
 }

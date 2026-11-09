@@ -677,3 +677,87 @@ test('How it works opens the how-to again and every way of closing it gives focu
   await expect(link).toBeFocused()
   expect(await howToSeen(page)).toBe(true)
 })
+
+const learnedWords = (page: Page): Promise<unknown> =>
+  page.evaluate(() => JSON.parse(localStorage.getItem('nail-tracker.settings') ?? '{}').learnedWords ?? {})
+
+test('"Joe X 65" makes a Gel-X card with Check this', async ({ page }) => {
+  await startSay(page)
+  await sayText(page, 'Joe X 65 tip 10 cash')
+
+  await expect(cards(page)).toHaveCount(1)
+  await expect(cards(page).first()).toContainText('Gel-X')
+  await expect(cards(page).first()).toContainText('$65')
+  await expect(cards(page).first()).toContainText('+$10 cash tip')
+  await expect(cards(page).first()).toContainText('Check this')
+  await expect(cards(page).first()).toContainText('Joe X')
+  await expect(page.getByRole('button', { name: 'Save 1 turn' })).toBeEnabled()
+})
+
+test('fixing a card teaches the words, and the same words then match with no check', async ({ page }) => {
+  await startSay(page)
+  await sayText(page, 'Manicure 30. blah blah')
+  await page.getByRole('button', { name: 'Add as a turn' }).click()
+  await page.getByRole('button', { name: 'Pedicure', exact: true }).click()
+  await page.getByLabel('Service amount').fill('40')
+  await page.getByRole('button', { name: 'Done', exact: true }).click()
+  await expect(cards(page)).toHaveCount(2)
+  await expect.poll(() => learnedWords(page)).toEqual({ 'blah blah': 'pedicure' })
+
+  await page.goto('./#/say')
+  await sayText(page, 'blah blah 45')
+  await expect(cards(page)).toHaveCount(1)
+  await expect(cards(page).first()).toContainText('Pedicure')
+  await expect(cards(page).first()).toContainText('$45')
+  await expect(cards(page).first()).not.toContainText('Check this')
+})
+
+test('a guessed card fixed to another service is learned too, and one fixed to nothing new is not', async ({ page }) => {
+  await startSay(page)
+  await sayText(page, 'Joe X 65')
+  // Opened and saved with the same service the reader chose: nothing to learn.
+  await cards(page).first().click()
+  await page.getByRole('button', { name: 'Done', exact: true }).click()
+  await expect(cards(page)).toHaveCount(1)
+  await expect.poll(() => learnedWords(page)).toEqual({})
+
+  await cards(page).first().click()
+  await selectServices(page, ['Gel Pedicure'])
+  await page.getByLabel('Service amount').fill('65')
+  await page.getByRole('button', { name: 'Done', exact: true }).click()
+  await expect.poll(() => learnedWords(page)).toEqual({ 'joe x': 'gel-pedicure' })
+
+  await page.goto('./#/say')
+  await sayText(page, 'Joe X 65')
+  await expect(cards(page).first()).toContainText('Gel Pedicure')
+  await expect(cards(page).first()).not.toContainText('Check this')
+})
+
+test('Forget learned words clears what was learned, after a confirm', async ({ page }) => {
+  await page.clock.setFixedTime(NOON)
+  await seedSettings(page, { learnedWords: { 'blah blah': 'pedicure' } })
+  await page.goto('./#/settings')
+
+  await page.getByRole('button', { name: 'Forget learned words' }).click()
+  const dialog = page.getByRole('dialog', { name: 'Forget learned words?' })
+  await expect(dialog).toBeVisible()
+  await dialog.getByRole('button', { name: 'Cancel' }).click()
+  expect(await learnedWords(page)).toEqual({ 'blah blah': 'pedicure' })
+
+  await page.getByRole('button', { name: 'Forget learned words' }).click()
+  await dialog.getByRole('button', { name: 'Forget learned words' }).click()
+  await expect(page.getByRole('button', { name: 'Forget learned words' })).toHaveCount(0)
+  expect(await learnedWords(page)).toEqual({})
+
+  await page.goto('./#/say')
+  await sayText(page, 'blah blah 45')
+  await expect(page.getByText('Not understood: "blah blah"')).toBeVisible()
+})
+
+test('the Settings button is not shown while nothing is learned', async ({ page }) => {
+  await page.clock.setFixedTime(NOON)
+  await seedSettings(page)
+  await page.goto('./#/settings')
+  await expect(page.getByRole('heading', { name: 'Manage service presets' }).or(page.getByRole('link', { name: 'Manage service presets' }))).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Forget learned words' })).toHaveCount(0)
+})

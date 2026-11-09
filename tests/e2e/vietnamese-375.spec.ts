@@ -20,6 +20,8 @@ const VIETNAMESE_SETTINGS = {
   payPeriodAnchorDate: '2026-11-01',
   weekStartDay: 0,
   backupReminderDays: 0,
+  // So the Forget learned words button on Settings has something to show.
+  learnedWords: { 'joe x': 'gel-x' },
 }
 
 interface Line {
@@ -437,6 +439,7 @@ test('every screen fits in Vietnamese at 375 pixels', async ({ page }) => {
 
   await page.goto('./#/settings')
   await expect(page.getByRole('heading', { name: 'Cài đặt', exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Quên các từ đã học', exact: true })).toBeVisible()
   await checkScreen(page, 'settings')
 
   await page.goto('./#/settings/services')

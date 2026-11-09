@@ -19,6 +19,7 @@ import { TileGroup } from '../../ui/TileGroup.tsx'
 import { card, field, label, secondaryButton } from '../../ui/styles.ts'
 import { BackupSection } from '../backup/BackupSection.tsx'
 import { DeleteAllSection } from '../backup/DeleteAllSection.tsx'
+import { LearnedWordsSection } from './LearnedWordsSection.tsx'
 import { payRulesSummary } from '../payRules/payRulesSummary.ts'
 import { TipHandlingFields } from './TipHandlingFields.tsx'
 
@@ -238,6 +239,8 @@ export function SettingsPage() {
       <Link href={paths.services} className={secondaryButton + ' block text-center'}>
         {t(locale, 'manageServices')}
       </Link>
+
+      <LearnedWordsSection />
 
       <div className={card}>
         <Row label={t(locale, 'currency')} value={t(locale, 'currencyUsd')} />
