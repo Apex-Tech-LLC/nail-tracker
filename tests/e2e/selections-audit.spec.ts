@@ -1521,32 +1521,21 @@ test('Record what you got: Zelle is chosen for the other payment, a tap on Other
   expect(methodOf(await readStore<SavedPayment>(page, 'payments'), 500)).toBe('other')
 })
 
-test('onboarding: each step opens on the usual answer, one tap changes it, Back keeps it, and the answers reach Settings and Add turn', async ({
+test('onboarding: every choice opens on the usual answer, one tap changes it, and the answers reach Settings and Add turn', async ({
   page,
 }) => {
   await start(page, { onboardingDone: false })
   await page.goto('./')
-  await expect(page.getByText('Step 1 of 4')).toBeVisible()
   await expect(radio(page, 'Language', 'English')).toBeChecked()
-  await pressed(page, 'Next').click()
-
-  await expect(page.getByText('Step 2 of 4')).toBeVisible()
   await expect(radio(page, 'Default commission', '60% commission')).toBeChecked()
   await choose(page, 'Default commission', '50% commission')
   await expect(radio(page, 'Default commission', '50% commission')).toBeChecked()
-  await pressed(page, 'Next').click()
-  await pressed(page, 'Back').click()
-  await expect(radio(page, 'Default commission', '50% commission')).toBeChecked()
   await choose(page, 'Default commission', 'Custom commission')
   await page.getByLabel('Custom commission %').fill('45')
-  await pressed(page, 'Next').click()
 
-  await expect(page.getByText('Step 3 of 4')).toBeVisible()
   await expect(radio(page, 'Total tips', 'Cash tips right away, card tips on payday')).toBeChecked()
   await choose(page, 'Total tips', 'All tips on payday')
-  await pressed(page, 'Next').click()
 
-  await expect(page.getByText('Step 4 of 4')).toBeVisible()
   await expect(radio(page, 'Payday schedule', 'Skip for now')).toBeChecked()
   await choose(page, 'Payday schedule', 'Weekly')
   await pressed(page, 'Start tracking').click()
@@ -1568,17 +1557,14 @@ test('onboarding: each step opens on the usual answer, one tap changes it, Back 
   await expect(page.getByLabel('Cash tip already in my hand')).not.toBeChecked()
 })
 
-test('onboarding: choosing Vietnamese on the first step switches the next steps, and Skip on every step keeps the usual answers', async ({
+test('onboarding: choosing Vietnamese switches every choice at once, and one Skip keeps the usual answers', async ({
   page,
 }) => {
   await start(page, { onboardingDone: false })
   await page.goto('./')
   await choose(page, 'Language', 'Tiếng Việt')
-  await expect(page.getByRole('heading', { name: 'Chọn ngôn ngữ' })).toBeVisible()
-  await pressed(page, 'Bỏ qua').click()
-  await expect(page.getByRole('heading', { name: 'Bạn được trả lương thế nào?' })).toBeVisible()
-  await pressed(page, 'Bỏ qua').click()
-  await pressed(page, 'Bỏ qua').click()
+  await expect(page.getByRole('heading', { name: 'Tỷ lệ chia mặc định' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Lịch nhận lương' })).toBeVisible()
   await pressed(page, 'Bỏ qua').click()
 
   await expect(page.getByRole('link', { name: /Thêm turn/ })).toBeVisible()

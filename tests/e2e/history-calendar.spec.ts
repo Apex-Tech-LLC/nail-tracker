@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
-import { addTurn, formSave, seedSettings, selectServices, turnRow } from './helpers.ts'
+import { addTurn, formSave, seedSettings, selectServices, skipOnboarding, turnRow } from './helpers.ts'
 
 /** Records a turn on the day locked in the browser clock, with an explicit offset. */
 async function addTurnOn(
@@ -86,9 +86,7 @@ test('a day off shows on the calendar, survives a reload and a backup', async ({
   await dialog.getByLabel('Type the word here').fill('DELETE')
   await dialog.getByRole('button', { name: 'Delete all data' }).click()
   await expect(page).toHaveURL(/#\/onboarding/)
-  for (let step = 0; step < 4; step += 1) {
-    await page.getByRole('button', { name: 'Skip', exact: true }).click()
-  }
+  await skipOnboarding(page)
 
   await page.goto('./#/settings')
   await page.locator('input[type=file]').setInputFiles(file)

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
-import { addTurn, seedSettings } from './helpers.ts'
+import { addTurn, seedSettings, skipOnboarding } from './helpers.ts'
 
 // Times carry an explicit offset so GitHub's UTC clock cannot move the day.
 function moment(time: string): Date {
@@ -135,9 +135,7 @@ test('hours survive a reload and a backup round trip', async ({ page }, testInfo
   await confirm.getByLabel('Type the word here').fill('DELETE')
   await confirm.getByRole('button', { name: 'Delete all data' }).click()
   await expect(page).toHaveURL(/#\/onboarding/)
-  for (let step = 0; step < 4; step += 1) {
-    await page.getByRole('button', { name: 'Skip', exact: true }).click()
-  }
+  await skipOnboarding(page)
 
   await page.goto('./#/settings')
   await page.locator('input[type=file]').setInputFiles(file)

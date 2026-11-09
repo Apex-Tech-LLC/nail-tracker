@@ -163,3 +163,9 @@ export async function addTurn(
   await formSave(page).click()
   await expect(page.getByRole('link', { name: /Add Turn|Add your first turn/ })).toBeVisible()
 }
+
+/** Leaves first-time setup on its one screen with the usual answers: one Skip. */
+export async function skipOnboarding(page: Page): Promise<void> {
+  await page.getByRole('button', { name: 'Skip', exact: true }).click()
+}
+

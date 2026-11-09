@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { expect, test, type Page } from '@playwright/test'
-import { addTurn, formSave, rowAmount, seedSettings } from './helpers.ts'
+import { addTurn, formSave, rowAmount, seedSettings, skipOnboarding } from './helpers.ts'
 
 // Noon on Wednesday 2026-11-04 in Chicago. The offset is explicit so UTC on
 // another machine cannot move the fixed day.
@@ -41,9 +41,7 @@ async function deleteAll(page: Page): Promise<void> {
   await dialog.getByLabel('Type the word here').fill('DELETE')
   await dialog.getByRole('button', { name: 'Delete all data' }).click()
   await expect(page).toHaveURL(/#\/onboarding/)
-  for (let step = 0; step < 4; step += 1) {
-    await page.getByRole('button', { name: 'Skip', exact: true }).click()
-  }
+  await skipOnboarding(page)
 }
 
 test('opens from Reports in Year mode and shows the year totals', async ({ page }) => {
@@ -123,7 +121,7 @@ test('the percent survives a reload and a backup round trip', async ({ page }, t
   await expect(page.locator('p[role=status]')).toContainText('Restore finished')
 
   await page.goto('./#/settings')
-  await expect(page.getByText('Set aside 20%')).toBeVisible()
+  await expect(page.getByRole('button', { name: '20%', exact: true })).toHaveAttribute('aria-pressed', 'true')
 })
 
 test('the tax reminder shows on Home with its own words', async ({ page }) => {

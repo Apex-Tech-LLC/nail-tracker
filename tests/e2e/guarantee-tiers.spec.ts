@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
-import { formSave, rowAmount, seedSettings, weeklyPay } from './helpers.ts'
+import { formSave, rowAmount, seedSettings, skipOnboarding, weeklyPay } from './helpers.ts'
 
 // Noon on 2026-11-04 in Chicago, with its offset written down so a UTC runner
 // cannot move the day.
@@ -44,9 +44,7 @@ async function deleteAll(page: Page): Promise<void> {
   await dialog.getByLabel('Type the word here').fill('DELETE')
   await dialog.getByRole('button', { name: 'Delete all data' }).click()
   await expect(page).toHaveURL(/#\/onboarding/)
-  for (let step = 0; step < 4; step += 1) {
-    await page.getByRole('button', { name: 'Skip', exact: true }).click()
-  }
+  await skipOnboarding(page)
 }
 
 test('a $150 daily guarantee tops a slow week up to $900', async ({ page }, testInfo) => {

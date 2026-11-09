@@ -41,8 +41,7 @@ interface Copy {
   forgetLearnedWords: string
   servicePresets: string
   addPreset: string
-  next: string
-  onboarding: readonly [string, string, string, string]
+  onboarding: string
 }
 
 const TEXT: Record<Locale, Copy> = {
@@ -71,13 +70,7 @@ const TEXT: Record<Locale, Copy> = {
     forgetLearnedWords: 'Forget learned words',
     servicePresets: 'Service presets',
     addPreset: 'Add a service',
-    next: 'Next',
-    onboarding: [
-      'Choose your language',
-      'How are you paid?',
-      'How do you usually get your tips?',
-      'How often are you paid?',
-    ],
+    onboarding: 'Quick setup',
   },
   vi: {
     appName: 'Nail Tracker',
@@ -104,13 +97,7 @@ const TEXT: Record<Locale, Copy> = {
     forgetLearnedWords: 'Quên các từ đã học',
     servicePresets: 'Danh sách dịch vụ',
     addPreset: 'Thêm dịch vụ',
-    next: 'Tiếp',
-    onboarding: [
-      'Chọn ngôn ngữ',
-      'Bạn được trả lương thế nào?',
-      'Bạn thường nhận tip thế nào?',
-      'Bao lâu bạn nhận lương một lần?',
-    ],
+    onboarding: 'Cài đặt nhanh',
   },
 }
 
@@ -444,24 +431,19 @@ for (const scheme of SCHEMES) {
         })
       })
 
-      // No seedSettings: this is a first launch. Each step is audited on its own,
-      // because a failure must name the step.
-      test(`onboarding, all four steps (${locale})`, async ({ page }) => {
+      // No seedSettings: this is a first launch. The whole setup is one screen.
+      test(`onboarding (${locale})`, async ({ page }) => {
         await page.clock.setFixedTime(NOON)
         await page.addInitScript((value) => {
           localStorage.setItem('nail-tracker.settings', JSON.stringify({ locale: value }))
         }, locale)
         await page.goto('./')
 
-        for (const [index, heading] of text.onboarding.entries()) {
-          await expect(page.getByRole('heading', { level: 1, name: heading })).toBeVisible()
-          await audit(page)
-          await noSidewaysScroll(page)
-          await shoot(page, scheme, `${locale}-onboarding-${index + 1}`)
-          if (index < text.onboarding.length - 1) {
-            await page.getByRole('button', { name: text.next, exact: true }).click()
-          }
-        }
+        await expect(page.getByRole('heading', { level: 1, name: text.onboarding })).toBeAttached()
+        await audit(page)
+        await noSidewaysScroll(page)
+        expect(await smallTapTargets(page)).toEqual([])
+        await shoot(page, scheme, `${locale}-onboarding`)
       })
     }
 

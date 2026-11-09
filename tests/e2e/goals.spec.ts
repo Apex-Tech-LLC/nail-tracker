@@ -1,5 +1,5 @@
-import { expect, test, type Locator, type Page } from '@playwright/test'
-import { addTurn, formSave, openCommission, seedSettings } from './helpers.ts'
+import { expect, test, type Page } from '@playwright/test'
+import { addTurn, formSave, openCommission, seedSettings, skipOnboarding } from './helpers.ts'
 
 // 3pm on Wednesday 2026-11-04 in the browser's America/Chicago timezone. The
 // offset is explicit so a machine running in UTC cannot move the fixed day.
@@ -8,7 +8,8 @@ const NOON = new Date('2026-11-04T15:00:00-06:00')
 const pad = (page: Page) => page.getByTestId('number-pad')
 const status = (page: Page) => page.locator('p[role=status]')
 const fileInput = (page: Page) => page.locator('input[type=file]')
-const goalsRow = (page: Page): Locator => page.getByRole('link', { name: /Goals/ })
+const weeklyBox = (page: Page) => page.getByLabel('Weekly goal')
+const monthlyBox = (page: Page) => page.getByLabel('Monthly goal')
 
 async function typeOnPad(page: Page, keys: readonly string[]): Promise<void> {
   for (const key of keys) {
@@ -44,38 +45,36 @@ async function deleteAll(page: Page): Promise<void> {
   await dialog.getByLabel('Type the word here').fill('DELETE')
   await dialog.getByRole('button', { name: 'Delete all data' }).click()
   await expect(page).toHaveURL(/#\/onboarding/)
-  for (let step = 0; step < 4; step += 1) {
-    await page.getByRole('button', { name: 'Skip', exact: true }).click()
-  }
+  await skipOnboarding(page)
 }
 
-test('a goal set on the Goals sheet shows in Settings and survives a reload', async ({
+test('a goal set in the Settings boxes stays there after a reload and fills the Goals page', async ({
   page,
 }) => {
   await seedSettings(page)
   await page.clock.setFixedTime(NOON)
   await page.goto('./#/settings')
 
-  const goals = goalsRow(page)
-  await expect(goals).toContainText('Not set')
-  await goals.click()
-  await expect(page.getByRole('heading', { name: 'Goals', exact: true })).toBeVisible()
-
-  await page.getByLabel('Weekly goal').click()
+  await expect(weeklyBox(page)).toHaveValue('')
+  await weeklyBox(page).click()
   await typeOnPad(page, ['1', '0', '0', '0'])
   await pad(page).getByRole('button', { name: 'Next', exact: true }).click()
   await typeOnPad(page, ['4', '0', '0', '0'])
   await pad(page).getByRole('button', { name: 'Save', exact: true }).click()
 
   await expect(page.getByRole('heading', { name: 'Settings', exact: true })).toBeVisible()
-  await expect(page.getByRole('link', { name: /Goals/ })).toContainText(
-    '$1,000 a week · $4,000 a month',
-  )
+  await expect(weeklyBox(page)).toHaveValue('1000.00')
+  await expect(monthlyBox(page)).toHaveValue('4000.00')
 
   await page.reload()
-  await expect(page.getByRole('link', { name: /Goals/ })).toContainText(
-    '$1,000 a week · $4,000 a month',
-  )
+  await expect(weeklyBox(page)).toHaveValue('1000.00')
+  await expect(monthlyBox(page)).toHaveValue('4000.00')
+
+  // Home's "Set a goal" link still opens the Goals page with the same numbers.
+  await page.goto('./#/settings/goals')
+  await expect(page.getByRole('heading', { name: 'Goals', exact: true })).toBeVisible()
+  await expect(weeklyBox(page)).toHaveValue('1000.00')
+  await expect(monthlyBox(page)).toHaveValue('4000.00')
 })
 
 test('Home shows how close the week is to a $1,000 goal', async ({ page }) => {
@@ -140,18 +139,18 @@ test('a goal survives a reload and a backup round trip', async ({ page }, testIn
   await seedSettings(page, { weeklyGoalCents: 100_000 })
   await page.clock.setFixedTime(NOON)
   await page.goto('./#/settings')
-  await expect(goalsRow(page)).toContainText('$1,000 a week')
+  await expect(weeklyBox(page)).toHaveValue('1000.00')
 
   await page.reload()
-  await expect(goalsRow(page)).toContainText('$1,000 a week')
+  await expect(weeklyBox(page)).toHaveValue('1000.00')
 
   const file = testInfo.outputPath('goals-backup.json')
   await saveBackup(page, file)
   await deleteAll(page)
   await page.goto('./#/settings')
-  await expect(goalsRow(page)).toContainText('Not set')
+  await expect(weeklyBox(page)).toHaveValue('')
 
   await fileInput(page).setInputFiles(file)
   await expect(status(page)).toContainText('Restore finished')
-  await expect(goalsRow(page)).toContainText('$1,000 a week')
+  await expect(weeklyBox(page)).toHaveValue('1000.00')
 })

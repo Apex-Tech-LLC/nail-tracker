@@ -8,6 +8,8 @@ interface Props {
   onBackspace: () => void
   onNext: () => void
   onSave: () => void
+  /** For a pad over a single box: this key takes the place of Next and gives up the change. */
+  onCancel?: () => void
 }
 
 const DIGITS = ['1', '2', '3', '4', '5', '6', '7', '8', '9'] as const
@@ -33,7 +35,7 @@ const SIDE =
  * into the money box that is active, so the phone's keyboard never opens and
  * the page does not jump.
  */
-export function NumberPad({ locale, onDigit, onBackspace, onNext, onSave }: Props) {
+export function NumberPad({ locale, onDigit, onBackspace, onNext, onSave, onCancel }: Props) {
   // Keep focus in the money box: without preventDefault the button takes it.
   function tap(event: PointerEvent<HTMLButtonElement>, action: () => void) {
     event.preventDefault()
@@ -99,12 +101,12 @@ export function NumberPad({ locale, onDigit, onBackspace, onNext, onSave }: Prop
       </button>
       <button
         type="button"
-        aria-label={t(locale, 'next')}
+        aria-label={t(locale, onCancel ? 'cancel' : 'next')}
         style={{ gridColumn: 4, gridRow: '1 / span 2' }}
         className={`${SIDE} bg-inverse text-on-inverse text-[15px]`}
-        onPointerDown={(event) => move(event, onNext)}
+        onPointerDown={(event) => move(event, onCancel ?? onNext)}
       >
-        {t(locale, 'next')}
+        {t(locale, onCancel ? 'cancel' : 'next')}
       </button>
       <button
         type="button"
