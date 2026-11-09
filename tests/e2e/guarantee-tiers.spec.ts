@@ -13,10 +13,9 @@ async function start(page: Page): Promise<void> {
   await page.clock.setFixedTime(NOON)
 }
 
-/** Saves the rule form through its start-date step. */
+/** Saves the rule form, starting the rule today (the form starts from the pay period by default). */
 async function saveRules(page: Page): Promise<void> {
-  await page.getByRole('button', { name: 'Save', exact: true }).click()
-  await expect(page.getByText('When did this start?')).toBeVisible()
+  await page.getByRole('button', { name: 'Today', exact: true }).click()
   await page.getByRole('button', { name: 'Save rules', exact: true }).click()
 }
 

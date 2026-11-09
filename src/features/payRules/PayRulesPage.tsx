@@ -43,6 +43,9 @@ import { Row } from '../../ui/Row.tsx'
 import { TileGroup } from '../../ui/TileGroup.tsx'
 import {
   card,
+  chip,
+  chipOff,
+  chipOn,
   dangerButton,
   errorText,
   field,
@@ -64,6 +67,12 @@ type SupplyKind = SupplyFee['kind']
 type RateChoice = '6000' | '5000' | 'custom'
 type SplitChoice = 'none' | 'half' | 'custom'
 type StartChoice = 'today' | 'period' | 'other'
+
+const START_CHOICES: [StartChoice, 'startOfPayPeriod' | 'startToday' | 'startOtherDay'][] = [
+  ['period', 'startOfPayPeriod'],
+  ['today', 'startToday'],
+  ['other', 'startOtherDay'],
+]
 
 interface FormErrors {
   supply?: string
@@ -184,6 +193,7 @@ function PayRulesForm({ initial, today, periodStart }: FormProps) {
   const formRef = useRef<HTMLFormElement | null>(null)
   const perServiceHintId = useId()
   const startDateId = useId()
+  const startLabelId = useId()
   const minDaysId = useId()
 
   const [customOpen, setCustomOpen] = useState(rate !== 6000 && rate !== 5000)
@@ -239,8 +249,7 @@ function PayRulesForm({ initial, today, periodStart }: FormProps) {
   )
 
   const [errors, setErrors] = useState<FormErrors>({})
-  const [askingStart, setAskingStart] = useState(false)
-  const [startChoice, setStartChoice] = useState<StartChoice>('today')
+  const [startChoice, setStartChoice] = useState<StartChoice>('period')
   const [otherDate, setOtherDate] = useState<IsoDate>(today)
   const [startError, setStartError] = useState(false)
 
@@ -397,29 +406,22 @@ function PayRulesForm({ initial, today, periodStart }: FormProps) {
     return Object.keys(next).length === 0 && !customInvalid
   }
 
-  function startSaving(event?: FormEvent) {
+  async function saveRules(event?: FormEvent) {
     event?.preventDefault()
     if (!validate()) return
-    setStartChoice('today')
-    setStartError(false)
-    setAskingStart(true)
-  }
-
-  async function confirmSave() {
     const startDate =
       startChoice === 'today' ? today : startChoice === 'period' ? periodStart : otherDate
     if (!isIsoDate(startDate)) {
       setStartError(true)
       return
     }
-    await savePayRules(db, draft, startDate)
-    setAskingStart(false)
     setStartError(false)
+    await savePayRules(db, draft, startDate)
     toast.show({ message: t(locale, 'rulesSaved') })
   }
 
   return (
-    <form ref={formRef} noValidate onSubmit={startSaving} className="flex flex-col gap-4">
+    <form ref={formRef} noValidate onSubmit={saveRules} className="flex flex-col gap-4">
       <section className={`${card} flex flex-col gap-3`}>
         <h2 className="font-medium">{t(locale, 'yourCommission')}</h2>
         <TileGroup<RateChoice>
@@ -746,56 +748,52 @@ function PayRulesForm({ initial, today, periodStart }: FormProps) {
         </p>
       </section>
 
-      {askingStart ? (
-        <section className={`${card} flex flex-col gap-3`}>
-          <h2 className="font-medium">{t(locale, 'whenDidThisStart')}</h2>
-          <TileGroup<StartChoice>
-            legend={t(locale, 'startDate')}
-            name="start-choice"
-            value={startChoice}
-            onChange={(value) => {
-              setStartChoice(value)
-              setStartError(false)
-            }}
-            stacked
-            options={[
-              { value: 'today', label: t(locale, 'startToday') },
-              { value: 'period', label: t(locale, 'startOfPayPeriod') },
-              { value: 'other', label: t(locale, 'startOtherDay') },
-            ]}
-          />
-          {startChoice === 'other' && (
-            <div>
-              <label htmlFor={startDateId} className={label}>
-                {t(locale, 'startDate')}
-              </label>
-              <input
-                id={startDateId}
-                type="date"
-                value={otherDate}
-                onChange={(event) => {
-                  if (isIsoDate(event.target.value)) {
-                    setOtherDate(event.target.value)
-                    setStartError(false)
-                  }
+      <section className={`${card} flex flex-col gap-3`}>
+        <div role="group" aria-labelledby={startLabelId}>
+          <p id={startLabelId} className={label}>
+            {t(locale, 'whenDidThisStart')}
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {START_CHOICES.map(([value, key]) => (
+              <button
+                key={value}
+                type="button"
+                aria-pressed={startChoice === value}
+                className={`${chip} ${startChoice === value ? chipOn : chipOff}`}
+                onClick={() => {
+                  setStartChoice(value)
+                  setStartError(false)
                 }}
-                className="w-full rounded-control border-[1.5px] border-border-strong bg-surface px-3.5 py-3 text-base focus:border-brand-ink focus:outline-none"
-              />
-            </div>
-          )}
-          {startError && <p className={errorText}>{t(locale, 'errorStartDate')}</p>}
-          <button type="button" onClick={() => void confirmSave()} className={primaryButton}>
-            {t(locale, 'saveRules')}
-          </button>
-          <button type="button" onClick={() => setAskingStart(false)} className={secondaryButton}>
-            {t(locale, 'cancel')}
-          </button>
-        </section>
-      ) : (
+              >
+                {t(locale, key)}
+              </button>
+            ))}
+          </div>
+        </div>
+        {startChoice === 'other' && (
+          <div>
+            <label htmlFor={startDateId} className={label}>
+              {t(locale, 'startDate')}
+            </label>
+            <input
+              id={startDateId}
+              type="date"
+              value={otherDate}
+              onChange={(event) => {
+                if (isIsoDate(event.target.value)) {
+                  setOtherDate(event.target.value)
+                  setStartError(false)
+                }
+              }}
+              className="w-full rounded-control border-[1.5px] border-border-strong bg-surface px-3.5 py-3 text-base focus:border-brand-ink focus:outline-none"
+            />
+          </div>
+        )}
+        {startError && <p className={errorText}>{t(locale, 'errorStartDate')}</p>}
         <button type="submit" className={primaryButton}>
-          {t(locale, 'save')}
+          {t(locale, 'saveRules')}
         </button>
-      )}
+      </section>
 
       {numberPad && padOpen && (
         <NumberPad

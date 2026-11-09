@@ -12,6 +12,7 @@ import { t } from '../../lib/i18n.ts'
 import { endLoad, startLoad } from '../../lib/loadMark.ts'
 import { list, primaryButton, secondaryButton } from '../../ui/styles.ts'
 import { CheckPanel } from '../paycheck/CheckPanel.tsx'
+import { ExactPayButton } from '../paycheck/ExactPayButton.tsx'
 import { checkStatusColor, checkStatusLabel } from '../paycheck/paycheckStatus.ts'
 import { StatementCard } from '../paycheck/StatementCard.tsx'
 import { AddPeriodForm } from './AddPeriodForm.tsx'
@@ -90,6 +91,7 @@ export function PaydayPage() {
             endRules={current.endRules}
             status={current.state}
           />
+          <ExactPayButton summary={current} />
           <CheckPanel summary={current} />
         </>
       )}

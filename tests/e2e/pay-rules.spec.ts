@@ -66,8 +66,9 @@ test('sets up commission, supply fee, card-tip fee and a 50/50 split', async ({ 
   ).toBeVisible()
   await expect(page.getByText('$1,834 owed: $917 by check, $917 cash.')).toBeVisible()
 
-  await page.getByRole('button', { name: 'Save', exact: true }).click()
+  // The start choice sits right above Save rules; this one starts from today.
   await expect(page.getByText('When did this start?')).toBeVisible()
+  await page.getByRole('button', { name: 'Today', exact: true }).click()
   await page.getByRole('button', { name: 'Save rules', exact: true }).click()
   // The live list shows the saved rule once the write has finished.
   await expect(page.getByText('Starts Nov 6, 2026')).toBeVisible()
@@ -96,8 +97,7 @@ test('a rule saved with another day is replaced, not duplicated, on a later chan
   await page.goto('./#/settings/pay')
 
   await page.getByLabel('Percent of card tips').fill('4')
-  await page.getByRole('button', { name: 'Save', exact: true }).click()
-  await page.getByRole('group', { name: 'Start date' }).getByText('Other day', { exact: true }).click()
+  await page.getByRole('button', { name: 'Other day', exact: true }).click()
   await page.getByLabel('Start date').fill('2026-11-04')
   await page.getByRole('button', { name: 'Save rules', exact: true }).click()
 
@@ -105,8 +105,7 @@ test('a rule saved with another day is replaced, not duplicated, on a later chan
   expect(await countPayRules(page)).toBe(2)
 
   await page.getByLabel('Percent of card tips').fill('5')
-  await page.getByRole('button', { name: 'Save', exact: true }).click()
-  await page.getByRole('group', { name: 'Start date' }).getByText('Other day', { exact: true }).click()
+  await page.getByRole('button', { name: 'Other day', exact: true }).click()
   await page.getByLabel('Start date').fill('2026-11-04')
   await page.getByRole('button', { name: 'Save rules', exact: true }).click()
 

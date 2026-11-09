@@ -12,6 +12,10 @@ interface Props {
   error?: string
   /** Smaller buttons for the Add turn header, where the row shares a line with other pills. */
   compact?: boolean
+  /** The heading above the row. Defaults to "Date". */
+  label?: string
+  /** What the date input is called to a screen reader and a test. Defaults to "Work date". */
+  inputLabel?: string
 }
 
 const compactChip =
@@ -23,7 +27,14 @@ const compactChip =
  * real date input laid over it, invisible but tappable, so one tap opens the
  * phone's own date picker.
  */
-export function WorkDateField({ value, onChange, error, compact = false }: Props) {
+export function WorkDateField({
+  value,
+  onChange,
+  error,
+  compact = false,
+  label: heading,
+  inputLabel,
+}: Props) {
   const { locale } = useSettings()
   const id = useId()
   const today = useToday()
@@ -31,7 +42,8 @@ export function WorkDateField({ value, onChange, error, compact = false }: Props
 
   const base = compact ? compactChip : `${chip} flex items-center justify-center`
   const other = value !== today && value !== yesterday
-  const shown = isIsoDate(value) ? formatDatePill(value, locale) : t(locale, 'workDate')
+  const dateLabel = inputLabel ?? t(locale, 'workDate')
+  const shown = isIsoDate(value) ? formatDatePill(value, locale) : dateLabel
   const errorId = `${id}-date-error`
 
   function openPicker(input: HTMLInputElement) {
@@ -74,7 +86,7 @@ export function WorkDateField({ value, onChange, error, compact = false }: Props
           id={`${id}-date`}
           type="date"
           value={value}
-          aria-label={t(locale, 'workDate')}
+          aria-label={dateLabel}
           aria-invalid={!!error}
           aria-describedby={error ? errorId : undefined}
           onChange={(event) => onChange(event.target.value)}
@@ -102,7 +114,7 @@ export function WorkDateField({ value, onChange, error, compact = false }: Props
 
   return (
     <div>
-      <p className={label}>{t(locale, 'date')}</p>
+      <p className={label}>{heading ?? t(locale, 'date')}</p>
       {row}
       {errorLine}
     </div>
