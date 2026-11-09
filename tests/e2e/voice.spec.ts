@@ -107,12 +107,12 @@ test('Vietnamese words are read and every reason is in Vietnamese', async ({ pag
   await page.reload()
   await sayText(page, 'Sơn gel tay bốn mươi lăm, tip mười đô. Làm móng chân', 'Tạo turn')
 
-  await expect(page.getByRole('heading', { level: 1, name: 'Kiểm tra 2 turn' })).toBeVisible()
+  await expect(page.getByRole('heading', { level: 1, name: 'Xem lại 2 turn' })).toBeVisible()
   await expect(cards(page).nth(0)).toContainText('Sơn gel tay')
   await expect(cards(page).nth(0)).toContainText('$45')
-  await expect(cards(page).nth(0)).toContainText('+$10 tip tiền mặt')
+  await expect(cards(page).nth(0)).toContainText('+$10 tip cash')
   await expect(cards(page).nth(1)).toContainText(
-    'Cần xem lại: Chưa nghe thấy giá, đã dùng giá quen thuộc $35',
+    'Cần xem lại: Chưa có giá, tạm lấy giá thường tính là $35',
   )
   await expect(page.getByText('No price heard')).toHaveCount(0)
   await expect(page.getByRole('button', { name: 'Lưu 2 turn' })).toBeEnabled()
@@ -572,10 +572,108 @@ test('the ChatGPT labels and reasons are in Vietnamese', async ({ page }) => {
   await page.goto('./#/say')
   await page.reload()
 
-  await expect(page.getByRole('button', { name: 'Dùng ChatGPT thay thế' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Dùng ChatGPT' })).toBeVisible()
   await page.getByLabel('Dán câu trả lời của ChatGPT').fill(answer('{"services":[{"id":"x"}]}'))
   await page.getByRole('button', { name: 'Kiểm tra câu trả lời' }).click()
   await expect(
-    page.getByText('Không hiểu: turn 1 có dịch vụ không có trong danh sách của bạn (x)'),
+    page.getByText('Chưa hiểu: dịch vụ ở turn 1 chưa có trong danh sách (x)'),
   ).toBeVisible()
+})
+
+const howTo = (page: Page, name: string): Locator => page.getByRole('dialog', { name })
+
+const howToSeen = (page: Page): Promise<unknown> =>
+  page.evaluate(() => JSON.parse(localStorage.getItem('nail-tracker.settings') ?? '{}').sayHowToSeen)
+
+test('the how-to opens the first time in English, closes with Got it and does not come back', async ({ page }) => {
+  await startSay(page, { sayHowToSeen: false })
+
+  const sheet = howTo(page, 'Say your turns')
+  await expect(sheet).toBeVisible()
+  await expect(page.getByRole('heading', { level: 1, name: 'Say your turns' })).toBeVisible()
+  await expect(sheet.getByRole('heading', { level: 2, name: 'Say your turns' })).toBeVisible()
+  await expect(sheet.getByRole('listitem')).toHaveCount(9)
+  await expect(sheet.getByText('Tap the mic on your phone’s keyboard. Say the day’s jobs in order.')).toBeVisible()
+  await expect(sheet.getByText('Nail Tracker keeps your words on this phone and sends nothing.')).toBeVisible()
+  await expect(sheet.getByText('“Gel manicure 45, 10 tip cash.”')).toBeVisible()
+  await expect(sheet.getByText('“Pedicure 35, tip 8 on card.”')).toBeVisible()
+  await expect(sheet.getByText('“Acrylic fill 45, she asked for me.”')).toBeVisible()
+  expect(await howToSeen(page)).toBeFalsy()
+
+  await sheet.getByRole('button', { name: 'Got it', exact: true }).click()
+  await expect(sheet).toHaveCount(0)
+  expect(await howToSeen(page)).toBe(true)
+  await expect(jobsBox(page)).toBeFocused()
+
+  await page.reload()
+  await expect(page.getByRole('heading', { level: 1, name: 'Say your turns' })).toBeVisible()
+  await expect(sheet).toHaveCount(0)
+})
+
+test('the how-to opens the first time in Vietnamese', async ({ page }) => {
+  await startSay(page, { locale: 'vi', sayHowToSeen: false })
+
+  const sheet = howTo(page, 'Nói turn trong ngày')
+  await expect(sheet).toBeVisible()
+  await expect(sheet.getByRole('heading', { level: 2, name: 'Nói turn trong ngày' })).toBeVisible()
+  await expect(sheet.getByText('Hoặc bấm Dùng ChatGPT. Dán hướng dẫn, nói chuyện, rồi dán câu trả lời về đây.')).toBeVisible()
+  await expect(sheet.getByText('“Dặm bột bốn lăm, khách gọi tên.”')).toBeVisible()
+
+  await sheet.getByRole('button', { name: 'Hiểu rồi', exact: true }).click()
+  await expect(sheet).toHaveCount(0)
+  expect(await howToSeen(page)).toBe(true)
+})
+
+test('Escape closes the how-to and counts as seen, also after Check and back', async ({ page }) => {
+  await startSay(page, { sayHowToSeen: false })
+
+  const sheet = howTo(page, 'Say your turns')
+  await expect(sheet).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(sheet).toHaveCount(0)
+  expect(await howToSeen(page)).toBe(true)
+  await expect(jobsBox(page)).toBeFocused()
+
+  await sayText(page, 'Gel manicure 45, 10 tip cash.')
+  await expect(page.getByRole('heading', { level: 1, name: 'Check 1 turn' })).toBeVisible()
+  await page.getByRole('button', { name: 'Back' }).click()
+  await expect(page.getByRole('heading', { level: 1, name: 'Say your turns' })).toBeVisible()
+  await expect(sheet).toHaveCount(0)
+
+  await page.reload()
+  await expect(page.getByRole('heading', { level: 1, name: 'Say your turns' })).toBeVisible()
+  await expect(sheet).toHaveCount(0)
+})
+
+test('How it works opens the how-to again and every way of closing it gives focus back to the link', async ({ page }) => {
+  await startSay(page, { sayHowToSeen: true })
+
+  const sheet = howTo(page, 'Say your turns')
+  const link = page.getByRole('button', { name: 'How it works', exact: true })
+  await expect(sheet).toHaveCount(0)
+
+  await link.click()
+  await expect(sheet).toBeVisible()
+  await sheet.getByRole('button', { name: 'Got it', exact: true }).click()
+  await expect(sheet).toHaveCount(0)
+  await expect(link).toBeFocused()
+
+  await link.click()
+  await expect(sheet).toBeVisible()
+  await sheet.getByRole('button', { name: 'Close', exact: true }).click()
+  await expect(sheet).toHaveCount(0)
+  await expect(link).toBeFocused()
+
+  await link.click()
+  await expect(sheet).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(sheet).toHaveCount(0)
+  await expect(link).toBeFocused()
+
+  await link.click()
+  await expect(sheet).toBeVisible()
+  await page.mouse.click(190, 40)
+  await expect(sheet).toHaveCount(0)
+  await expect(link).toBeFocused()
+  expect(await howToSeen(page)).toBe(true)
 })

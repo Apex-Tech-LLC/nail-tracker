@@ -28,6 +28,7 @@ const settings: Settings = {
   tipButtonsTarget: 'cash',
   numberPad: true,
   onboardingDone: true,
+  sayHowToSeen: true,
   hoursOn: true,
   minimumWageCents: 1650,
   backupReminderDays: 14,

@@ -29,13 +29,16 @@ turns on the phone. ChatGPT and an AI key are extras for people who want them.
 
 ## 3. The screens
 
-**Entry.** On Home, a `Say your turns` / `Nói các turn` button beside `+ Add turn`; on Add turn, a mic chip at the
+**Entry.** On Home, a `Say your turns` / `Nói turn trong ngày` button beside `+ Add turn`; on Add turn, a mic chip at the
 top. Both open the Say screen.
 
 **Say screen** (`/say`):
 - The day, as on Add turn: `Today`, `Yesterday` or a date. End of day from paper is the main use.
 - One big text box with the hint: `Tap the mic on your keyboard and say each job: service, price, tip.` and an example
   in the person's language. Typing works too.
+- A `How it works` / `Cách dùng` link near the top. The first time the screen opens, the same how-to opens over it: six
+  short steps, three examples and `Got it` / `Hiểu rồi`. Closing it any way counts as seen and it does not open again
+  on its own.
 - `Make turns` / `Tạo turn`.
 
 **Check screen:**

@@ -28,6 +28,7 @@ describe('resolveSettings', () => {
     tipButtonsTarget: 'cash',
     numberPad: true,
     onboardingDone: false,
+    sayHowToSeen: false,
     hoursOn: false,
     minimumWageCents: null,
     backupReminderDays: 14,
@@ -81,6 +82,12 @@ describe('resolveSettings', () => {
       lastBackupDate: '2026-11-04',
       dismissedReminders: { 'backup:2026-10-01': '2026-11-04' },
     })
+  })
+
+  it('keeps the Say how-to as seen only when it was saved as true', () => {
+    expect(resolveSettings(JSON.stringify({ sayHowToSeen: true }), []).sayHowToSeen).toBe(true)
+    expect(resolveSettings(JSON.stringify({ sayHowToSeen: 'yes' }), []).sayHowToSeen).toBe(false)
+    expect(resolveSettings(null, []).sayHowToSeen).toBe(false)
   })
 
   it('keeps a saved tax set-aside percent and refuses a bad one', () => {

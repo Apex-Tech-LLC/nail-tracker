@@ -1095,7 +1095,7 @@ test('Vietnamese Add turn: chips, date choices and Save work, and the saved serv
   await page.getByRole('button', { name: 'Hôm qua', exact: true }).click()
   await expect(page.getByRole('button', { name: /^Ngày:/ })).toHaveAccessibleName('Ngày: Hôm qua')
   await page.getByRole('button', { name: 'Thêm tùy chọn', exact: true }).click()
-  await page.getByLabel('Đã nhận tip tiền mặt').uncheck()
+  await page.getByLabel('Tip cash đã cầm').uncheck()
   await page.locator('form').getByRole('button', { name: 'Lưu', exact: true }).click()
   await expect(page.getByRole('link', { name: /Thêm turn/ })).toBeVisible()
 

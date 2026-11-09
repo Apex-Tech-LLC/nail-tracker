@@ -21,6 +21,8 @@ interface Copy {
   addTurn: string
   editTurn: string
   sayYourTurns: string
+  sayHowToOpen: string
+  sayHowToGotIt: string
   makeTurns: string
   addService: string
   moreOptions: string
@@ -45,6 +47,8 @@ const TEXT: Record<Locale, Copy> = {
     addTurn: 'Add Turn',
     editTurn: 'Edit Turn',
     sayYourTurns: 'Say your turns',
+    sayHowToOpen: 'How it works',
+    sayHowToGotIt: 'Got it',
     makeTurns: 'Make turns',
     addService: 'Add service',
     moreOptions: 'More options',
@@ -71,7 +75,9 @@ const TEXT: Record<Locale, Copy> = {
     appName: 'Nail Tracker',
     addTurn: 'Thêm turn',
     editTurn: 'Chỉnh sửa turn',
-    sayYourTurns: 'Nói các turn',
+    sayYourTurns: 'Nói turn trong ngày',
+    sayHowToOpen: 'Cách dùng',
+    sayHowToGotIt: 'Hiểu rồi',
     makeTurns: 'Tạo turn',
     addService: 'Thêm dịch vụ',
     moreOptions: 'Thêm tùy chọn',
@@ -155,9 +161,9 @@ async function addData(page: Page) {
   await expect(page.getByRole('heading', { name: 'Payments', exact: true })).toBeVisible()
 }
 
-async function start(page: Page, locale: Locale, withData = true) {
+async function start(page: Page, locale: Locale, withData = true, overrides: Record<string, unknown> = {}) {
   await page.clock.setFixedTime(NOON)
-  await seedSettings(page, weeklyPay)
+  await seedSettings(page, { ...weeklyPay, ...overrides })
   if (withData) await addData(page)
   else await page.goto('./')
   await switchLocale(page, locale)
@@ -245,6 +251,13 @@ for (const scheme of SCHEMES) {
           await start(page, locale, false)
           await page.goto('./#/say')
           await expectScreen(page, scheme, `${locale}-say`, text.sayYourTurns)
+        })
+
+        test('say your turns, how-to open', async ({ page }) => {
+          await start(page, locale, false, { sayHowToSeen: false })
+          await page.goto('./#/say')
+          await expect(page.getByRole('dialog', { name: text.sayYourTurns })).toBeVisible()
+          await expectScreen(page, scheme, `${locale}-say-how-to`, text.sayYourTurns)
         })
 
         test('check the drafts', async ({ page }) => {
@@ -339,6 +352,10 @@ for (const scheme of SCHEMES) {
             await page.goto('./#/say')
             await expect(page.getByRole('heading', { level: 1, name: text.sayYourTurns })).toBeVisible()
             expect(await smallTapTargets(page)).toEqual([])
+            await page.getByRole('button', { name: text.sayHowToOpen, exact: true }).click()
+            await expect(page.getByRole('dialog', { name: text.sayYourTurns })).toBeVisible()
+            expect(await smallTapTargets(page)).toEqual([])
+            await page.getByRole('button', { name: text.sayHowToGotIt, exact: true }).click()
           })
 
           await test.step('Check the drafts', async () => {

@@ -25,6 +25,8 @@ export interface Settings {
   tipButtonsTarget: TipButtonsTarget
   numberPad: boolean
   onboardingDone: boolean
+  /** The first-time how-to on the Say screen has been closed once, so it stays closed unless asked for. */
+  sayHowToSeen: boolean
   /** Optional hours tracking, off until the technician turns it on. */
   hoursOn: boolean
   minimumWageCents: number | null
@@ -89,6 +91,7 @@ export function resolveSettings(saved: string | null, languages: readonly string
     tipButtonsTarget: parsed.tipButtonsTarget === 'card' ? 'card' : 'cash',
     numberPad: parsed.numberPad !== false,
     onboardingDone: parsed.onboardingDone === true,
+    sayHowToSeen: parsed.sayHowToSeen === true,
     hoursOn: parsed.hoursOn === true,
     minimumWageCents: isCents(parsed.minimumWageCents) ? parsed.minimumWageCents : null,
     backupReminderDays: isReminderDays(parsed.backupReminderDays) ? parsed.backupReminderDays : 14,
