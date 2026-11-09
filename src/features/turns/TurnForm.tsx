@@ -840,7 +840,7 @@ export function TurnFormFields({ presets, existing, quick, copy, onDone, onClose
           )}
         </div>
 
-        <div className="flex flex-wrap items-start justify-end gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {!existing && !draft && (
             <Link
               href={paths.say}
@@ -867,7 +867,7 @@ export function TurnFormFields({ presets, existing, quick, copy, onDone, onClose
               type="button"
               aria-expanded={rateOpen}
               aria-label={`${t(locale, 'commission')}: ${lines[0].rate}%`}
-              className={pill}
+              className={`${pill} ml-auto`}
               onClick={() => setRateOpen((wasOpen) => !wasOpen)}
             >
               {lines[0].rate}%

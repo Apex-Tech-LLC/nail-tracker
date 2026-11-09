@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { expect, test, type Page } from '@playwright/test'
-import { addTurn, formSave, openDateChoices, rowAmount, seedSettings } from './helpers.ts'
+import { addTurn, formSave, rowAmount, seedSettings } from './helpers.ts'
 
 // Noon on Wednesday 2026-11-04 in Chicago. The offset is explicit so UTC on
 // another machine cannot move the fixed day.
@@ -11,7 +11,7 @@ async function start(page: Page, settings: Record<string, unknown> = {}): Promis
   await page.clock.setFixedTime(NOW)
 }
 
-/** Saves one turn on a chosen past day through the form's Other day choice. */
+/** Saves one turn on a chosen past day through the form's date pill. */
 async function addTurnOn(
   page: Page,
   date: string,
@@ -19,8 +19,6 @@ async function addTurnOn(
   tips: { cash?: string; card?: string } = {},
 ): Promise<void> {
   await page.goto('./#/add')
-  await openDateChoices(page)
-  await page.getByRole('button', { name: 'Other day' }).click()
   await page.getByLabel('Work date').fill(date)
   await page.getByLabel('Service amount').fill(amount)
   if (tips.cash) await page.getByLabel('Cash tip').fill(tips.cash)

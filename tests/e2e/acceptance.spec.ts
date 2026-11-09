@@ -2,7 +2,6 @@ import { expect, test, type Locator, type Page } from '@playwright/test'
 import {
   addTurn,
   formSave,
-  openDateChoices,
   openEarningsToday,
   rowAmount,
   seedSettings,
@@ -38,11 +37,9 @@ function earningsTotal(page: Page): Locator {
   return page.getByText('Total earned', { exact: true }).locator('..').locator('p.text-3xl')
 }
 
-/** Saves one turn on a chosen past day through the form's Other day choice. */
+/** Saves one turn on a chosen past day through the form's date pill. */
 async function addTurnOn(page: Page, date: string, amount: string): Promise<void> {
   await page.goto('./#/add')
-  await openDateChoices(page)
-  await page.getByRole('button', { name: 'Other day' }).click()
   await page.getByLabel('Work date').fill(date)
   await page.getByLabel('Service amount').fill(amount)
   await formSave(page).click()
@@ -132,7 +129,6 @@ test('old date', async ({ page }) => {
 test('shift past midnight', async ({ page }) => {
   await page.clock.setFixedTime(new Date('2026-11-05T00:30:00-06:00'))
   await page.goto('./#/add')
-  await openDateChoices(page)
   await page.getByRole('button', { name: 'Yesterday' }).click()
   await page.getByLabel('Service amount').fill('100')
   await formSave(page).click()

@@ -2,7 +2,6 @@ import { expect, test, type Page } from '@playwright/test'
 import {
   datePill,
   formSave,
-  openDateChoices,
   seedSettings,
   selectServices,
   turnRow,
@@ -104,16 +103,15 @@ test('the amount box asks for no phone keyboard only while the setting is on', a
   await expect(page.getByLabel('Service amount')).toHaveAttribute('inputmode', 'decimal')
 })
 
-test('the date pill opens the day choices and Yesterday saves on that day', async ({ page }) => {
+test('Yesterday is one tap on the date row and saves on that day', async ({ page }) => {
   await page.clock.setFixedTime(NOON)
   await seedSettings(page)
   await page.goto('./#/add')
 
-  await expect(datePill(page)).toContainText('Today')
+  await expect(datePill(page)).toContainText('Wed 11/4')
 
-  await openDateChoices(page)
   await page.getByRole('button', { name: 'Yesterday', exact: true }).click()
-  await expect(datePill(page)).toContainText('Yesterday')
+  await expect(datePill(page)).toContainText('Tue 11/3')
 
   await page.getByLabel('Service amount').fill('35')
   await formSave(page).click()

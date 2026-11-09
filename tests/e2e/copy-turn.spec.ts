@@ -1,7 +1,6 @@
 import { expect, test } from '@playwright/test'
 import {
   formSave,
-  openDateChoices,
   openEarningsToday,
   rowAmount,
   seedSettings,
@@ -22,8 +21,6 @@ test.beforeEach(async ({ page }) => {
 test('copying a turn saves a second turn today and leaves the original alone', async ({ page }) => {
   // One turn on November 2, with every extra option changed from its default.
   await page.goto('./#/add')
-  await openDateChoices(page)
-  await page.getByRole('button', { name: 'Other day' }).click()
   await page.getByLabel('Work date').fill('2026-11-02')
   await selectServices(page, ['Gel-X'])
   await page.getByLabel('Service amount').fill('75')
@@ -51,7 +48,6 @@ test('copying a turn saves a second turn today and leaves the original alone', a
   await expect(page.getByLabel('Service amount')).toHaveValue('75.00')
   await expect(page.getByRole('textbox', { name: 'Cash tip' })).toHaveValue('10.00')
   await expect(page.getByRole('textbox', { name: 'Card tip' })).toHaveValue('5.00')
-  await openDateChoices(page)
   await expect(page.getByRole('button', { name: 'Today', exact: true })).toHaveAttribute(
     'aria-pressed',
     'true',

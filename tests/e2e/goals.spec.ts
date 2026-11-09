@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
-import { addTurn, formSave, openCommission, openDateChoices, seedSettings } from './helpers.ts'
+import { addTurn, formSave, openCommission, seedSettings } from './helpers.ts'
 
 // 3pm on Wednesday 2026-11-04 in the browser's America/Chicago timezone. The
 // offset is explicit so a machine running in UTC cannot move the fixed day.
@@ -19,8 +19,6 @@ async function typeOnPad(page: Page, keys: readonly string[]): Promise<void> {
 /** Saves one turn on a chosen day with a 100% rate, so earned equals the amount. */
 async function addEarnedOn(page: Page, date: string, amount: string): Promise<void> {
   await page.goto('./#/add')
-  await openDateChoices(page)
-  await page.getByRole('button', { name: 'Other day' }).click()
   await page.getByLabel('Work date').fill(date)
   await page.getByLabel('Service amount').fill(amount)
   await openCommission(page)

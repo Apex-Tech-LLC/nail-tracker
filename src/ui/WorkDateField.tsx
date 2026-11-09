@@ -1,133 +1,110 @@
-import { useId, useState, type FocusEvent } from 'react'
+import { useId } from 'react'
+import { IconCalendar } from '@tabler/icons-react'
 import { useSettings } from '../app/settings.ts'
 import { useToday } from '../app/useToday.ts'
-import { addDays, formatDayShort, isIsoDate, type IsoDate } from '../domain/dates.ts'
+import { addDays, formatDatePill, isIsoDate, type IsoDate } from '../domain/dates.ts'
 import { t } from '../lib/i18n.ts'
-import { chip, chipOff, chipOn, errorText, field, label, pill } from './styles.ts'
+import { chip, chipOff, chipOn, errorText, label } from './styles.ts'
 
 interface Props {
   value: IsoDate
   onChange: (value: IsoDate) => void
   error?: string
-  /** One pill at the top of the Add turn screen; the choices open under it. */
+  /** Smaller buttons for the Add turn header, where the row shares a line with other pills. */
   compact?: boolean
 }
 
-/** The date chips and date box shared by the turn and adjustment forms. */
+const compactChip =
+  'inline-flex min-h-11 items-center justify-center gap-1 whitespace-nowrap rounded-full border-[1.5px] px-3 text-sm font-semibold focus-visible:outline-2 focus-visible:outline-brand-ink'
+
+/**
+ * The date row shared by the turn, voice and adjustment screens: Today and
+ * Yesterday in one tap, and a pill showing the chosen day. The pill carries a
+ * real date input laid over it, invisible but tappable, so one tap opens the
+ * phone's own date picker.
+ */
 export function WorkDateField({ value, onChange, error, compact = false }: Props) {
   const { locale } = useSettings()
   const id = useId()
   const today = useToday()
   const yesterday = addDays(today, -1)
-  const [pickOtherDay, setPickOtherDay] = useState(value !== today && value !== yesterday)
-  const [open, setOpen] = useState(false)
 
-  function pick(date: IsoDate) {
-    setPickOtherDay(false)
-    onChange(date)
-    if (compact) setOpen(false)
+  const base = compact ? compactChip : `${chip} flex items-center justify-center`
+  const other = value !== today && value !== yesterday
+  const shown = isIsoDate(value) ? formatDatePill(value, locale) : t(locale, 'workDate')
+  const errorId = `${id}-date-error`
+
+  function openPicker(input: HTMLInputElement) {
+    // Older iPhones have no showPicker; the tap itself opens their picker.
+    try {
+      input.showPicker()
+    } catch {
+      // Not supported, or not allowed right now: the tap is enough.
+    }
   }
 
-  /**
-   * Typing a date fires a change on every whole part, so the choices close
-   * only once the person leaves the date box for somewhere outside them.
-   */
-  function leaveDate(event: FocusEvent<HTMLInputElement>) {
-    const into = event.relatedTarget
-    const choices = event.currentTarget.closest('[data-date-choices]')
-    if (compact && !(into instanceof Node && choices?.contains(into))) setOpen(false)
-  }
+  const row = (
+    // In the Add turn header the row takes its own line, under the Say and commission pills.
+    <div className={`flex w-full items-center gap-2 ${compact ? 'order-3' : ''}`}>
+      <button
+        type="button"
+        aria-pressed={value === today}
+        className={`${base} ${value === today ? chipOn : chipOff}`}
+        onClick={() => onChange(today)}
+      >
+        {t(locale, 'today')}
+      </button>
+      <button
+        type="button"
+        aria-pressed={value === yesterday}
+        className={`${base} ${value === yesterday ? chipOn : chipOff}`}
+        onClick={() => onChange(yesterday)}
+      >
+        {t(locale, 'yesterday')}
+      </button>
+      <span
+        data-date-pill
+        className={`${base} relative flex-1 gap-1.5 focus-within:outline-2 focus-within:outline-brand-ink ${
+          other ? chipOn : chipOff
+        }`}
+      >
+        <span aria-hidden="true">{shown}</span>
+        <IconCalendar size={16} aria-hidden="true" />
+        <input
+          id={`${id}-date`}
+          type="date"
+          value={value}
+          aria-label={t(locale, 'workDate')}
+          aria-invalid={!!error}
+          aria-describedby={error ? errorId : undefined}
+          onChange={(event) => onChange(event.target.value)}
+          onClick={(event) => openPicker(event.currentTarget)}
+          className="absolute inset-0 h-full w-full cursor-pointer text-base opacity-0"
+        />
+      </span>
+    </div>
+  )
 
-  const choices = (
-    <>
-      <div className="flex flex-wrap gap-2">
-        <button
-          type="button"
-          aria-pressed={!pickOtherDay && value === today}
-          className={`${chip} ${!pickOtherDay && value === today ? chipOn : chipOff}`}
-          onClick={() => pick(today)}
-        >
-          {t(locale, 'today')}
-        </button>
-        <button
-          type="button"
-          aria-pressed={!pickOtherDay && value === yesterday}
-          className={`${chip} ${!pickOtherDay && value === yesterday ? chipOn : chipOff}`}
-          onClick={() => pick(yesterday)}
-        >
-          {t(locale, 'yesterday')}
-        </button>
-        <button
-          type="button"
-          aria-pressed={pickOtherDay}
-          className={`${chip} ${pickOtherDay ? chipOn : chipOff}`}
-          onClick={() => setPickOtherDay(true)}
-        >
-          {t(locale, 'otherDay')}
-        </button>
-      </div>
-      {pickOtherDay && (
-        <div className="mt-3">
-          <label htmlFor={`${id}-date`} className={label}>
-            {t(locale, 'workDate')}
-          </label>
-          <input
-            id={`${id}-date`}
-            type="date"
-            value={value}
-            onChange={(event) => onChange(event.target.value)}
-            onBlur={leaveDate}
-            aria-invalid={!!error}
-            aria-describedby={error ? `${id}-date-error` : undefined}
-            className={field}
-          />
-          {error && (
-            <p id={`${id}-date-error`} className={errorText}>
-              {error}
-            </p>
-          )}
-        </div>
-      )}
-    </>
+  const errorLine = error && (
+    <p id={errorId} className={`${errorText} ${compact ? 'order-last basis-full' : ''}`}>
+      {error}
+    </p>
   )
 
   if (compact) {
-    const shown =
-      value === today
-        ? t(locale, 'today')
-        : value === yesterday
-          ? t(locale, 'yesterday')
-          : // A date half typed into the box is not a day yet.
-            isIsoDate(value)
-            ? formatDayShort(value, locale)
-            : t(locale, 'otherDay')
     return (
-      <div className={open ? 'w-full' : undefined}>
-        <div className="flex justify-end">
-          <button
-            type="button"
-            aria-expanded={open}
-            aria-label={`${t(locale, 'date')}: ${shown}`}
-            className={pill}
-            onClick={() => setOpen((wasOpen) => !wasOpen)}
-          >
-            {shown}
-            <span aria-hidden="true">▾</span>
-          </button>
-        </div>
-        {open && (
-          <div className="mt-2" data-date-choices>
-            {choices}
-          </div>
-        )}
-      </div>
+      <>
+        {row}
+        {errorLine}
+      </>
     )
   }
 
   return (
     <div>
       <p className={label}>{t(locale, 'date')}</p>
-      {choices}
+      {row}
+      {errorLine}
     </div>
   )
 }
