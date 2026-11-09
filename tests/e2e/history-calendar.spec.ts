@@ -20,7 +20,6 @@ async function addTurnWithClient(
 ): Promise<void> {
   await page.clock.setFixedTime(moment)
   await page.goto('./#/add')
-  await page.getByRole('button', { name: 'More options', exact: true }).click()
   await page.getByRole('button', { name: client, exact: true }).click()
   await selectServices(page, ['Manicure'])
   await page.getByLabel('Service amount').fill(amount)

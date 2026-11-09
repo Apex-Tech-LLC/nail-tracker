@@ -18,6 +18,7 @@ import { t, tf } from '../../lib/i18n.ts'
 import { serviceColor } from '../../ui/serviceColor.ts'
 import { dangerButton, secondaryButton } from '../../ui/styles.ts'
 import { useToast } from '../../ui/useToast.ts'
+import { saveCopyOfTurn } from './copyTurn.ts'
 import { deleteTurn, restoreTurn } from './turnStore.ts'
 
 interface Props {
@@ -30,6 +31,8 @@ const OPEN_OFFSET = -152
 const OPEN_AT = 60
 const START_AFTER = 10
 const LONG_PRESS_MS = 500
+// A second tap on Copy this soon after the first is the same tap twice.
+const COPY_COOLDOWN_MS = 1000
 
 const clampOffset = (value: number) => Math.min(0, Math.max(OPEN_OFFSET, value))
 
@@ -58,6 +61,8 @@ export function TurnRow({ turn, services, number }: Props) {
   const press = useRef<{ timer: number; startX: number; startY: number } | null>(null)
   // A swipe or a long press must not also open the edit screen.
   const swallowClick = useRef(false)
+  // A quick double tap on Copy must save one turn, not two.
+  const copyBusy = useRef(false)
 
   const clearPress = useCallback(() => {
     if (press.current) {
@@ -236,6 +241,43 @@ export function TurnRow({ turn, services, number }: Props) {
     }
   }
 
+  /** One tap: save a copy dated now, then offer Undo and Edit. */
+  async function copyNow() {
+    setSheetOpen(false)
+    closeSelf()
+    if (copyBusy.current) return
+    copyBusy.current = true
+    let copied = null
+    try {
+      copied = await saveCopyOfTurn(turn.id, locale)
+      if (!copied) return
+      const newId = copied.id
+      toast.show({
+        message: tf(locale, 'copiedYouEarn', { amount: formatUsdShort(copied.earnedTotalCents) }),
+        actions: [
+          {
+            label: t(locale, 'undo'),
+            onClick: () => {
+              void deleteTurn(db, newId)
+            },
+          },
+          {
+            label: t(locale, 'edit'),
+            onClick: () => navigate(paths.edit(newId)),
+          },
+        ],
+      })
+    } finally {
+      if (copied) {
+        window.setTimeout(() => {
+          copyBusy.current = false
+        }, COPY_COOLDOWN_MS)
+      } else {
+        copyBusy.current = false
+      }
+    }
+  }
+
   const names = services.map((service) => service.serviceNameSnapshot).join(' + ')
   const markName = services[0]?.serviceNameSnapshot ?? ''
   const tipCents = turn.cashTipCents + turn.cardTipCents
@@ -270,8 +312,7 @@ export function TurnRow({ turn, services, number }: Props) {
           type="button"
           className={secondaryButton}
           onClick={() => {
-            setSheetOpen(false)
-            navigate(paths.copy(turn.id))
+            void copyNow()
           }}
         >
           {t(locale, 'copy')}
@@ -306,16 +347,18 @@ export function TurnRow({ turn, services, number }: Props) {
     <>
       <div ref={wrapper} className="relative overflow-hidden">
         <div className="absolute inset-y-0 right-0 flex">
-          <Link
-            href={paths.copy(turn.id)}
+          <button
+            type="button"
             aria-hidden={open ? undefined : true}
             tabIndex={open ? 0 : -1}
-            onClick={closeSelf}
+            onClick={() => {
+              void copyNow()
+            }}
             className="flex w-[76px] flex-col items-center justify-center gap-[3px] bg-inverse text-[12px] font-bold text-on-inverse"
           >
             <IconCopy size={20} aria-hidden="true" />
             {t(locale, 'copy')}
-          </Link>
+          </button>
           <button
             type="button"
             aria-hidden={open ? undefined : true}
@@ -373,15 +416,17 @@ export function TurnRow({ turn, services, number }: Props) {
             )}
           </div>
 
-          <Link
+          <button
+            type="button"
             data-row-copy
-            href={paths.copy(turn.id)}
             aria-label={copyLabel}
-            onClick={closeSelf}
+            onClick={() => {
+              void copyNow()
+            }}
             className="flex h-11 w-11 shrink-0 items-center justify-center rounded-control text-text-secondary"
           >
             <IconCopy size={20} aria-hidden="true" />
-          </Link>
+          </button>
         </div>
       </div>
 

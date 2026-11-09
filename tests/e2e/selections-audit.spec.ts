@@ -349,8 +349,10 @@ test('Add turn opens on the last-used service with its usual price, today, and n
   for (const label of ['$5', '$10', '$15', '$20', '18%']) {
     await expect(tipButton(page, label)).toHaveAttribute('aria-pressed', 'false')
   }
+  for (const label of ['Walk-in', 'Request']) {
+    await expect(page.getByRole('button', { name: label, exact: true })).toHaveAttribute('aria-pressed', 'false')
+  }
   await openMoreOptions(page)
-  await expect(page.getByRole('button', { name: 'Not set', exact: true })).toHaveAttribute('aria-pressed', 'true')
   await expect(page.getByLabel('Turn count')).toHaveValue('1')
 })
 
@@ -591,7 +593,6 @@ test('client type: nothing is chosen at first, one tap saves it, and it survives
   await start(page)
   await page.goto('./#/add')
   await amountBox(page).fill('30')
-  await openMoreOptions(page)
   for (const label of ['Walk-in', 'Request']) {
     await expect(page.getByRole('button', { name: label, exact: true })).toHaveAttribute('aria-pressed', 'false')
   }
@@ -605,7 +606,7 @@ test('client type: nothing is chosen at first, one tap saves it, and it survives
   await page.reload()
   await page.getByTestId('turn-row').first().click()
   await expect(page).toHaveURL(/#\/edit\//)
-  // A turn with a client type opens More options by itself.
+  // The client type sits on the main form, so it shows without opening anything.
   await expect(page.getByRole('button', { name: 'Request', exact: true })).toHaveAttribute('aria-pressed', 'true')
 
   await page.getByRole('button', { name: 'Walk-in', exact: true }).click()
@@ -1358,6 +1359,11 @@ function pressed(page: Page, name: string): Locator {
   return page.getByRole('button', { name, exact: true })
 }
 
+/** A chip of the adjustment's Type row; Bonus is also a chip in the sign row above the amount. */
+function typeChip(page: Page, name: string): Locator {
+  return page.getByRole('group', { name: 'Type', exact: true }).getByRole('button', { name, exact: true })
+}
+
 test('adjustment: Bonus and Today are chosen at first, one tap picks a type and a day, the signed amount is stored, and edit reopens it', async ({
   page,
 }) => {
@@ -1368,15 +1374,19 @@ test('adjustment: Bonus and Today are chosen at first, one tap picks a type and 
     ['Commission correction', 'false'],
     ['Tip correction', 'false'],
     ['Bookkeeping deduction', 'false'],
+  ] as const) {
+    await expect(typeChip(page, name)).toHaveAttribute('aria-pressed', on)
+  }
+  for (const [name, on] of [
     ['Today', 'true'],
     ['Yesterday', 'false'],
   ] as const) {
     await expect(pressed(page, name)).toHaveAttribute('aria-pressed', on)
   }
 
-  await pressed(page, 'Commission correction').click()
-  await expect(pressed(page, 'Commission correction')).toHaveAttribute('aria-pressed', 'true')
-  await expect(pressed(page, 'Bonus')).toHaveAttribute('aria-pressed', 'false')
+  await typeChip(page, 'Commission correction').click()
+  await expect(typeChip(page, 'Commission correction')).toHaveAttribute('aria-pressed', 'true')
+  await expect(typeChip(page, 'Bonus')).toHaveAttribute('aria-pressed', 'false')
   await pressed(page, 'Yesterday').click()
   await expect(pressed(page, 'Today')).toHaveAttribute('aria-pressed', 'false')
   await page.getByLabel('Amount', { exact: true }).fill('-25')
@@ -1393,10 +1403,11 @@ test('adjustment: Bonus and Today are chosen at first, one tap picks a type and 
   })
 
   await page.goto(`./#/adjustment/${saved.id}`)
-  await expect(pressed(page, 'Commission correction')).toHaveAttribute('aria-pressed', 'true')
+  await expect(typeChip(page, 'Commission correction')).toHaveAttribute('aria-pressed', 'true')
   await expect(pressed(page, 'Yesterday')).toHaveAttribute('aria-pressed', 'true')
-  await expect(page.getByLabel('Amount', { exact: true })).toHaveValue('-25.00')
-  await pressed(page, 'Tip correction').click()
+  await expect(pressed(page, 'Deduction')).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.getByLabel('Amount', { exact: true })).toHaveValue('25.00')
+  await typeChip(page, 'Tip correction').click()
   await pressed(page, 'Save').click()
   await expect
     .poll(async () => (await readStore<SavedAdjustment>(page, 'adjustments'))[0].category)
