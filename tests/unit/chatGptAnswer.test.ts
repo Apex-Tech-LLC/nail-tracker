@@ -5,6 +5,7 @@ import {
   answerAsReaderResult,
   chatGptPrompt,
   decodeProblem,
+  looksLikeChatGptAnswer,
   readChatGptAnswer,
 } from '../../src/domain/chatGptAnswer.ts'
 import type { ReaderPreset } from '../../src/domain/voiceReader.ts'
@@ -231,5 +232,32 @@ describe('chatGptPrompt', () => {
     expect(problems).toEqual([])
     expect(turns).toHaveLength(2)
     expect(turns[1]).toMatchObject({ request: true, services: [{ presetId: 'pedicure', priceCents: null }] })
+  })
+})
+
+describe('looksLikeChatGptAnswer', () => {
+  it('leaves dictation alone, even when it says turns or a dollar sign', () => {
+    expect(looksLikeChatGptAnswer('Gel manicure 45, 10 tip cash. Pedicure $35.')).toBe(false)
+    expect(looksLikeChatGptAnswer('Three turns today: gel $45, then a pedicure.')).toBe(false)
+    expect(looksLikeChatGptAnswer('')).toBe(false)
+  })
+
+  it('knows a clean answer', () => {
+    expect(looksLikeChatGptAnswer(ANSWER_FORMAT)).toBe(true)
+  })
+
+  it('knows an answer in a code fence, with or without braces after it', () => {
+    expect(looksLikeChatGptAnswer('Here you go:\n```json\n' + ANSWER_FORMAT + '\n```')).toBe(true)
+    expect(looksLikeChatGptAnswer('  \n```json\nturns')).toBe(true)
+    expect(looksLikeChatGptAnswer('gel manicure 45 ``` pedicure 35')).toBe(false)
+  })
+
+  it('keeps a truncated or malformed paste on the ChatGPT path', () => {
+    expect(looksLikeChatGptAnswer('{"turns":[{"services":[{"id":"gel-manicure","price":"45')).toBe(true)
+    expect(looksLikeChatGptAnswer('"turns": []}')).toBe(true)
+  })
+
+  it('knows an answer typed with smart quotes', () => {
+    expect(looksLikeChatGptAnswer('{“turns”:[{“services”:[]}]}')).toBe(true)
   })
 })

@@ -257,6 +257,17 @@ export function readChatGptAnswer(input: {
   return { turns, problems }
 }
 
+/**
+ * Whether the text in the one Say box is a pasted ChatGPT answer rather than
+ * dictation. Dictation never types braces, so any brace (even a lone or
+ * truncated one) or an opening code fence sends the text down the ChatGPT path,
+ * where a bad paste gets its refusal reasons instead of a confusing voice read.
+ */
+export function looksLikeChatGptAnswer(text: string): boolean {
+  const folded = text.replace(/[“”]/g, '"').replace(/[‘’]/g, "'")
+  return /[{}]/.test(folded) || /^\s*```/.test(folded)
+}
+
 /** The answer as the same result the spoken-word reader returns, so the Check screen can show either. */
 export function answerAsReaderResult(answer: AnswerResult): ReaderResult {
   return { turns: answer.turns, notUnderstood: answer.problems.map(encodeProblem) }

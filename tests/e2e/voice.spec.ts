@@ -36,7 +36,7 @@ async function startSay(page: Page, overrides: Record<string, unknown> = {}): Pr
   await page.goto('./#/say')
 }
 
-/** The jobs box is the first text box; the ChatGPT answer box comes after it. */
+/** The one box on the Say screen: dictated words, or a ChatGPT answer pasted in. */
 const jobsBox = (page: Page): Locator => page.locator('textarea').first()
 
 async function sayText(page: Page, text: string, makeName = 'Make turns'): Promise<void> {
@@ -53,9 +53,7 @@ test('Home and Add turn both open the Say screen', async ({ page }) => {
 
   await page.getByRole('link', { name: 'Say your turns' }).click()
   await expect(page.getByRole('heading', { level: 1, name: 'Say your turns' })).toBeVisible()
-  await expect(
-    page.getByText('Tap the mic on your keyboard and say each job: service, price, tip.'),
-  ).toBeVisible()
+  await expect(page.getByText('Tap the mic and say each job, or paste ChatGPT’s answer.')).toBeVisible()
 
   await page.goto('./#/add')
   await page.getByRole('link', { name: 'Say your turns' }).click()
@@ -151,8 +149,7 @@ test('words the reader cannot place become a card that is fixed and saved with t
 
 test('a ChatGPT refusal line has no Add as a turn button', async ({ page }) => {
   await startSay(page)
-  await page.getByLabel("Paste ChatGPT's answer").fill(answer('{"services":[{"id":"nails","price":"20"}]}'))
-  await page.getByRole('button', { name: 'Check the answer' }).click()
+  await sayText(page, answer('{"services":[{"id":"nails","price":"20"}]}'))
 
   await expect(page.getByText('Not understood: turn 1 has a service that is not on your list (nails)')).toBeVisible()
   await expect(page.getByRole('button', { name: 'Add as a turn' })).toHaveCount(0)
@@ -400,8 +397,7 @@ test('the Say and Check screens make no request outside the app', async ({ page,
   await page.getByRole('button', { name: 'Back' }).click()
   await page.getByRole('button', { name: 'Use ChatGPT instead' }).click()
   await expect(page.getByText('Instructions copied.')).toBeVisible()
-  await page.getByLabel("Paste ChatGPT's answer").fill(answer(GOOD_TURN))
-  await page.getByRole('button', { name: 'Check the answer' }).click()
+  await sayText(page, answer(GOOD_TURN))
   await expect(cards(page)).toHaveCount(1)
 
   for (const url of urls) expect(url, url).toMatch(/^http:\/\/localhost:4173\/|^blob:|^data:/)
@@ -447,8 +443,8 @@ test('Use ChatGPT instead copies the instructions with the services and the repl
     '{"turns":[{"services":[{"id":"gel-manicure","price":"45.00"}],"cashTip":"10.00","cardTip":"0","request":false}]}',
   )
   expect(copied).toContain('You reply: ')
-  // Copied fine, so there is no box to copy by hand.
-  await expect(page.getByLabel('Instructions for ChatGPT')).toHaveCount(0)
+  // Copied fine, so there is no sheet to copy by hand.
+  await expect(page.getByRole('dialog', { name: 'Instructions for ChatGPT' })).toHaveCount(0)
 })
 
 test('Use ChatGPT instead opens ChatGPT in a new tab', async ({ page, context }) => {
@@ -461,18 +457,25 @@ test('Use ChatGPT instead opens ChatGPT in a new tab', async ({ page, context })
   await expect.poll(() => opens(page)).toEqual([['https://chatgpt.com', '_blank', 'noopener,noreferrer']])
 })
 
-test('when the clipboard fails the instructions are shown to copy by hand', async ({ page }) => {
-  await recordOpens(page)
+/** A phone that refuses to copy, as an iPhone sometimes does. */
+async function refuseClipboard(page: Page): Promise<void> {
   await page.addInitScript(() => {
     Object.defineProperty(navigator, 'clipboard', {
       value: { writeText: () => Promise.reject(new DOMException('no', 'NotAllowedError')) },
     })
   })
+}
+
+test('when the clipboard fails the instructions are shown in a sheet to copy by hand', async ({ page }) => {
+  await recordOpens(page)
+  await refuseClipboard(page)
   await startSay(page)
 
   await page.getByRole('button', { name: 'Use ChatGPT instead' }).click()
 
-  const box = page.getByLabel('Instructions for ChatGPT')
+  const sheet = page.getByRole('dialog', { name: 'Instructions for ChatGPT' })
+  await expect(sheet).toBeVisible()
+  const box = sheet.getByLabel('Instructions for ChatGPT')
   await expect(box).toBeVisible()
   await expect(box).toHaveAttribute('readonly', '')
   await expect(box).toHaveValue(/- gel-manicure: Gel Manicure \/ Sơn gel tay/)
@@ -491,6 +494,111 @@ test('when the clipboard fails the instructions are shown to copy by hand', asyn
   expect(await opens(page)).toHaveLength(1)
 })
 
+test('the copy-by-hand sheet closes with X, Escape or a tap outside and gives focus back', async ({ page }) => {
+  await refuseClipboard(page)
+  await startSay(page)
+  const link = page.getByRole('button', { name: 'Use ChatGPT instead' })
+  const sheet = page.getByRole('dialog', { name: 'Instructions for ChatGPT' })
+
+  await link.focus()
+  await link.click()
+  await expect(sheet).toBeVisible()
+  await expect(sheet.getByRole('heading', { level: 2, name: 'Instructions for ChatGPT' })).toBeFocused()
+  await sheet.getByRole('button', { name: 'Close' }).click()
+  await expect(sheet).toHaveCount(0)
+  await expect(link).toBeFocused()
+
+  await link.click()
+  await expect(sheet).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(sheet).toHaveCount(0)
+  await expect(link).toBeFocused()
+
+  await link.click()
+  await expect(sheet).toBeVisible()
+  await page.mouse.click(190, 60)
+  await expect(sheet).toHaveCount(0)
+  await expect(link).toBeFocused()
+})
+
+test('dictation and a pasted ChatGPT answer both work from the one box', async ({ page }) => {
+  await startSay(page)
+  await expect(page.locator('textarea')).toHaveCount(1)
+  await expect(page.getByRole('button', { name: 'Check the answer' })).toHaveCount(0)
+
+  await sayText(page, 'Manicure 30. Pedicure 40.')
+  await expect(cards(page)).toHaveCount(2)
+
+  await page.getByRole('button', { name: 'Back' }).click()
+  await sayText(page, answer(GOOD_TURN))
+  await expect(cards(page)).toHaveCount(1)
+  await expect(cards(page).first()).toContainText('Gel Manicure')
+  await expect(cards(page).first()).toContainText('+$10 cash tip')
+})
+
+test('the ChatGPT answer tag shows while the box holds an answer, and not for dictation', async ({ page }) => {
+  await startSay(page)
+  const tag = page.getByText('ChatGPT answer found')
+
+  await jobsBox(page).fill('Three turns today: gel $45, then a pedicure.')
+  await expect(tag).toHaveCount(0)
+
+  await jobsBox(page).fill('```json\n' + answer(GOOD_TURN) + '\n```')
+  await expect(tag).toBeVisible()
+
+  // A cut-off paste is still an answer, so its reasons show instead of a voice guess.
+  await jobsBox(page).fill('{"turns":[{"services":[{"id":"gel-manicure","price":"45')
+  await expect(tag).toBeVisible()
+
+  await jobsBox(page).fill('Gel manicure 45')
+  await expect(tag).toHaveCount(0)
+})
+
+for (const [locale, makeName] of [
+  ['en', 'Make turns'],
+  ['vi', 'Tạo turn'],
+] as const) {
+  test(`the Say screen fills a 375 by 740 phone with no gap and no scroll in ${locale}`, async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 740 })
+    await startSay(page, { locale })
+    const make = page.getByRole('button', { name: makeName, exact: true })
+    await expect(make).toBeVisible()
+
+    const measure = () =>
+      page.evaluate(() => {
+        const root = document.documentElement
+        const box = document.querySelector('textarea')!.getBoundingClientRect()
+        const button = [...document.querySelectorAll('button[type="submit"]')][0].getBoundingClientRect()
+        return {
+          overflow: root.scrollHeight - root.clientHeight,
+          boxHeight: box.height,
+          gapBelowBox: button.top - box.bottom,
+          buttonBottom: button.bottom,
+        }
+      })
+
+    // Empty, and again with far more words than fit: the box scrolls inside itself, the page never does.
+    for (const text of ['', Array.from({ length: 60 }, (_, line) => `Gel manicure ${line + 10}`).join('\n')]) {
+      await jobsBox(page).fill(text)
+      const size = await measure()
+      expect(size.overflow).toBeLessThanOrEqual(0)
+      expect(size.boxHeight).toBeGreaterThanOrEqual(5 * 24)
+      expect(size.gapBelowBox).toBeLessThanOrEqual(24)
+      expect(size.buttonBottom).toBeLessThanOrEqual(740)
+    }
+  })
+}
+
+test('a cut-off ChatGPT paste reaches Check with its reason and no turns', async ({ page }) => {
+  await startSay(page)
+  await sayText(page, '{"turns":[{"services":[{"id":"gel-manicure","price":"45')
+
+  await expect(page.getByRole('heading', { level: 1, name: /^Check/ })).toBeVisible()
+  await expect(page.getByText('Not understood: the JSON block is broken')).toBeVisible()
+  await expect(cards(page)).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Add as a turn' })).toHaveCount(0)
+})
+
 test('a good ChatGPT answer becomes cards and saves', async ({ page }) => {
   await startSay(page)
   await page.getByRole('button', { name: 'Yesterday' }).click()
@@ -504,8 +612,7 @@ test('a good ChatGPT answer becomes cards and saves', async ({ page }) => {
     '```',
     'Anything else?',
   ].join('\n')
-  await page.getByLabel("Paste ChatGPT's answer").fill(reply)
-  await page.getByRole('button', { name: 'Check the answer' }).click()
+  await sayText(page, reply)
 
   await expect(page.getByRole('heading', { level: 1, name: 'Check 2 turns' })).toBeVisible()
   await expect(cards(page).nth(0)).toContainText('Gel Manicure')
@@ -535,12 +642,10 @@ test('a good ChatGPT answer becomes cards and saves', async ({ page }) => {
 
 test('a ChatGPT answer that cannot be checked shows Not understood and is never saved', async ({ page }) => {
   await startSay(page)
-  await page
-    .getByLabel("Paste ChatGPT's answer")
-    .fill(
-      answer('{"services":[{"id":"manicure","price":"forty-ish"}]}', '{"services":[{"id":"nails","price":"20"}]}'),
-    )
-  await page.getByRole('button', { name: 'Check the answer' }).click()
+  await sayText(
+    page,
+    answer('{"services":[{"id":"manicure","price":"forty-ish"}]}', '{"services":[{"id":"nails","price":"20"}]}'),
+  )
 
   await expect(
     page.getByText('Not understood: turn 1 has a price that is not dollars and cents (forty-ish)'),
@@ -552,11 +657,11 @@ test('a ChatGPT answer that cannot be checked shows Not understood and is never 
   await expect(page.getByRole('button', { name: 'Save 0 turns' })).toBeDisabled()
   expect(await rows(page, 'turns')).toHaveLength(0)
 
-  // Text that is not an answer at all is refused too, and never put into the page as markup.
+  // Words with no braces are dictation, not an answer: the voice reader gets them, never as markup.
   await page.getByRole('button', { name: 'Back' }).click()
-  await page.getByLabel("Paste ChatGPT's answer").fill('<img src=x onerror="document.title=\'hacked\'"> sorry')
-  await page.getByRole('button', { name: 'Check the answer' }).click()
-  await expect(page.getByText('Not understood: no JSON block was found in the answer')).toBeVisible()
+  await sayText(page, '<img src=x onerror="document.title=\'hacked\'"> sorry')
+  await expect(page.getByText(/^Not understood: "img src=x/)).toBeVisible()
+  await expect(page.getByText('no JSON block was found in the answer')).toHaveCount(0)
   await expect(page.locator('img[src="x"]')).toHaveCount(0)
   expect(await page.title()).not.toBe('hacked')
 })
@@ -573,8 +678,7 @@ test('the ChatGPT labels and reasons are in Vietnamese', async ({ page }) => {
   await page.reload()
 
   await expect(page.getByRole('button', { name: 'Dùng ChatGPT' })).toBeVisible()
-  await page.getByLabel('Dán câu trả lời của ChatGPT').fill(answer('{"services":[{"id":"x"}]}'))
-  await page.getByRole('button', { name: 'Kiểm tra câu trả lời' }).click()
+  await sayText(page, answer('{"services":[{"id":"x"}]}'), 'Tạo turn')
   await expect(
     page.getByText('Chưa hiểu: dịch vụ ở turn 1 chưa có trong danh sách (x)'),
   ).toBeVisible()

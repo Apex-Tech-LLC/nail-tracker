@@ -357,6 +357,18 @@ test('every screen fits in Vietnamese at 375 pixels', async ({ page }) => {
   await checkScreen(page, 'say-how-to')
   await page.getByRole('button', { name: 'Hiểu rồi', exact: true }).click()
 
+  // The phone refuses to copy, so the ChatGPT instructions come up in a sheet.
+  await page.evaluate(() => {
+    Object.defineProperty(navigator, 'clipboard', {
+      value: { writeText: () => Promise.reject(new DOMException('no', 'NotAllowedError')) },
+    })
+  })
+  await page.getByRole('button', { name: 'Dùng ChatGPT', exact: true }).click()
+  await expect(page.getByRole('dialog', { name: 'Hướng dẫn cho ChatGPT' })).toBeVisible()
+  await checkScreen(page, 'say-chatgpt-sheet')
+  await page.keyboard.press('Escape')
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+
   await page.locator('textarea').first().fill('Gel manicure 45, 10 tip cash\nPedicure\nblah blah')
   await page.getByRole('button', { name: 'Tạo turn', exact: true }).click()
   await expect(page.getByTestId('draft-card').first()).toBeVisible()
