@@ -36,7 +36,14 @@ const TIP_NO_AMOUNT: DraftCheck = {
 
 /** "Looks right" is offered only for a turn that can be saved and has nothing left but things to look at. */
 export function canLookRight(card: DraftCard, input: TurnInput | null): boolean {
-  return input !== null && card.reader.checks.every((check) => LOOK_ONLY.has(check.code))
+  // "No price" only asks to look once every line has a price (the usual one filled in).
+  const allPriced = unpricedLines(card).length === 0
+  return (
+    input !== null &&
+    card.reader.checks.every(
+      (check) => LOOK_ONLY.has(check.code) || (check.code === 'noPrice' && allPriced),
+    )
+  )
 }
 
 export function lookedAt(card: DraftCard): DraftCard {

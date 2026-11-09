@@ -83,9 +83,12 @@ describe('quick fixes', () => {
     const input = {} as never
     expect(canLookRight(card([check('shorthand'), check('priceChange')]), input)).toBe(true)
     expect(canLookRight(card([check('shorthand')]), null)).toBe(false)
-    for (const code of ['noService', 'unclearService', 'countMismatch', 'badAmount', 'paymentNotTip', 'backReference', 'timeNotRead', 'tipNoAmount', 'noPrice'] as const) {
+    for (const code of ['noService', 'unclearService', 'countMismatch', 'badAmount', 'paymentNotTip', 'backReference', 'timeNotRead', 'tipNoAmount'] as const) {
       expect(canLookRight(card([check('shorthand'), check(code)]), input), code).toBe(false)
     }
+    // A no-price note is look-only once the usual price filled the line, not while a line is empty.
+    expect(canLookRight(card([check('noPrice')]), input)).toBe(true)
+    expect(canLookRight(card([check('noPrice')], [{ presetId: 'gel', priceCents: null }]), input)).toBe(false)
     expect(lookedAt(card([check('shorthand')])).reviewed).toBe(true)
   })
 
