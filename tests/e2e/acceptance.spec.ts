@@ -205,7 +205,7 @@ test('language changes nothing', async ({ page }) => {
     .getByText('Tiếng Việt', { exact: true })
     .click()
   await page.goto('./#/earnings')
-  await page.getByRole('button', { name: 'Chi tiết', exact: true }).click()
+  await page.getByRole('button', { name: 'Xem thêm', exact: true }).click()
 
   await expect(rowAmount(page, 'Tiền chia')).toHaveText('$60.00')
   await expect(
