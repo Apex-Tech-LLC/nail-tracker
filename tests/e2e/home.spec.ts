@@ -3,7 +3,6 @@ import {
   addTurn,
   formSave,
   openCommission,
-  openDateChoices,
   openEarningsToday,
   rowAmount,
   seedSettings,
@@ -27,8 +26,6 @@ const stat = (page: Page, label: string) =>
 /** Saves one turn on a chosen day with a 100% rate, so earned equals the amount. */
 async function addEarnedOn(page: Page, date: string, amount: string): Promise<void> {
   await page.goto('./#/add')
-  await openDateChoices(page)
-  await page.getByRole('button', { name: 'Other day' }).click()
   await page.getByLabel('Work date').fill(date)
   await page.getByLabel('Service amount').fill(amount)
   await openCommission(page)

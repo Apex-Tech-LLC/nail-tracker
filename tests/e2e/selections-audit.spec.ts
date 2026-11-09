@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
-import { commissionPill, datePill, fixNow, formSave, openCommission, openDateChoices, seedSettings, weeklyPay } from './helpers.ts'
+import { commissionPill, datePill, fixNow, formSave, openCommission, seedSettings, weeklyPay } from './helpers.ts'
 
 /*
  * Audit of every selection control, used the way a person uses it: open the
@@ -339,7 +339,7 @@ test('Add turn opens on the last-used service with its usual price, today, and n
   await expect(chips(page).locator('button[data-service-name="Pedicure"]')).toContainText('$45')
   await expect(amountBox(page)).toHaveValue('45.00')
 
-  await expect(datePill(page)).toHaveAccessibleName('Date: Today')
+  await expect(datePill(page)).toContainText('Fri 11/6')
   await expect(commissionPill(page)).toHaveAccessibleName('Commission: 60%')
   await expect(cashTip(page)).toHaveValue('')
   await expect(cardTip(page)).toHaveValue('')
@@ -459,7 +459,7 @@ test('Same as last copies the latest turn, saves it as a new turn dated today, a
   expect(await pressedServices(page)).toEqual(['Pedicure'])
   await expect(amountBox(page)).toHaveValue('50.00')
   await expect(commissionPill(page)).toHaveAccessibleName('Commission: 55%')
-  await expect(datePill(page)).toHaveAccessibleName('Date: Today')
+  await expect(datePill(page)).toContainText('Fri 11/6')
   await expect(cashTip(page)).toHaveValue('7.00')
   await expect(cardTip(page)).toHaveValue('3.00')
   await expect(page.getByRole('button', { name: 'Walk-in', exact: true })).toHaveAttribute('aria-pressed', 'true')
@@ -630,48 +630,46 @@ test('turn count: starts at 1, a tap on 2 saves two turns, and it shows up on Hi
   await expect(page.getByTestId('history-total')).toContainText('2 turns')
 })
 
-test('date pill: Today is chosen, Yesterday saves yesterday, Other day saves the picked day, and the pill follows', async ({
+test('date row: Today is chosen, Yesterday saves yesterday, the pill saves the picked day, and the pill follows', async ({
   page,
 }) => {
   await start(page)
   await page.goto('./#/add')
   await amountBox(page).fill('20')
-  await openDateChoices(page)
   const choice = (name: string) => page.getByRole('button', { name, exact: true })
   await expect(choice('Today')).toHaveAttribute('aria-pressed', 'true')
   await expect(choice('Yesterday')).toHaveAttribute('aria-pressed', 'false')
-  await expect(choice('Other day')).toHaveAttribute('aria-pressed', 'false')
+  await expect(datePill(page)).toContainText('Fri 11/6')
 
   await choice('Yesterday').click()
-  await expect(datePill(page)).toHaveAccessibleName('Date: Yesterday')
+  await expect(choice('Yesterday')).toHaveAttribute('aria-pressed', 'true')
+  await expect(datePill(page)).toContainText('Thu 11/5')
   await saveAndWaitForHome(page)
   expect((await savedTurns(page))[0].localWorkDate).toBe(YESTERDAY)
 
   await page.goto('./#/add')
   await amountBox(page).fill('25')
-  await openDateChoices(page)
-  await choice('Other day').click()
   await page.getByLabel('Work date').fill('2026-11-02')
-  await expect(datePill(page)).toHaveAccessibleName('Date: Nov 2')
+  await expect(datePill(page)).toContainText('Mon 11/2')
+  await expect(choice('Today')).toHaveAttribute('aria-pressed', 'false')
+  await expect(choice('Yesterday')).toHaveAttribute('aria-pressed', 'false')
   await saveAndWaitForHome(page)
   const turns = await savedTurns(page)
   expect(turns.map((turn) => turn.localWorkDate).sort()).toEqual(['2026-11-02', YESTERDAY])
 
-  // Editing the old-day turn must open with Other day chosen, not Today.
+  // Editing the old-day turn must open on that day, with neither Today nor Yesterday chosen.
   await page.goto(`./#/edit/${byDate(turns, '2026-11-02').id}`)
-  await expect(datePill(page)).toHaveAccessibleName('Date: Nov 2')
-  await openDateChoices(page)
-  await expect(choice('Other day')).toHaveAttribute('aria-pressed', 'true')
+  await expect(datePill(page)).toContainText('Mon 11/2')
+  await expect(page.getByLabel('Work date')).toHaveValue('2026-11-02')
   await expect(choice('Today')).toHaveAttribute('aria-pressed', 'false')
+  await expect(choice('Yesterday')).toHaveAttribute('aria-pressed', 'false')
 })
 
-test('typing a date into Other day with the keyboard does not close the picker after the first key', async ({
+test('typing a date into the date pill with the keyboard keeps the row after the first key', async ({
   page,
 }) => {
   await start(page)
   await page.goto('./#/add')
-  await openDateChoices(page)
-  await page.getByRole('button', { name: 'Other day', exact: true }).click()
   const date = page.getByLabel('Work date')
   await date.focus()
   // Month first: "03" is a whole valid month, so the box fires a change at once.
@@ -796,7 +794,7 @@ test('edit keeps every choice of the saved turn and saving without changes chang
   await page.getByTestId('turn-row').first().click()
 
   expect((await pressedServices(page)).sort()).toEqual(['Gel-X', 'Nail Art / Design'])
-  await expect(datePill(page)).toHaveAccessibleName('Date: Nov 4')
+  await expect(datePill(page)).toContainText('Wed 11/4')
   await expect(commissionPill(page)).toHaveAccessibleName('Commission: 55%')
   await expect(cashTip(page)).toHaveValue('4.00')
   await expect(cardTip(page)).toHaveValue('9.00')
@@ -843,7 +841,7 @@ test('Copy on an edit screen opens a new turn on today with the same choices', a
   await page.getByRole('link', { name: 'Copy as a new turn', exact: true }).click()
 
   expect(await pressedServices(page)).toEqual(['Dip Powder'])
-  await expect(datePill(page)).toHaveAccessibleName('Date: Today')
+  await expect(datePill(page)).toContainText('Fri 11/6')
   await expect(commissionPill(page)).toHaveAccessibleName('Commission: 50%')
   await expect(page.getByRole('button', { name: 'Walk-in', exact: true })).toHaveAttribute('aria-pressed', 'true')
   await saveAndWaitForHome(page)
@@ -861,7 +859,6 @@ test('Save & Add Another: the next turn starts clean on the service just used, t
   await tapChip(page, 'Manicure')
   await tapChip(page, 'Dip Powder')
   expect(await pressedServices(page)).toEqual(['Dip Powder'])
-  await openDateChoices(page)
   await page.getByRole('button', { name: 'Yesterday', exact: true }).click()
   await cashTip(page).fill('5')
   await cardTip(page).fill('6')
@@ -887,7 +884,8 @@ test('Save & Add Another: the next turn starts clean on the service just used, t
   expect(await pressedServices(page)).toEqual(['Dip Powder'])
   await expect(cashTip(page)).toHaveValue('')
   await expect(cardTip(page)).toHaveValue('')
-  await expect(datePill(page)).toHaveAccessibleName('Date: Yesterday')
+  await expect(datePill(page)).toContainText('Thu 11/5')
+  await expect(page.getByRole('button', { name: 'Yesterday', exact: true })).toHaveAttribute('aria-pressed', 'true')
   await openMoreOptions(page)
   await expect(page.getByLabel('Turn count')).toHaveValue('1')
   await expect(page.getByRole('button', { name: 'Walk-in', exact: true })).toHaveAttribute('aria-pressed', 'false')
@@ -1090,10 +1088,10 @@ test('Vietnamese Add turn: chips, date choices and Save work, and the saved serv
   expect(pressed).toHaveLength(1)
 
   await page.getByLabel('Tiền dịch vụ').fill('55')
-  await page.getByRole('button', { name: /^Ngày:/ }).click()
   await expect(page.getByRole('button', { name: 'Hôm nay', exact: true })).toHaveAttribute('aria-pressed', 'true')
+  await expect(datePill(page)).toContainText('T6 6/11')
   await page.getByRole('button', { name: 'Hôm qua', exact: true }).click()
-  await expect(page.getByRole('button', { name: /^Ngày:/ })).toHaveAccessibleName('Ngày: Hôm qua')
+  await expect(datePill(page)).toContainText('T5 5/11')
   await page.getByRole('button', { name: 'Thêm tùy chọn', exact: true }).click()
   await page.getByLabel('Tip cash đã cầm').uncheck()
   await page.locator('form').getByRole('button', { name: 'Lưu', exact: true }).click()
@@ -1372,7 +1370,6 @@ test('adjustment: Bonus and Today are chosen at first, one tap picks a type and 
     ['Bookkeeping deduction', 'false'],
     ['Today', 'true'],
     ['Yesterday', 'false'],
-    ['Other day', 'false'],
   ] as const) {
     await expect(pressed(page, name)).toHaveAttribute('aria-pressed', on)
   }
@@ -1408,10 +1405,9 @@ test('adjustment: Bonus and Today are chosen at first, one tap picks a type and 
   expect([edited.amountCents, edited.localWorkDate]).toEqual([-2500, YESTERDAY])
 })
 
-test('adjustment day: Other day saves the picked day and the edit screen reopens on Other day', async ({ page }) => {
+test('adjustment day: the date pill saves the picked day and the edit screen reopens on it', async ({ page }) => {
   await start(page)
   await page.goto('./#/adjustment/new')
-  await pressed(page, 'Other day').click()
   await page.getByLabel('Work date').fill('2026-10-30')
   await page.getByLabel('Amount', { exact: true }).fill('40')
   await pressed(page, 'Save').click()
@@ -1421,8 +1417,9 @@ test('adjustment day: Other day saves the picked day and the edit screen reopens
   expect([saved.localWorkDate, saved.amountCents, saved.category]).toEqual(['2026-10-30', 4000, 'bonus'])
 
   await page.goto(`./#/adjustment/${saved.id}`)
-  await expect(pressed(page, 'Other day')).toHaveAttribute('aria-pressed', 'true')
+  await expect(datePill(page)).toContainText('Fri 10/30')
   await expect(pressed(page, 'Today')).toHaveAttribute('aria-pressed', 'false')
+  await expect(pressed(page, 'Yesterday')).toHaveAttribute('aria-pressed', 'false')
   await expect(page.getByLabel('Work date')).toHaveValue('2026-10-30')
 })
 

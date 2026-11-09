@@ -2,7 +2,6 @@ import { expect, test, type Page } from '@playwright/test'
 import {
   addTurn,
   formSave,
-  openDateChoices,
   seedSettings,
 } from './helpers.ts'
 
@@ -14,11 +13,9 @@ const fixClock = (page: Page) => page.clock.setFixedTime(NOW)
 
 const noBackupCard = "You have no backup yet. Save one in case you lose your phone."
 
-/** Saves one turn on a chosen past day through the form's Other day choice. */
+/** Saves one turn on a chosen past day through the form's date pill. */
 async function addTurnOn(page: Page, date: string): Promise<void> {
   await page.goto('./#/add')
-  await openDateChoices(page)
-  await page.getByRole('button', { name: 'Other day' }).click()
   await page.getByLabel('Work date').fill(date)
   await page.getByLabel('Service amount').fill('100')
   await formSave(page).click()

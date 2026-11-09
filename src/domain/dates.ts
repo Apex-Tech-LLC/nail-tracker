@@ -158,3 +158,15 @@ export function formatTime(ms: number, locale: DateLocale): string {
     minute: '2-digit',
   }).format(new Date(ms))
 }
+
+const VIETNAMESE_WEEKDAY = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7']
+const ENGLISH_WEEKDAY = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+
+/** The date pill text: "Mon 11/9" in English (month first), "T2 9/11" in Vietnamese (day first). */
+export function formatDatePill(iso: IsoDate, locale: DateLocale): string {
+  const { month, day } = parseIsoDate(iso)
+  const weekday = dayOfWeek(iso)
+  return locale === 'vi'
+    ? `${VIETNAMESE_WEEKDAY[weekday]} ${day}/${month}`
+    : `${ENGLISH_WEEKDAY[weekday]} ${month}/${day}`
+}

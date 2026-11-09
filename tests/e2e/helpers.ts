@@ -97,14 +97,9 @@ export async function openCommission(page: Page): Promise<void> {
   await commissionPill(page).click()
 }
 
-/** The date pill at the top of the Add turn form. */
+/** The date pill in the date row; its text is the chosen day, such as "Fri 11/6". */
 export function datePill(page: Page): Locator {
-  return page.getByRole('button', { name: /^Date:/ })
-}
-
-/** Opens the date pill so Today, Yesterday and Other day can be picked. */
-export async function openDateChoices(page: Page): Promise<void> {
-  await datePill(page).click()
+  return page.locator('[data-date-pill]')
 }
 
 /**

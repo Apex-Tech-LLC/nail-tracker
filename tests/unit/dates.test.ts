@@ -4,6 +4,7 @@ import {
   dayOfWeek,
   diffDays,
   formatDayLong,
+  formatDatePill,
   formatDayShort,
   formatMonthShort,
   formatMonthShortYear,
@@ -169,5 +170,18 @@ describe('local time helpers', () => {
     const ms = new Date(2026, 10, 6, 15, 40).getTime()
     expect(formatTime(ms, 'en')).toContain(':40')
     expect(formatTime(ms, 'vi')).toContain('15:40')
+  })
+})
+
+describe('formatDatePill', () => {
+  it('writes the weekday and month first in English', () => {
+    expect(formatDatePill('2026-11-09', 'en')).toBe('Mon 11/9')
+    expect(formatDatePill('2026-11-08', 'en')).toBe('Sun 11/8')
+  })
+
+  it('writes T2 to T7 and CN with the day first in Vietnamese', () => {
+    expect(formatDatePill('2026-11-09', 'vi')).toBe('T2 9/11')
+    expect(formatDatePill('2026-11-14', 'vi')).toBe('T7 14/11')
+    expect(formatDatePill('2026-11-08', 'vi')).toBe('CN 8/11')
   })
 })

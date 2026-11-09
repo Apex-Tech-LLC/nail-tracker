@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
-import { formSave, openDateChoices, rowAmount, seedSettings, weeklyPay } from './helpers.ts'
+import { formSave, rowAmount, seedSettings, weeklyPay } from './helpers.ts'
 
 // Noon on 2026-11-04 in Chicago, with its offset written down so a UTC runner
 // cannot move the day.
@@ -23,8 +23,6 @@ async function saveRules(page: Page): Promise<void> {
 /** Saves one turn at the default 60% commission on a chosen day. */
 async function addTurnOn(page: Page, date: string, amount: string): Promise<void> {
   await page.goto('./#/add')
-  await openDateChoices(page)
-  await page.getByRole('button', { name: 'Other day' }).click()
   await page.getByLabel('Work date').fill(date)
   await page.getByLabel('Service amount').fill(amount)
   await formSave(page).click()
