@@ -1,0 +1,2218 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Nail Tracker: One-Click Mockups (Say, Date Row, Home)</title>
+<style>
+  :root,
+  [data-theme="light"] {
+    --brand-50: #fbe7ef;
+    --brand-100: #f6d0df;
+    --brand-200: #eaa6c0;
+    --brand-400: #c42a64;
+    --brand-600: #a3164d;
+    --brand-800: #7d0f3a;
+    --brand-900: #5c0a2a;
+    --brand-ink: #a3164d;
+    --brand-ink-strong: #7d0f3a;
+
+    --page: #f7f4f8;
+    --surface: #ffffff;
+    --surface-subtle: #efe9f2;
+    --text: #1d1822;
+    --text-secondary: #5d5566;
+    --text-muted: #6e6676;
+    --border: #ebe5ee;
+    --border-strong: #d6ccdb;
+
+    --positive-bg: #e3f4ec;
+    --positive-text: #0d7a57;
+    --warning-bg: #fdeee6;
+    --warning-text: #b4441b;
+    --danger-bg: #fcebeb;
+    --danger-text: #b42318;
+
+    --inverse: #1d1822;
+    --on-inverse: #ffffff;
+    --pad-tray: #e7e1ea;
+    --pad-key: #ffffff;
+    --bottle-future: #ecd9d1;
+    --toast-link: #ffb3cd;
+  }
+
+  [data-theme="dark"] {
+    --brand-50: #2e2233;
+    --brand-100: #3d2c45;
+    --brand-200: #523a5b;
+    --brand-400: #c42a64;
+    --brand-600: #a3164d;
+    --brand-800: #7d0f3a;
+    --brand-900: #5c0a2a;
+    --brand-ink: #f7a8c4;
+    --brand-ink-strong: #ffd3e2;
+
+    --page: #17131f;
+    --surface: #211b2a;
+    --surface-subtle: #2a2333;
+    --text: #f3eef6;
+    --text-secondary: #c6bbd0;
+    --text-muted: #a89db4;
+    --border: #332b3e;
+    --border-strong: #4a3e56;
+
+    --positive-bg: #14352a;
+    --positive-text: #7fe0b8;
+    --warning-bg: #3d2419;
+    --warning-text: #f6b08c;
+    --danger-bg: #3d1d1e;
+    --danger-text: #ffa8a0;
+
+    --inverse: #3a3046;
+    --on-inverse: #f7f4f8;
+    --pad-tray: #130f19;
+    --pad-key: #2b2333;
+    --bottle-future: #4a3140;
+    --toast-link: #ffc9dc;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    padding: 28px 20px 64px;
+    background: #ded8e3;
+    color: #1d1822;
+    font-family: "Be Vietnam Pro", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 16px;
+    line-height: 1.4;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .num {
+    font-variant-numeric: tabular-nums;
+  }
+
+  header.doc-head {
+    max-width: 1640px;
+    margin: 0 auto 28px;
+  }
+
+  header.doc-head h1 {
+    margin: 0 0 6px;
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+
+  header.doc-head p {
+    margin: 0;
+    color: #4f4659;
+    font-size: 14px;
+    max-width: 980px;
+  }
+
+  section.spec-block {
+    max-width: 1640px;
+    margin: 0 auto 44px;
+  }
+
+  .section-bar {
+    margin-bottom: 14px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #c7bdd0;
+  }
+
+  .section-bar h2 {
+    margin: 0 0 4px;
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+  }
+
+  .section-bar p {
+    margin: 0;
+    font-size: 13.5px;
+    color: #4f4659;
+  }
+
+  .pair-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, 375px);
+    gap: 22px;
+    align-items: start;
+  }
+
+  figure.frame {
+    margin: 0;
+    width: 375px;
+  }
+
+  figure.frame figcaption {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #4f4659;
+    margin-bottom: 8px;
+  }
+
+  /* 375 x 740 fixed phone viewport for full-screen checks */
+  .phone {
+    width: 375px;
+    height: 740px;
+    background: var(--page);
+    color: var(--text);
+    border-radius: 30px;
+    box-shadow: 0 14px 36px rgba(20, 14, 28, 0.22), 0 0 0 1px rgba(29, 24, 34, 0.12);
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .phone-auto {
+    width: 375px;
+    background: var(--page);
+    color: var(--text);
+    border-radius: 26px;
+    box-shadow: 0 14px 36px rgba(20, 14, 28, 0.22), 0 0 0 1px rgba(29, 24, 34, 0.12);
+    overflow: hidden;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .status {
+    height: 24px;
+    padding: 6px 20px 0;
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    flex-shrink: 0;
+  }
+
+  /* Shared controls */
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    min-height: 40px;
+    padding: 6px 11px;
+    border-radius: 10px;
+    font-size: 13.5px;
+    font-weight: 600;
+    border: 1.5px solid var(--border-strong);
+    background: var(--surface);
+    color: var(--text);
+    white-space: nowrap;
+  }
+
+  .chip.on {
+    background: var(--brand-600);
+    border-color: var(--brand-600);
+    color: #ffffff;
+  }
+
+  .date-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    min-height: 40px;
+    padding: 6px 11px;
+    border-radius: 10px;
+    font-size: 13.5px;
+    font-weight: 700;
+    border: 1.5px solid var(--border-strong);
+    background: var(--surface);
+    color: var(--text);
+    white-space: nowrap;
+  }
+
+  .date-pill.custom-on {
+    border-color: var(--brand-600);
+    background: var(--brand-50);
+    color: var(--brand-ink-strong);
+  }
+
+  .date-pill svg {
+    width: 15px;
+    height: 15px;
+    color: var(--brand-ink);
+    flex-shrink: 0;
+  }
+
+  .btn-primary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    min-height: 46px;
+    padding: 11px 16px;
+    border-radius: 10px;
+    border: 0;
+    background: var(--brand-600);
+    color: #ffffff;
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  .btn-secondary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 46px;
+    padding: 11px 14px;
+    border-radius: 10px;
+    border: 1.5px solid var(--border-strong);
+    background: var(--surface);
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  /* 1A: Say screen */
+  .say-body {
+    flex: 1;
+    padding: 8px 16px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 0;
+  }
+
+  .say-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 40px;
+  }
+
+  .icon-close {
+    width: 40px;
+    height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    color: var(--text);
+    font-size: 20px;
+    font-weight: 500;
+  }
+
+  .say-top h1 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  .link-subtle {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--brand-ink);
+    text-decoration: underline;
+  }
+
+  .date-row-bar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .date-row-bar .date-pill {
+    flex: 1;
+  }
+
+  .say-hint {
+    margin: 0;
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.35;
+  }
+
+  .say-box-wrap {
+    flex: 1;
+    min-height: 180px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .say-box-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .say-box-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-secondary);
+  }
+
+  .gpt-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: var(--positive-bg);
+    color: var(--positive-text);
+    font-size: 11.5px;
+    font-weight: 700;
+  }
+
+  .say-textarea {
+    flex: 1;
+    width: 100%;
+    border-radius: 12px;
+    border: 1.5px solid var(--border-strong);
+    background: var(--surface);
+    color: var(--text);
+    padding: 12px;
+    font-family: inherit;
+    font-size: 15px;
+    line-height: 1.45;
+    resize: none;
+  }
+
+  .say-textarea.mono-json {
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    font-size: 12.5px;
+    line-height: 1.4;
+  }
+
+  .say-example {
+    margin: 0;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  .say-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 2px;
+  }
+
+  .say-gpt-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 32px;
+    font-size: 13.5px;
+  }
+
+  /* Bottom sheet for clipboard fallback */
+  .sheet-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 11, 22, 0.52);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+  }
+
+  .bottom-sheet {
+    background: var(--surface);
+    border-top: 1px solid var(--border-strong);
+    border-radius: 20px 20px 0 0;
+    padding: 14px 16px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    box-shadow: 0 -10px 28px rgba(0, 0, 0, 0.28);
+  }
+
+  .sheet-handle {
+    width: 36px;
+    height: 4px;
+    border-radius: 999px;
+    background: var(--border-strong);
+    margin: 0 auto 2px;
+  }
+
+  .sheet-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .sheet-head h3 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  .prompt-preview {
+    border-radius: 10px;
+    border: 1px solid var(--border-strong);
+    background: var(--surface-subtle);
+    padding: 9px 11px;
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    font-size: 11.5px;
+    color: var(--text-secondary);
+    line-height: 1.35;
+    max-height: 112px;
+    overflow: hidden;
+  }
+
+  /* 1B: Date row showcase cards */
+  .sample-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .sample-tag {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+  }
+
+  .field-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+  }
+
+  .error-line {
+    margin: 0;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--danger-text);
+  }
+
+  .compact-header-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .pill-mini {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    min-height: 36px;
+    padding: 5px 9px;
+    border-radius: 999px;
+    border: 1.5px solid var(--border-strong);
+    background: var(--surface);
+    color: var(--text);
+    font-size: 12.5px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .pill-mini.on {
+    background: var(--brand-600);
+    border-color: var(--brand-600);
+    color: #ffffff;
+  }
+
+  .pill-mini.date-active {
+    background: var(--brand-50);
+    border-color: var(--brand-600);
+    color: var(--brand-ink-strong);
+    font-weight: 700;
+  }
+
+  /* 1C: Home screen */
+  .home-scroll {
+    flex: 1;
+    padding: 4px 16px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow: hidden;
+  }
+
+  .app-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 32px;
+    flex-shrink: 0;
+  }
+
+  .app-top-title {
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+  }
+
+  .lang-btn {
+    padding: 3px 9px;
+    border-radius: 999px;
+    border: 1px solid var(--border-strong);
+    background: var(--surface);
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--text-secondary);
+  }
+
+  /* Hero block with locked vertical height so the chart box below never shifts */
+  .hero-locked {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    flex-shrink: 0;
+  }
+
+  .seg-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 3px;
+    padding: 3px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--surface-subtle);
+  }
+
+  .seg-3 span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 32px;
+    border-radius: 7px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-align: center;
+  }
+
+  .seg-3 span.on {
+    background: var(--surface);
+    color: var(--text);
+    box-shadow: 0 1px 2px rgba(29, 24, 34, 0.12);
+  }
+
+  .hero-amount-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .hero-caption {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-secondary);
+  }
+
+  .hero-total {
+    font-size: 32px;
+    font-weight: 800;
+    letter-spacing: -0.035em;
+    line-height: 1.05;
+  }
+
+  /* Reserved 2-line comparison slot (36px) so Vietnamese wrapping never shifts the chart box */
+  .compare-slot {
+    height: 36px;
+    display: flex;
+    align-items: center;
+  }
+
+  .compare-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: var(--positive-bg);
+    color: var(--positive-text);
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.25;
+  }
+
+  /* Reserved goal bar slot (38px) in all three views */
+  .goal-slot {
+    height: 38px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    padding: 6px 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+  }
+
+  .goal-head {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--text-secondary);
+  }
+
+  .goal-head b {
+    color: var(--text);
+  }
+
+  .goal-track {
+    height: 5px;
+    border-radius: 999px;
+    background: var(--surface-subtle);
+    overflow: hidden;
+  }
+
+  .goal-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: var(--brand-400);
+  }
+
+  /* FIXED 290px CHART BOX across Today, This week, and This month */
+  .chart-box {
+    height: 290px;
+    flex-shrink: 0;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    padding: 10px 10px 8px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .chart-box-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 6px;
+  }
+
+  .chart-box-title {
+    font-size: 11.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-secondary);
+  }
+
+  .chart-box-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  /* Week polish bottles */
+  .bottles-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    align-items: end;
+    flex: 1;
+    padding: 6px 0 4px;
+  }
+
+  .bottle-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+  }
+
+  .bottle-amt {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    line-height: 1.1;
+  }
+
+  .bottle-col.is-today .bottle-amt {
+    color: var(--brand-ink);
+    font-weight: 800;
+  }
+
+  .bottle-wrap {
+    display: flex;
+     flex-direction: column;
+    align-items: center;
+    width: 100%;
+  }
+
+  .bottle-cap {
+    width: 11px;
+    height: 13px;
+    border-radius: 2px 2px 1px 1px;
+    background: var(--inverse);
+  }
+
+  .bottle-neck {
+    width: 15px;
+    height: 4px;
+    background: var(--border-strong);
+  }
+
+  .bottle-body {
+    position: relative;
+    width: 100%;
+    max-width: 34px;
+    height: 132px;
+    border-radius: 6px 6px 9px 9px;
+    border: 1.5px solid var(--border-strong);
+    background: var(--surface-subtle);
+    overflow: hidden;
+  }
+
+  .bottle-col.is-today .bottle-body {
+    border: 2px solid var(--brand-ink);
+  }
+
+  .bottle-col.is-future {
+    opacity: 0.45;
+  }
+
+  .fill-last {
+    position: absolute;
+    inset-inline: 0;
+    bottom: 0;
+    background: var(--brand-200);
+    opacity: 0.45;
+  }
+
+  .fill-this {
+    position: absolute;
+    inset-inline: 0;
+    bottom: 0;
+    background: linear-gradient(to top, var(--brand-600), var(--brand-400));
+  }
+
+  .bottle-day {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    line-height: 1.1;
+    margin-top: 2px;
+  }
+
+  .bottle-date {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-muted);
+    line-height: 1.1;
+  }
+
+  .bottle-col.is-today .bottle-day,
+  .bottle-col.is-today .bottle-date {
+    color: var(--brand-ink);
+    font-weight: 800;
+  }
+
+  .chart-legend {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding-top: 4px;
+    border-top: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--text-secondary);
+  }
+
+  .legend-items {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .swatch {
+    display: inline-block;
+    width: 9px;
+    height: 9px;
+    border-radius: 2px;
+    margin-right: 4px;
+    vertical-align: -1px;
+  }
+
+  /* Month calendar grid inside the same 290px chart-box */
+  .cal-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 3px;
+    text-align: center;
+    font-size: 10.5px;
+    font-weight: 700;
+    color: var(--text-muted);
+    padding-bottom: 2px;
+  }
+
+  .cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    grid-template-rows: repeat(6, 1fr);
+    gap: 3px;
+    flex: 1;
+  }
+
+  .cal-cell {
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    padding: 2px 3px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    font-variant-numeric: tabular-nums;
+    min-height: 36px;
+  }
+
+  .cal-cell .d {
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 1;
+  }
+
+  .cal-cell .v {
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1.05;
+    text-align: right;
+  }
+
+  .cal-s0 { background: var(--surface); color: var(--text); }
+  .cal-s1 { background: var(--brand-50); color: var(--text); }
+  .cal-s2 { background: var(--brand-100); color: var(--text); }
+  .cal-s3 { background: var(--brand-200); color: #1d1822; }
+  [data-theme="dark"] .cal-s3 { color: var(--text); }
+  .cal-s4 { background: var(--brand-400); color: #ffffff; }
+  .cal-today { border: 2px solid var(--brand-ink); }
+  .cal-dim { opacity: 0.38; background: var(--surface-subtle); }
+  .cal-empty { border-color: transparent; background: transparent; }
+
+  /* Today turn bars inside the same 290px chart-box */
+  .today-bars {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 6px;
+    align-items: end;
+    flex: 1;
+    padding: 8px 2px 4px;
+  }
+
+  .tbar-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    height: 100%;
+    justify-content: flex-end;
+  }
+
+  .tbar-amt {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .tbar-track {
+    width: 100%;
+    max-width: 36px;
+    height: 136px;
+    border-radius: 7px;
+    border: 1.5px solid var(--border-strong);
+    background: var(--surface-subtle);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    overflow: hidden;
+  }
+
+  .tbar-fill {
+    width: 100%;
+    background: linear-gradient(to top, var(--brand-600), var(--brand-400));
+    border-radius: 4px 4px 0 0;
+  }
+
+  .tbar-tip {
+    width: 100%;
+    background: var(--positive-text);
+  }
+
+  .tbar-turn {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    line-height: 1.1;
+  }
+
+  .tbar-time {
+    font-size: 10px;
+    color: var(--text-muted);
+    line-height: 1.1;
+  }
+
+  /* Compact stats strip below chart box */
+  .stats-strip {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  .stat-cell {
+    padding: 6px 4px;
+    text-align: center;
+    border-right: 1px solid var(--border);
+  }
+
+  .stat-cell:last-child {
+    border-right: 0;
+  }
+
+  .stat-cell b {
+    display: block;
+    font-size: 14px;
+    font-weight: 800;
+  }
+
+  .stat-cell span {
+    font-size: 10.5px;
+    color: var(--text-muted);
+  }
+
+  /* Docked Add/Say bar + Bottom Nav */
+  .home-dock {
+    margin-top: auto;
+    padding: 8px 16px 8px;
+    background: var(--page);
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .home-dock .btn-primary {
+    flex: 1;
+    min-height: 42px;
+    padding: 8px 12px;
+    font-size: 14px;
+  }
+
+  .home-dock .btn-secondary {
+    min-height: 42px;
+    padding: 8px 12px;
+    font-size: 13.5px;
+  }
+
+  .bottom-nav {
+    height: 54px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    flex-shrink: 0;
+  }
+
+  .nav-tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    font-size: 10.5px;
+    font-weight: 600;
+    color: var(--text-muted);
+  }
+
+  .nav-tab.on {
+    color: var(--brand-ink);
+    font-weight: 700;
+  }
+
+  .nav-dot {
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    border: 1.5px solid currentColor;
+  }
+
+  .reason-callout {
+    max-width: 1170px;
+    margin-bottom: 14px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: #ffffff;
+    border-left: 4px solid #a3164d;
+    font-size: 13.5px;
+    color: #1d1822;
+  }
+</style>
+</head>
+<body>
+
+<header class="doc-head">
+  <h1>Nail Tracker: One-Click Mockups</h1>
+  <p>Self-contained HTML mockups using the app's exact light and dark tokens from <code>src/index.css</code> at 375x740 phone dimensions. Covers (1a) the single-box Say screen with no scroll or gap, (1b) the one-tap Date row across full and compact headers, and (1c) the locked-height Home chart box across Today, This week, and This month in English and Vietnamese.</p>
+</header>
+
+<!-- ===================================================================== -->
+<!-- 1A. SAY SCREEN (375 x 740, NO EMPTY GAP, ONE TEXT BOX, NO SCROLLING)  -->
+<!-- ===================================================================== -->
+<section class="spec-block">
+  <div class="section-bar">
+    <h2>1a. Say Screen (375 x 740, Zero Scroll, Single Text Box)</h2>
+    <p>One text box handles both dictated turns and pasted ChatGPT JSON replies. Removing the second textarea, the "Check the answer" button, and the <code>mt-auto</code> spacer lets the whole screen fit inside 375x740 before the keyboard opens.</p>
+  </div>
+
+  <div class="pair-grid">
+    <!-- Light: Dictation ready -->
+    <figure class="frame">
+      <figcaption>Light · Dictation or Paste (1 Box)</figcaption>
+      <div class="phone" data-theme="light">
+        <div class="status"><span class="num">9:41</span><span>5G · 100%</span></div>
+        <div class="say-body">
+          <div class="say-top">
+            <span class="icon-close" aria-label="Close">✕</span>
+            <h1>Say your turns</h1>
+            <span class="link-subtle">How it works</span>
+          </div>
+
+          <!-- One-tap Date Row -->
+          <div class="date-row-bar">
+            <span class="chip on">Today</span>
+            <span class="chip">Yesterday</span>
+            <span class="date-pill num">
+              <span>Mon 11/9</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            </span>
+          </div>
+
+          <p class="say-hint">Tap the mic on your keyboard and say each job, or paste ChatGPT's answer in the same box.</p>
+
+          <div class="say-box-wrap">
+            <div class="say-box-head">
+              <span class="say-box-label">Your jobs</span>
+            </div>
+            <textarea class="say-textarea" rows="8" readonly>Gel manicure 45, 10 tip cash.
+Pedicure 35, 8 tip card.
+Acrylic full set 65, she asked for me, 15 tip card.</textarea>
+            <p class="say-example">Example: "Gel manicure 45, 10 tip cash. Pedicure 35."</p>
+          </div>
+
+          <div class="say-actions">
+            <button type="button" class="btn-primary">Make turns</button>
+            <div class="say-gpt-row">
+              <span class="link-subtle">Use ChatGPT instead</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </figure>
+
+    <!-- Dark: ChatGPT answer auto-detected -->
+    <figure class="frame">
+      <figcaption>Dark · ChatGPT Answer Auto-Detected</figcaption>
+      <div class="phone" data-theme="dark">
+        <div class="status"><span class="num">9:41</span><span>5G · 100%</span></div>
+        <div class="say-body">
+          <div class="say-top">
+            <span class="icon-close" aria-label="Close">✕</span>
+            <h1>Say your turns</h1>
+            <span class="link-subtle">How it works</span>
+          </div>
+
+          <div class="date-row-bar">
+            <span class="chip">Today</span>
+            <span class="chip on">Yesterday</span>
+            <span class="date-pill num">
+              <span>Sun 11/8</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            </span>
+          </div>
+
+          <p class="say-hint">Tap the mic on your keyboard and say each job, or paste ChatGPT's answer in the same box.</p>
+
+          <div class="say-box-wrap">
+            <div class="say-box-head">
+              <span class="say-box-label">Your jobs</span>
+              <span class="gpt-badge">✓ ChatGPT answer found</span>
+            </div>
+            <textarea class="say-textarea mono-json" rows="8" readonly>{
+  "turns": [
+    {
+      "services": [{ "name": "Gel manicure", "price": 45 }],
+      "cashTip": 10,
+      "request": false
+    },
+    {
+      "services": [{ "name": "Pedicure", "price": 35 }],
+      "cardTip": 8,
+      "request": true
+    }
+  ]
+}</textarea>
+            <p class="say-example">The app reads the pasted JSON automatically when you tap Make turns.</p>
+          </div>
+
+          <div class="say-actions">
+            <button type="button" class="btn-primary">Make turns</button>
+            <div class="say-gpt-row">
+              <span class="link-subtle">Use ChatGPT instead</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </figure>
+
+    <!-- Light: Clipboard refused bottom sheet -->
+    <figure class="frame">
+      <figcaption>Light · When Clipboard Copy Is Refused (Bottom Sheet)</figcaption>
+      <div class="phone" data-theme="light">
+        <div class="status"><span class="num">9:41</span><span>5G · 100%</span></div>
+        <div class="say-body">
+          <div class="say-top">
+            <span class="icon-close">✕</span>
+            <h1>Say your turns</h1>
+            <span class="link-subtle">How it works</span>
+          </div>
+          <div class="date-row-bar">
+            <span class="chip on">Today</span>
+            <span class="chip">Yesterday</span>
+            <span class="date-pill num"><span>Mon 11/9</span></span>
+          </div>
+          <p class="say-hint">Tap the mic on your keyboard and say each job, or paste ChatGPT's answer in the same box.</p>
+          <div class="say-box-wrap">
+            <div class="say-box-head"><span class="say-box-label">Your jobs</span></div>
+            <textarea class="say-textarea" rows="8" readonly placeholder="Gel manicure 45, 10 tip cash..."></textarea>
+          </div>
+          <div class="say-actions">
+            <button type="button" class="btn-primary">Make turns</button>
+            <div class="say-gpt-row"><span class="link-subtle">Use ChatGPT instead</span></div>
+          </div>
+        </div>
+
+        <div class="sheet-backdrop">
+          <div class="bottom-sheet">
+            <div class="sheet-handle"></div>
+            <div class="sheet-head">
+              <h3>Instructions for ChatGPT</h3>
+              <span class="icon-close" style="width:32px;height:32px;font-size:16px;">✕</span>
+            </div>
+            <p class="say-hint">Your phone would not copy automatically. Copy these instructions, talk in ChatGPT, then paste its reply into the box.</p>
+            <div class="prompt-preview">You are helping a nail technician log today's turns into Nail Tracker. Return only JSON matching {"turns":[{"services":[{"name":"Gel manicure","price":45}],"cashTip":10,"cardTip":0,"request":false}]}...</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+              <button type="button" class="btn-secondary">Select all</button>
+              <button type="button" class="btn-primary">Open ChatGPT</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </figure>
+  </div>
+</section>
+
+<!-- ===================================================================== -->
+<!-- 1B. ONE-TAP WORK DATE ROW (FULL & COMPACT HEADER, EN & VI, ERROR)     -->
+<!-- ===================================================================== -->
+<section class="spec-block">
+  <div class="section-bar">
+    <h2>1b. One-Tap Date Choice (Say, Adjustments, and Add Turn Header)</h2>
+    <p>The chosen date is always visible and tappable to open the native date picker in one tap. Tapping Today or Yesterday updates that date immediately. No "Other day" button that reveals a second control.</p>
+  </div>
+
+  <div class="pair-grid">
+    <!-- Light column -->
+    <figure class="frame">
+      <figcaption>Light · Full Row &amp; Add Turn Compact Header</figcaption>
+      <div class="phone-auto" data-theme="light">
+        <div class="sample-card">
+          <span class="sample-tag">Full Row · Today Selected (Default)</span>
+          <span class="field-label">Work date</span>
+          <div class="date-row-bar">
+            <span class="chip on">Today</span>
+            <span class="chip">Yesterday</span>
+            <span class="date-pill num">
+              <span>Mon 11/9</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            </span>
+          </div>
+        </div>
+
+        <div class="sample-card">
+          <span class="sample-tag">Full Row · Yesterday Tapped (Date Changes)</span>
+          <span class="field-label">Work date</span>
+          <div class="date-row-bar">
+            <span class="chip">Today</span>
+            <span class="chip on">Yesterday</span>
+            <span class="date-pill num">
+              <span>Sun 11/8</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            </span>
+          </div>
+        </div>
+
+        <div class="sample-card">
+          <span class="sample-tag">Full Row · Earlier Date Picked + Error Slot</span>
+          <span class="field-label">Work date</span>
+          <div class="date-row-bar">
+            <span class="chip">Today</span>
+            <span class="chip">Yesterday</span>
+            <span class="date-pill custom-on num">
+              <span>Thu 11/5</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            </span>
+          </div>
+          <p class="error-line">Pick a valid work date.</p>
+        </div>
+
+        <div class="sample-card">
+          <span class="sample-tag">Add Turn Compact Header (With Error Line Room)</span>
+          <div class="say-top" style="min-height:34px;">
+            <span class="icon-close" style="width:32px;height:32px;">✕</span>
+            <h1 style="font-size:15px;margin:0;">Add Turn</h1>
+            <span style="width:32px;"></span>
+          </div>
+          <div class="compact-header-bar">
+            <span class="pill-mini" style="margin-right:auto;">🎤 Say</span>
+            <span class="pill-mini on">Today</span>
+            <span class="pill-mini">Yesterday</span>
+            <span class="pill-mini num">Mon 11/9 📅</span>
+            <span class="pill-mini num">60% ▾</span>
+          </div>
+          <p class="error-line">Pick a valid work date.</p>
+        </div>
+      </div>
+    </figure>
+
+    <!-- Dark column -->
+    <figure class="frame">
+      <figcaption>Dark · Full Row, Vietnamese Format, Compact Header</figcaption>
+      <div class="phone-auto" data-theme="dark">
+        <div class="sample-card">
+          <span class="sample-tag">Full Row · Today Selected (English)</span>
+          <span class="field-label">Work date</span>
+          <div class="date-row-bar">
+            <span class="chip on">Today</span>
+            <span class="chip">Yesterday</span>
+            <span class="date-pill num">
+              <span>Mon 11/9</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            </span>
+          </div>
+        </div>
+
+        <div class="sample-card">
+          <span class="sample-tag">Full Row · Vietnamese Date Format (T2 9/11)</span>
+          <span class="field-label">Ngày làm</span>
+          <div class="date-row-bar">
+            <span class="chip on">Hôm nay</span>
+            <span class="chip">Hôm qua</span>
+            <span class="date-pill num">
+              <span>T2 9/11</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            </span>
+          </div>
+        </div>
+
+        <div class="sample-card">
+          <span class="sample-tag">Full Row · Earlier Date Picked (Thu 11/5)</span>
+          <span class="field-label">Work date</span>
+          <div class="date-row-bar">
+            <span class="chip">Today</span>
+            <span class="chip">Yesterday</span>
+            <span class="date-pill custom-on num">
+              <span>Thu 11/5</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            </span>
+          </div>
+        </div>
+
+        <div class="sample-card">
+          <span class="sample-tag">Add Turn Compact Header · Earlier Date Selected</span>
+          <div class="say-top" style="min-height:34px;">
+            <span class="icon-close" style="width:32px;height:32px;">✕</span>
+            <h1 style="font-size:15px;margin:0;">Add Turn</h1>
+            <span style="width:32px;"></span>
+          </div>
+          <div class="compact-header-bar">
+            <span class="pill-mini" style="margin-right:auto;">🎤 Say</span>
+            <span class="pill-mini">Today</span>
+            <span class="pill-mini">Yesterday</span>
+            <span class="pill-mini date-active num">Thu 11/5 📅</span>
+            <span class="pill-mini num">60% ▾</span>
+          </div>
+        </div>
+      </div>
+    </figure>
+  </div>
+</section>
+
+<!-- ===================================================================== -->
+<!-- 1C. HOME SCREEN: TODAY, THIS WEEK, THIS MONTH (LOCKED 290PX BOX)      -->
+<!-- ===================================================================== -->
+<section class="spec-block">
+  <div class="section-bar">
+    <h2>1c. Home Screen: Today, This Week, and This Month (Locked 290px Chart Box)</h2>
+    <p>Both the two-line comparison slot and the goal bar row stay reserved in all three periods, and the chart box stays locked at 290px high. Switching between Today, This week, and This month never shifts the Stats strip, the docked Add/Say bar, or the bottom navigation.</p>
+  </div>
+
+  <div class="reason-callout">
+    <strong>Why Today shows turn bars in order:</strong> Every technician logs turns, whereas work hours are optional and off by default, so turn bars in order always show how today's pay built up (up to 8 bars, then a <code>+n</code> bar).
+  </div>
+
+  <!-- Row 1: Light Today / This week / This month -->
+  <div class="pair-grid" style="margin-bottom:26px;">
+    <!-- LIGHT: THIS WEEK -->
+    <figure class="frame">
+      <figcaption>Light · Home · This Week (Polish Bottles + Dates)</figcaption>
+      <div class="phone" data-theme="light">
+        <div class="status"><span class="num">9:41</span><span>5G · 100%</span></div>
+        <div class="home-scroll">
+          <div class="app-top">
+            <span class="app-top-title">Nail Tracker</span>
+            <span class="lang-btn">VI</span>
+          </div>
+
+          <div class="hero-locked">
+            <div class="seg-3">
+              <span>Today</span>
+              <span class="on">This week</span>
+              <span>This month</span>
+            </div>
+            <div class="hero-amount-row">
+              <span class="hero-caption">You earned this week</span>
+              <span class="hero-total num">$548.00</span>
+            </div>
+            <div class="compare-slot">
+              <span class="compare-pill num">▲ $84.00 more than this time last week</span>
+            </div>
+            <div class="goal-slot">
+              <div class="goal-head"><span>Weekly goal</span><b class="num">$548 of $1,200 · $652 to go</b></div>
+              <div class="goal-track"><div class="goal-fill" style="width:46%;"></div></div>
+            </div>
+          </div>
+
+          <!-- 290px Locked Chart Box: Week Bottles -->
+          <div class="chart-box" data-testid="week-chart-box">
+            <div class="chart-box-head">
+              <span class="chart-box-title">This week</span>
+              <span class="chart-box-sub">Tap a bottle for that day</span>
+            </div>
+            <div class="bottles-grid">
+              <div class="bottle-col" data-testid="week-bottle">
+                <span class="bottle-amt num">$152</span>
+                <div class="bottle-wrap"><div class="bottle-cap"></div><div class="bottle-neck"></div><div class="bottle-body"><div class="fill-last" style="height:55%;"></div><div class="fill-this" style="height:68%;"></div></div></div>
+                <span class="bottle-day">Sun</span>
+                <span class="bottle-date num">11/8</span>
+              </div>
+              <div class="bottle-col is-today" data-testid="week-bottle">
+                <span class="bottle-amt num">$212</span>
+                <div class="bottle-wrap"><div class="bottle-cap"></div><div class="bottle-neck"></div><div class="bottle-body"><div class="fill-last" style="height:70%;"></div><div class="fill-this" style="height:92%;"></div></div></div>
+                <span class="bottle-day">Mon</span>
+                <span class="bottle-date num">11/9</span>
+              </div>
+              <div class="bottle-col" data-testid="week-bottle">
+                <span class="bottle-amt num">$184</span>
+                <div class="bottle-wrap"><div class="bottle-cap"></div><div class="bottle-neck"></div><div class="bottle-body"><div class="fill-last" style="height:62%;"></div><div class="fill-this" style="height:80%;"></div></div></div>
+                <span class="bottle-day">Tue</span>
+                <span class="bottle-date num">11/10</span>
+              </div>
+              <div class="bottle-col is-future" data-testid="week-bottle">
+                <span class="bottle-amt num">$0</span>
+                <div class="bottle-wrap"><div class="bottle-cap"></div><div class="bottle-neck"></div><div class="bottle-body"><div class="fill-last" style="height:48%;"></div></div></div>
+                <span class="bottle-day">Wed</span>
+                <span class="bottle-date num">11/11</span>
+              </div>
+              <div class="bottle-col is-future" data-testid="week-bottle">
+                <span class="bottle-amt num">$0</span>
+                <div class="bottle-wrap"><div class="bottle-cap"></div><div class="bottle-neck"></div><div class="bottle-body"><div class="fill-last" style="height:75%;"></div></div></div>
+                <span class="bottle-day">Thu</span>
+                <span class="bottle-date num">11/12</span>
+              </div>
+              <div class="bottle-col is-future" data-testid="week-bottle">
+                <span class="bottle-amt num">$0</span>
+                <div class="bottle-wrap"><div class="bottle-cap"></div><div class="bottle-neck"></div><div class="bottle-body"><div class="fill-last" style="height:95%;"></div></div></div>
+                <span class="bottle-day">Fri</span>
+                <span class="bottle-date num">11/13</span>
+              </div>
+              <div class="bottle-col is-future" data-testid="week-bottle">
+                <span class="bottle-amt num">$0</span>
+                <div class="bottle-wrap"><div class="bottle-cap"></div><div class="bottle-neck"></div><div class="bottle-body"><div class="fill-last" style="height:88%;"></div></div></div>
+                <span class="bottle-day">Sat</span>
+                <span class="bottle-date num">11/14</span>
+              </div>
+            </div>
+            <div class="chart-legend">
+              <div class="legend-items">
+                <span><i class="swatch" style="background:var(--brand-400);"></i>This week</span>
+                <span><i class="swatch" style="background:var(--brand-200);opacity:0.6;"></i>Last week</span>
+              </div>
+              <span class="num">Goal $200/day</span>
+            </div>
+          </div>
+
+          <div class="stats-strip">
+            <div class="stat-cell"><b class="num">14</b><span>Turns</span></div>
+            <div class="stat-cell"><b class="num">$118.00</b><span>Tips</span></div>
+            <div class="stat-cell"><b class="num">$476.00</b><span>Salon owes</span></div>
+          </div>
+        </div>
+
+        <div class="home-dock">
+          <button type="button" class="btn-primary">+ Add Turn</button>
+          <button type="button" class="btn-secondary">🎤 Say</button>
+        </div>
+        <nav class="bottom-nav">
+          <div class="nav-tab on"><span class="nav-dot"></span><span>Home</span></div>
+          <div class="nav-tab"><span class="nav-dot"></span><span>History</span></div>
+          <div class="nav-tab"><span class="nav-dot"></span><span>Reports</span></div>
+          <div class="nav-tab"><span class="nav-dot"></span><span>Paycheck</span></div>
+          <div class="nav-tab"><span class="nav-dot"></span><span>Settings</span></div>
+        </nav>
+      </div>
+    </figure>
+
+    <!-- LIGHT: THIS MONTH -->
+    <figure class="frame">
+      <figcaption>Light · Home · This Month (Calendar Grid in Same Box)</figcaption>
+      <div class="phone" data-theme="light">
+        <div class="status"><span class="num">9:41</span><span>5G · 100%</span></div>
+        <div class="home-scroll">
+          <div class="app-top">
+            <span class="app-top-title">Nail Tracker</span>
+            <span class="lang-btn">VI</span>
+          </div>
+
+          <div class="hero-locked">
+            <div class="seg-3">
+              <span>Today</span>
+              <span>This week</span>
+              <span class="on">This month</span>
+            </div>
+            <div class="hero-amount-row">
+              <span class="hero-caption">You earned this month</span>
+              <span class="hero-total num">$1,642.00</span>
+            </div>
+            <div class="compare-slot">
+              <span class="compare-pill num">▲ $190.00 more than this time last month</span>
+            </div>
+            <div class="goal-slot">
+              <div class="goal-head"><span>Monthly goal</span><b class="num">$1,642 of $4,800 · $3,158 to go</b></div>
+              <div class="goal-track"><div class="goal-fill" style="width:34%;"></div></div>
+            </div>
+          </div>
+
+          <!-- 290px Locked Chart Box: Month Calendar -->
+          <div class="chart-box" data-testid="month-chart-box">
+            <div class="chart-box-head">
+              <span class="chart-box-title">November 2026</span>
+              <span class="chart-box-sub">Tap a day to see its turns</span>
+            </div>
+            <div class="cal-weekdays">
+              <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+            </div>
+            <div class="cal-grid">
+              <!-- Row 1: Nov 1 - 7 -->
+              <div class="cal-cell cal-s2"><span class="d">1</span><span class="v">$168</span></div>
+              <div class="cal-cell cal-dim"><span class="d">2</span><span class="v">Off</span></div>
+              <div class="cal-cell cal-s3"><span class="d">3</span><span class="v">$205</span></div>
+              <div class="cal-cell cal-s2"><span class="d">4</span><span class="v">$174</span></div>
+              <div class="cal-cell cal-s3"><span class="d">5</span><span class="v">$218</span></div>
+              <div class="cal-cell cal-s4"><span class="d">6</span><span class="v">$275</span></div>
+              <div class="cal-cell cal-s4"><span class="d">7</span><span class="v">$254</span></div>
+              <!-- Row 2: Nov 8 - 14 (Today is Mon Nov 9) -->
+              <div class="cal-cell cal-s2"><span class="d">8</span><span class="v">$152</span></div>
+              <div class="cal-cell cal-s3 cal-today"><span class="d">9</span><span class="v">$212</span></div>
+              <div class="cal-cell cal-dim"><span class="d">10</span><span class="v"></span></div>
+              <div class="cal-cell cal-dim"><span class="d">11</span><span class="v"></span></div>
+              <div class="cal-cell cal-dim"><span class="d">12</span><span class="v"></span></div>
+              <div class="cal-cell cal-dim"><span class="d">13</span><span class="v"></span></div>
+              <div class="cal-cell cal-dim"><span class="d">14</span><span class="v"></span></div>
+              <!-- Row 3: Nov 15 - 21 -->
+              <div class="cal-cell cal-dim"><span class="d">15</span><span class="v"></span></div>
+              <div class="cal-cell cal-dim"><span class="d">16</span><span class="v"></span></div>
+              <div class="cal-cell cal-dim"><span class="d">17</span><span class="v"></span></div>
+              <div class="cal-cell cal-dim"><span class="d">18</span><span class="v"></span></div>
+              <div class="cal-cell cal-dim"><span class="d">19</span><span class="v"></span></div>
+              <div class="cal-cell cal-dim"><span class="d">20</span><span class="v"></span></div>
+              <div class="cal-cell cal-dim"><span class="d">21</span><span class="v"></span></div>
+              <!-- Row 4: Nov 22 - 28 -->
+              <div class="cal-cell cal-dim"><span class="d">22</span><span class="v"></span></div>
+              <div class="cal-cell cal-dim"><span class="d">23</span><span class="v"></span></div>
+              <div class="cal-cell cal-dim"><span class="d">24</span><span class="v"></span></div>
+              <div class="cal-cell cal-dim"><span class="d">25</span><span class="v"></span></div>
+              <div class="cal-cell cal-dim"><span class="d">26</span><span class="v"></span></div>
+              <div class="cal-cell cal-dim"><span class="d">27</span><span class="v"></span></div>
+              <div class="cal-cell cal-dim"><span class="d">28</span><span class="v"></span></div>
+              <!-- Row 5: Nov 29 - 30 -->
+              <div class="cal-cell cal-dim"><span class="d">29</span><span class="v"></span></div>
+              <div class="cal-cell cal-dim"><span class="d">30</span><span class="v"></span></div>
+              <div class="cal-cell cal-empty"></div>
+              <div class="cal-cell cal-empty"></div>
+              <div class="cal-cell cal-empty"></div>
+              <div class="cal-cell cal-empty"></div>
+              <div class="cal-cell cal-empty"></div>
+              <!-- Row 6: reserved for 6-row months so grid cells stay ~38px -->
+              <div class="cal-cell cal-empty"></div>
+              <div class="cal-cell cal-empty"></div>
+              <div class="cal-cell cal-empty"></div>
+              <div class="cal-cell cal-empty"></div>
+              <div class="cal-cell cal-empty"></div>
+              <div class="cal-cell cal-empty"></div>
+              <div class="cal-cell cal-empty"></div>
+            </div>
+          </div>
+
+          <div class="stats-strip">
+            <div class="stat-cell"><b class="num">42</b><span>Turns</span></div>
+            <div class="stat-cell"><b class="num">$346.00</b><span>Tips</span></div>
+            <div class="stat-cell"><b class="num">$476.00</b><span>Salon owes</span></div>
+          </div>
+        </div>
+
+        <div class="home-dock">
+          <button type="button" class="btn-primary">+ Add Turn</button>
+          <button type="button" class="btn-secondary">🎤 Say</button>
+        </div>
+        <nav class="bottom-nav">
+          <div class="nav-tab on"><span class="nav-dot"></span><span>Home</span></div>
+          <div class="nav-tab"><span class="nav-dot"></span><span>History</span></div>
+          <div class="nav-tab"><span class="nav-dot"></span><span>Reports</span></div>
+          <div class="nav-tab"><span class="nav-dot"></span><span>Paycheck</span></div>
+          <div class="nav-tab"><span class="nav-dot"></span><span>Settings</span></div>
+        </nav>
+      </div>
+    </figure>
+
+    <!-- LIGHT: TODAY -->
+    <figure class="frame">
+      <figcaption>Light · Home · Today (Turn Bars in Order in Same Box)</figcaption>
+      <div class="phone" data-theme="light">
+        <div class="status"><span class="num">9:41</span><span>5G · 100%</span></div>
+        <div class="home-scroll">
+          <div class="app-top">
+            <span class="app-top-title">Nail Tracker</span>
+            <span class="lang-btn">VI</span>
+          </div>
+
+          <div class="hero-locked">
+            <div class="seg-3">
+              <span class="on">Today</span>
+              <span>This week</span>
+              <span>This month</span>
+            </div>
+            <div class="hero-amount-row">
+              <span class="hero-caption">You earned today</span>
+              <span class="hero-total num">$212.00</span>
+            </div>
+            <div class="compare-slot">
+              <span class="compare-pill num">▲ $28.00 more than last Monday</span>
+            </div>
+            <div class="goal-slot">
+              <div class="goal-head"><span>Daily pace (1/6 of weekly goal)</span><b class="num">$212 of $200 · Goal hit</b></div>
+              <div class="goal-track"><div class="goal-fill" style="width:100%;"></div></div>
+            </div>
+          </div>
+
+          <!-- 290px Locked Chart Box: Today's Turns in Order -->
+          <div class="chart-box" data-testid="today-chart-box">
+            <div class="chart-box-head">
+              <span class="chart-box-title">Today's turns · Mon 11/9</span>
+              <span class="chart-box-sub">Up to 8 turns, then +n</span>
+            </div>
+            <div class="today-bars">
+              <div class="tbar-col">
+                <span class="tbar-amt num">$37</span>
+                <div class="tbar-track"><div class="tbar-tip" style="height:18%;"></div><div class="tbar-fill" style="height:48%;"></div></div>
+                <span class="tbar-turn">#1</span>
+                <span class="tbar-time num">9:30a</span>
+              </div>
+              <div class="tbar-col">
+                <span class="tbar-amt num">$29</span>
+                <div class="tbar-track"><div class="tbar-tip" style="height:14%;"></div><div class="tbar-fill" style="height:38%;"></div></div>
+                <span class="tbar-turn">#2</span>
+                <span class="tbar-time num">10:40a</span>
+              </div>
+              <div class="tbar-col">
+                <span class="tbar-amt num">$54</span>
+                <div class="tbar-track"><div class="tbar-tip" style="height:24%;"></div><div class="tbar-fill" style="height:68%;"></div></div>
+                <span class="tbar-turn">#3</span>
+                <span class="tbar-time num">12:15p</span>
+              </div>
+              <div class="tbar-col">
+                <span class="tbar-amt num">$42</span>
+                <div class="tbar-track"><div class="tbar-tip" style="height:16%;"></div><div class="tbar-fill" style="height:56%;"></div></div>
+                <span class="tbar-turn">#4</span>
+                <span class="tbar-time num">2:05p</span>
+              </div>
+              <div class="tbar-col">
+                <span class="tbar-amt num">$50</span>
+                <div class="tbar-track"><div class="tbar-tip" style="height:20%;"></div><div class="tbar-fill" style="height:64%;"></div></div>
+                <span class="tbar-turn">#5</span>
+                <span class="tbar-time num">3:40p</span>
+              </div>
+              <div class="tbar-col" style="opacity:0.45;">
+                <span class="tbar-amt num">Next</span>
+                <div class="tbar-track" style="border-style:dashed;"></div>
+                <span class="tbar-turn">#6</span>
+                <span class="tbar-time">Open</span>
+              </div>
+            </div>
+            <div class="chart-legend">
+              <div class="legend-items">
+                <span><i class="swatch" style="background:var(--brand-400);"></i>Commission</span>
+                <span><i class="swatch" style="background:var(--positive-text);"></i>Tip</span>
+              </div>
+              <span>Tap a bar to edit turn</span>
+            </div>
+          </div>
+
+          <div class="stats-strip">
+            <div class="stat-cell"><b class="num">5</b><span>Turns</span></div>
+            <div class="stat-cell"><b class="num">$53.00</b><span>Tips</span></div>
+            <div class="stat-cell"><b class="num">$476.00</b><span>Salon owes</span></div>
+          </div>
+        </div>
+
+        <div class="home-dock">
+          <button type="button" class="btn-primary">+ Add Turn</button>
+          <button type="button" class="btn-secondary">🎤 Say</button>
+        </div>
+        <nav class="bottom-nav">
+          <div class="nav-tab on"><span class="nav-dot"></span><span>Home</span></div>
+          <div class="nav-tab"><span class="nav-dot"></span><span>History</span></div>
+          <div class="nav-tab"><span class="nav-dot"></span><span>Reports</span></div>
+          <div class="nav-tab"><span class="nav-dot"></span><span>Paycheck</span></div>
+          <div class="nav-tab"><span class="nav-dot"></span><span>Settings</span></div>
+        </nav>
+      </div>
+    </figure>
+  </div>
+
+  <!-- Row 2: Dark Today / This week / This month -->
+  <div class="pair-grid" style="margin-bottom:26px;">
+    <!-- DARK: THIS WEEK -->
+    <figure class="frame">
+      <figcaption>Dark · Home · This Week</figcaption>
+      <div class="phone" data-theme="dark">
+        <div class="status"><span class="num">9:41</span><span>5G · 100%</span></div>
+        <div class="home-scroll">
+          <div class="app-top">
+            <span class="app-top-title">Nail Tracker</span>
+            <span class="lang-btn">VI</span>
+          </div>
+
+          <div class="hero-locked">
+            <div class="seg-3">
+              <span>Today</span>
+              <span class="on">This week</span>
+              <span>This month</span>
+            </div>
+            <div class="hero-amount-row">
+              <span class="hero-caption">You earned this week</span>
+              <span class="hero-total num">$548.00</span>
+            </div>
+            <div class="compare-slot">
+              <span class="compare-pill num">▲ $84.00 more than this time last week</span>
+            </div>
+            <div class="goal-slot">
+              <div class="goal-head"><span>Weekly goal</span><b class="num">$548 of $1,200 · $652 to go</b></div>
+              <div class="goal-track"><div class="goal-fill" style="width:46%;"></div></div>
+            </div>
+          </div>
+
+          <div class="chart-box">
+            <div class="chart-box-head">
+              <span class="chart-box-title">This week</span>
+              <span class="chart-box-sub">Tap a bottle for that day</span>
+            </div>
+            <div class="bottles-grid">
+              <div class="bottle-col">
+                <span class="bottle-amt num">$152</span>
+                <div class="bottle-wrap"><div class="bottle-cap"></div><div class="bottle-neck"></div><div class="bottle-body"><div class="fill-last" style="height:55%;"></div><div class="fill-this" style="height:68%;"></div></div></div>
+                <span class="bottle-day">Sun</span>
+                <span class="bottle-date num">11/8</span>
+              </div>
+              <div class="bottle-col is-today">
+                <span class="bottle-amt num">$212</span>
+                <div class="bottle-wrap"><div class="bottle-cap"></div><div class="bottle-neck"></div><div class="bottle-body"><div class="fill-last" style="height:70%;"></div><div class="fill-this" style="height:92%;"></div></div></div>
+                <span class="bottle-day">Mon</span>
+                <span class="bottle-date num">11/9</span>
+              </div>
+              <div class="bottle-col">
+                <span class="bottle-amt num">$184</span>
+                <div class="bottle-wrap"><div class="bottle-cap"></div><div class="bottle-neck"></div><div class="bottle-body"><div class="fill-last" style="height:62%;"></div><div class="fill-this" style="height:80%;"></div></div></div>
+                <span class="bottle-day">Tue</span>
+                <span class="bottle-date num">11/10</span>
+              </div>
+              <div class="bottle-col is-future">
+                <span class="bottle-amt num">$0</span>
+                <div class="bottle-wrap"><div class="bottle-cap"></div><div class="bottle-neck"></div><div class="bottle-body"><div class="fill-last" style="height:48%;"></div></div></div>
+                <span class="bottle-day">Wed</span>
+                <span class="bottle-date num">11/11</span>
+              </div>
+              <div class="bottle-col is-future">
+                <span class="bottle-amt num">$0</span>
+                <div class="bottle-wrap"><div class="bottle-cap"></div><div class="bottle-neck"></div><div class="bottle-body"><div class="fill-last" style="height:75%;"></div></div></div>
+                <span class="bottle-day">Thu</span>
+                <span class="bottle-date num">11/12</span>
+              </div>
+              <div class="bottle-col is-future">
+                <span class="bottle-amt num">$0</span>
+                <div class="bottle-wrap"><div class="bottle-cap"></div><div class="bottle-neck"></div><div class="bottle-body"><div class="fill-last" style="height:95%;"></div></div></div>
+                <span class="bottle-day">Fri</span>
+                <span class="bottle-date num">11/13</span>
+              </div>
+              <div class="bottle-col is-future">
+                <span class="bottle-amt num">$0</span>
+                <div class="bottle-wrap"><div class="bottle-cap"></div><div class="bottle-neck"></div><div class="bottle-body"><div class="fill-last" style="height:88%;"></div></div></div>
+                <span class="bottle-day">Sat</span>
+                <span class="bottle-date num">11/14</span>
+              </div>
+            </div>
+            <div class="chart-legend">
+              <div class="legend-items">
+                <span><i class="swatch" style="background:var(--brand-400);"></i>This week</span>
+                <span><i class="swatch" style="background:var(--brand-200);opacity:0.6;"></i>Last week</span>
+              </div>
+              <span class="num">Goal $200/day</span>
+            </div>
+          </div>
+
+          <div class="stats-strip">
+            <div class="stat-cell"><b class="num">14</b><span>Turns</span></div>
+            <div class="stat-cell"><b class="num">$118.00</b><span>Tips</span></div>
+            <div class="stat-cell"><b class="num">$476.00</b><span>Salon owes</span></div>
+          </div>
+        </div>
+
+        <div class="home-dock">
+          <button type="button" class="btn-primary">+ Add Turn</button>
+          <button type="button" class="btn-secondary">🎤 Say</button>
+        </div>
+        <nav class="bottom-nav">
+          <div class="nav-tab on"><span class="nav-dot"></span><span>Home</span></div>
+          <div class="nav-tab"><span class="nav-dot"></span><span>History</span></div>
+          <div class="nav-tab"><span class="nav-dot"></span><span>Reports</span></div>
+          <div class="nav-tab"><span class="nav-dot"></span><span>Paycheck</span></div>
+          <div class="nav-tab"><span class="nav-dot"></span><span>Settings</span></div>
+        </nav>
+      </div>
+    </figure>
+
+    <!-- DARK: THIS MONTH -->
+    <figure class="frame">
+      <figcaption>Dark · Home · This Month</figcaption>
+      <div class="phone" data-theme="dark">
+        <div class="status"><span class="num">9:41</span><span>5G · 100%</span></div>
+        <div class="home-scroll">
+          <div class="app-top">
+            <span class="app-top-title">Nail Tracker</span>
+            <span class="lang-btn">VI</span>
+          </div>
+
+          <div class="hero-locked">
+            <div class="seg-3">
+              <span>Today</span>
+              <span>This week</span>
+              <span class="on">This month</span>
+            </div>
+            <div class="hero-amount-row">
+              <span class="hero-caption">You earned this month</span>
+              <span class="hero-total num">$1,642.00</span>
+            </div>
+            <div class="compare-slot">
+              <span class="compare-pill num">▲ $190.00 more than this time last month</span>
+            </div>
+            <div class="goal-slot">
+              <div class="goal-head"><span>Monthly goal</span><b class="num">$1,642 of $4,800 · $3,158 to go</b></div>
+              <div class="goal-track"><div class="goal-fill" style="width:34%;"></div></div>
+            </div>
+          </div>
+
+          <div class="chart-box">
+            <div class="chart-box-head">
+              <span class="chart-box-title">November 2026</span>
+              <span class="chart-box-sub">Tap a day to see its turns</span>
+            </div>
+            <div class="cal-weekdays">
+              <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+            </div>
+            <div class="cal-grid">
+              <div class="cal-cell cal-s2"><span class="d">1</span><span class="v">$168</span></div>
+              <div class="cal-cell cal-dim"><span class="d">2</span><span class="v">Off</span></div>
+              <div class="cal-cell cal-s3"><span class="d">3</span><span class="v">$205</span></div>
+              <div class="cal-cell cal-s2"><span class="d">4</span><span class="v">$174</span></div>
+              <div class="cal-cell cal-s3"><span class="d">5</span><span class="v">$218</span></div>
+              <div class="cal-cell cal-s4"><span class="d">6</span><span class="v">$275</span></div>
+              <div class="cal-cell cal-s4"><span class="d">7</span><span class="v">$254</span></div>
+              <div class="cal-cell cal-s2"><span class="d">8</span><span class="v">$152</span></div>
+              <div class="cal-cell cal-s3 cal-today"><span class="d">9</span><span class="v">$212</span></div>
+              <div class="cal-cell cal-dim"><span class="d">10</span><span class="v"></span></div>
+              <div class="cal-cell cal-dim"><span class="d">11</span><span class="v"></span></div>
+              <div class="cal-cell cal-dim"><span class="d">12</span><span class="v"></span></div>
+              <div class="cal-cell cal-dim"><span class="d">13</span><span class="v"></span></div>
+              <div class="cal-cell cal-dim"><span class="d">14</span><span class="v"></span></div>
+              <div class="cal-cell cal-dim"><span class="d">15</span><span class="v"></span></div>
+              <div class="cal-cell cal-dim"><span class="d">16</span><span class="v"></span></div>
+              <div class="cal-cell cal-dim"><span class="d">17</span><span class="v"></span></div>
+              <div class="cal-cell cal-dim"><span class="d">18</span><span class="v"></span></div>
+              <div class="cal-cell cal-dim"><span class="d">19</span><span class="v"></span></div>
+              <div class="cal-cell cal-dim"><span class="d">20</span><span class="v"></span></div>
+              <div class="cal-cell cal-dim"><span class="d">21</span><span class="v"></span></div>
+              <div class="cal-cell cal-dim"><span class="d">22</span><span class="v"></span></div>
+              <div class="cal-cell cal-dim"><span class="d">23</span><span class="v"></span></div>
+              <div class="cal-cell cal-dim"><span class="d">24</span><span class="v"></span></div>
+              <div class="cal-cell cal-dim"><span class="d">25</span><span class="v"></span></div>
+              <div class="cal-cell cal-dim"><span class="d">26</span><span class="v"></span></div>
+              <div class="cal-cell cal-dim"><span class="d">27</span><span class="v"></span></div>
+              <div class="cal-cell cal-dim"><span class="d">28</span><span class="v"></span></div>
+              <div class="cal-cell cal-dim"><span class="d">29</span><span class="v"></span></div>
+              <div class="cal-cell cal-dim"><span class="d">30</span><span class="v"></span></div>
+              <div class="cal-cell cal-empty"></div>
+              <div class="cal-cell cal-empty"></div>
+              <div class="cal-cell cal-empty"></div>
+              <div class="cal-cell cal-empty"></div>
+              <div class="cal-cell cal-empty"></div>
+              <div class="cal-cell cal-empty"></div>
+              <div class="cal-cell cal-empty"></div>
+              <div class="cal-cell cal-empty"></div>
+              <div class="cal-cell cal-empty"></div>
+              <div class="cal-cell cal-empty"></div>
+              <div class="cal-cell cal-empty"></div>
+              <div class="cal-cell cal-empty"></div>
+            </div>
+          </div>
+
+          <div class="stats-strip">
+            <div class="stat-cell"><b class="num">42</b><span>Turns</span></div>
+            <div class="stat-cell"><b class="num">$346.00</b><span>Tips</span></div>
+            <div class="stat-cell"><b class="num">$476.00</b><span>Salon owes</span></div>
+          </div>
+        </div>
+
+        <div class="home-dock">
+          <button type="button" class="btn-primary">+ Add Turn</button>
+          <button type="button" class="btn-secondary">🎤 Say</button>
+        </div>
+        <nav class="bottom-nav">
+          <div class="nav-tab on"><span class="nav-dot"></span><span>Home</span></div>
+          <div class="nav-tab"><span class="nav-dot"></span><span>History</span></div>
+          <div class="nav-tab"><span class="nav-dot"></span><span>Reports</span></div>
+          <div class="nav-tab"><span class="nav-dot"></span><span>Paycheck</span></div>
+          <div class="nav-tab"><span class="nav-dot"></span><span>Settings</span></div>
+        </nav>
+      </div>
+    </figure>
+
+    <!-- DARK: TODAY (+n overflow & empty state inset) -->
+    <figure class="frame">
+      <figcaption>Dark · Home · Today (8 Turns + "+3" Bar &amp; Empty State)</figcaption>
+      <div class="phone" data-theme="dark">
+        <div class="status"><span class="num">9:41</span><span>5G · 100%</span></div>
+        <div class="home-scroll">
+          <div class="app-top">
+            <span class="app-top-title">Nail Tracker</span>
+            <span class="lang-btn">VI</span>
+          </div>
+
+          <div class="hero-locked">
+            <div class="seg-3">
+              <span class="on">Today</span>
+              <span>This week</span>
+              <span>This month</span>
+            </div>
+            <div class="hero-amount-row">
+              <span class="hero-caption">You earned today</span>
+              <span class="hero-total num">$386.00</span>
+            </div>
+            <div class="compare-slot">
+              <span class="compare-pill num">▲ $92.00 more than last Monday</span>
+            </div>
+            <div class="goal-slot">
+              <div class="goal-head"><span>No goal set</span><b class="link-subtle">Set a goal</b></div>
+              <div class="goal-track"><div class="goal-fill" style="width:0%;"></div></div>
+            </div>
+          </div>
+
+          <div class="chart-box">
+            <div class="chart-box-head">
+              <span class="chart-box-title">Today's turns · 11 turns</span>
+              <span class="chart-box-sub">Empty day shows centered prompt</span>
+            </div>
+            <div class="today-bars" style="grid-template-columns:repeat(9,1fr);gap:3px;">
+              <div class="tbar-col"><span class="tbar-amt num" style="font-size:10px;">$37</span><div class="tbar-track"><div class="tbar-tip" style="height:18%;"></div><div class="tbar-fill" style="height:48%;"></div></div><span class="tbar-turn" style="font-size:10px;">#1</span><span class="tbar-time num" style="font-size:9px;">9a</span></div>
+              <div class="tbar-col"><span class="tbar-amt num" style="font-size:10px;">$29</span><div class="tbar-track"><div class="tbar-tip" style="height:14%;"></div><div class="tbar-fill" style="height:38%;"></div></div><span class="tbar-turn" style="font-size:10px;">#2</span><span class="tbar-time num" style="font-size:9px;">10a</span></div>
+              <div class="tbar-col"><span class="tbar-amt num" style="font-size:10px;">$54</span><div class="tbar-track"><div class="tbar-tip" style="height:24%;"></div><div class="tbar-fill" style="height:68%;"></div></div><span class="tbar-turn" style="font-size:10px;">#3</span><span class="tbar-time num" style="font-size:9px;">11a</span></div>
+              <div class="tbar-col"><span class="tbar-amt num" style="font-size:10px;">$42</span><div class="tbar-track"><div class="tbar-tip" style="height:16%;"></div><div class="tbar-fill" style="height:56%;"></div></div><span class="tbar-turn" style="font-size:10px;">#4</span><span class="tbar-time num" style="font-size:9px;">1p</span></div>
+              <div class="tbar-col"><span class="tbar-amt num" style="font-size:10px;">$50</span><div class="tbar-track"><div class="tbar-tip" style="height:20%;"></div><div class="tbar-fill" style="height:64%;"></div></div><span class="tbar-turn" style="font-size:10px;">#5</span><span class="tbar-time num" style="font-size:9px;">2p</span></div>
+              <div class="tbar-col"><span class="tbar-amt num" style="font-size:10px;">$33</span><div class="tbar-track"><div class="tbar-tip" style="height:12%;"></div><div class="tbar-fill" style="height:44%;"></div></div><span class="tbar-turn" style="font-size:10px;">#6</span><span class="tbar-time num" style="font-size:9px;">3p</span></div>
+              <div class="tbar-col"><span class="tbar-amt num" style="font-size:10px;">$48</span><div class="tbar-track"><div class="tbar-tip" style="height:18%;"></div><div class="tbar-fill" style="height:60%;"></div></div><span class="tbar-turn" style="font-size:10px;">#7</span><span class="tbar-time num" style="font-size:9px;">4p</span></div>
+              <div class="tbar-col"><span class="tbar-amt num" style="font-size:10px;">$35</span><div class="tbar-track"><div class="tbar-tip" style="height:15%;"></div><div class="tbar-fill" style="height:46%;"></div></div><span class="tbar-turn" style="font-size:10px;">#8</span><span class="tbar-time num" style="font-size:9px;">5p</span></div>
+              <div class="tbar-col"><span class="tbar-amt num" style="font-size:10px;color:var(--brand-ink);">$58</span><div class="tbar-track" style="border-color:var(--brand-ink);"><div class="tbar-fill" style="height:78%;"></div></div><span class="tbar-turn" style="font-size:10px;color:var(--brand-ink);">+3</span><span class="tbar-time" style="font-size:9px;">more</span></div>
+            </div>
+            <div class="chart-legend">
+              <span>Empty state: "No turns yet. Tap + Add Turn below."</span>
+              <span class="num">11 turns</span>
+            </div>
+          </div>
+
+          <div class="stats-strip">
+            <div class="stat-cell"><b class="num">11</b><span>Turns</span></div>
+            <div class="stat-cell"><b class="num">$88.00</b><span>Tips</span></div>
+            <div class="stat-cell"><b class="num">$476.00</b><span>Salon owes</span></div>
+          </div>
+        </div>
+
+        <div class="home-dock">
+          <button type="button" class="btn-primary">+ Add Turn</button>
+          <button type="button" class="btn-secondary">🎤 Say</button>
+        </div>
+        <nav class="bottom-nav">
+          <div class="nav-tab on"><span class="nav-dot"></span><span>Home</span></div>
+          <div class="nav-tab"><span class="nav-dot"></span><span>History</span></div>
+          <div class="nav-tab"><span class="nav-dot"></span><span>Reports</span></div>
+          <div class="nav-tab"><span class="nav-dot"></span><span>Paycheck</span></div>
+          <div class="nav-tab"><span class="nav-dot"></span><span>Settings</span></div>
+        </nav>
+      </div>
+    </figure>
+  </div>
+
+  <!-- Row 3: Vietnamese at 375px for Week and Month (Light & Dark) -->
+  <div class="pair-grid">
+    <!-- VIETNAMESE LIGHT: THIS WEEK -->
+    <figure class="frame">
+      <figcaption>Vietnamese (375px) · Light · Tuần này (T2 9/11 Dates)</figcaption>
+      <div class="phone" data-theme="light" lang="vi">
+        <div class="status"><span class="num">9:41</span><span>5G · 100%</span></div>
+        <div class="home-scroll">
+          <div class="app-top">
+            <span class="app-top-title">Nail Tracker</span>
+            <span class="lang-btn">EN</span>
+          </div>
+
+          <div class="hero-locked">
+            <div class="seg-3">
+              <span>Hôm nay</span>
+              <span class="on">Tuần này</span>
+              <span>Tháng này</span>
+            </div>
+            <div class="hero-amount-row">
+              <span class="hero-caption">Tuần này bạn kiếm được</span>
+              <span class="hero-total num">$548.00</span>
+            </div>
+            <div class="compare-slot">
+              <span class="compare-pill num">▲ $84.00 nhiều hơn cùng kỳ tuần trước</span>
+            </div>
+            <div class="goal-slot">
+              <div class="goal-head"><span>Mục tiêu tuần</span><b class="num">$548 / $1,200 · còn $652</b></div>
+              <div class="goal-track"><div class="goal-fill" style="width:46%;"></div></div>
+            </div>
+          </div>
+
+          <div class="chart-box">
+            <div class="chart-box-head">
+              <span class="chart-box-title">Tuần này</span>
+              <span class="chart-box-sub">Chạm vào lọ sơn để xem ngày</span>
+            </div>
+            <div class="bottles-grid">
+              <div class="bottle-col">
+                <span class="bottle-amt num">$152</span>
+                <div class="bottle-wrap"><div class="bottle-cap"></div><div class="bottle-neck"></div><div class="bottle-body"><div class="fill-last" style="height:55%;"></div><div class="fill-this" style="height:68%;"></div></div></div>
+                <span class="bottle-day">CN</span>
+                <span class="bottle-date num">8/11</span>
+              </div>
+              <div class="bottle-col is-today">
+                <span class="bottle-amt num">$212</span>
+                <div class="bottle-wrap"><div class="bottle-cap"></div><div class="bottle-neck"></div><div class="bottle-body"><div class="fill-last" style="height:70%;"></div><div class="fill-this" style="height:92%;"></div></div></div>
+                <span class="bottle-day">T2</span>
+                <span class="bottle-date num">9/11</span>
+              </div>
+              <div class="bottle-col">
+                <span class="bottle-amt num">$184</span>
+                <div class="bottle-wrap"><div class="bottle-cap"></div><div class="bottle-neck"></div><div class="bottle-body"><div class="fill-last" style="height:62%;"></div><div class="fill-this" style="height:80%;"></div></div></div>
+                <span class="bottle-day">T3</span>
+                <span class="bottle-date num">10/11</span>
+              </div>
+              <div class="bottle-col is-future">
+                <span class="bottle-amt num">$0</span>
+                <div class="bottle-wrap"><div class="bottle-cap"></div><div class="bottle-neck"></div><div class="bottle-body"><div class="fill-last" style="height:48%;"></div></div></div>
+                <span class="bottle-day">T4</span>
+                <span class="bottle-date num">11/11</span>
+              </div>
+              <div class="bottle-col is-future">
+                <span class="bottle-amt num">$0</span>
+                <div class="bottle-wrap"><div class="bottle-cap"></div><div class="bottle-neck"></div><div class="bottle-body"><div class="fill-last" style="height:75%;"></div></div></div>
+                <span class="bottle-day">T5</span>
+                <span class="bottle-date num">12/11</span>
+              </div>
+              <div class="bottle-col is-future">
+                <span class="bottle-amt num">$0</span>
+                <div class="bottle-wrap"><div class="bottle-cap"></div><div class="bottle-neck"></div><div class="bottle-body"><div class="fill-last" style="height:95%;"></div></div></div>
+                <span class="bottle-day">T6</span>
+                <span class="bottle-date num">13/11</span>
+              </div>
+              <div class="bottle-col is-future">
+                <span class="bottle-amt num">$0</span>
+                <div class="bottle-wrap"><div class="bottle-cap"></div><div class="bottle-neck"></div><div class="bottle-body"><div class="fill-last" style="height:88%;"></div></div></div>
+                <span class="bottle-day">T7</span>
+                <span class="bottle-date num">14/11</span>
+              </div>
+            </div>
+            <div class="chart-legend">
+              <div class="legend-items">
+                <span><i class="swatch" style="background:var(--brand-400);"></i>Tuần này</span>
+                <span><i class="swatch" style="background:var(--brand-200);opacity:0.6;"></i>Tuần trước</span>
+              </div>
+              <span class="num">Mục tiêu $200</span>
+            </div>
+          </div>
+
+          <div class="stats-strip">
+            <div class="stat-cell"><b class="num">14</b><span>Turn</span></div>
+            <div class="stat-cell"><b class="num">$118.00</b><span>Tip</span></div>
+            <div class="stat-cell"><b class="num">$476.00</b><span>Tiệm còn nợ</span></div>
+          </div>
+        </div>
+
+        <div class="home-dock">
+          <button type="button" class="btn-primary">+ Thêm turn</button>
+          <button type="button" class="btn-secondary">🎤 Nói turn</button>
+        </div>
+        <nav class="bottom-nav">
+          <div class="nav-tab on"><span class="nav-dot"></span><span>Trang chính</span></div>
+          <div class="nav-tab"><span class="nav-dot"></span><span>Lịch sử</span></div>
+          <div class="nav-tab"><span class="nav-dot"></span><span>Báo cáo</span></div>
+          <div class="nav-tab"><span class="nav-dot"></span><span>Lương</span></div>
+          <div class="nav-tab"><span class="nav-dot"></span><span>Cài đặt</span></div>
+        </nav>
+      </div>
+    </figure>
+
+    <!-- VIETNAMESE DARK: THIS MONTH -->
+    <figure class="frame">
+      <figcaption>Vietnamese (375px) · Dark · Tháng này (Same Box Position)</figcaption>
+      <div class="phone" data-theme="dark" lang="vi">
+        <div class="status"><span class="num">9:41</span><span>5G · 100%</span></div>
+        <div class="home-scroll">
+          <div class="app-top">
+            <span class="app-top-title">Nail Tracker</span>
+            <span class="lang-btn">EN</span>
+          </div>
+
+          <div class="hero-locked">
+            <div class="seg-3">
+              <span>Hôm nay</span>
+              <span>Tuần này</span>
+              <span class="on">Tháng này</span>
+            </div>
+            <div class="hero-amount-row">
+              <span class="hero-caption">Tháng này bạn kiếm được</span>
+              <span class="hero-total num">$1,642.00</span>
+            </div>
+            <div class="compare-slot">
+              <span class="compare-pill num">▲ $190.00 nhiều hơn cùng kỳ tháng trước</span>
+            </div>
+            <div class="goal-slot">
+              <div class="goal-head"><span>Mục tiêu tháng</span><b class="num">$1,642 / $4,800 · còn $3,158</b></div>
+              <div class="goal-track"><div class="goal-fill" style="width:34%;"></div></div>
+            </div>
+          </div>
+
+          <div class="chart-box">
+            <div class="chart-box-head">
+              <span class="chart-box-title">Tháng 11, 2026</span>
+              <span class="chart-box-sub">Chạm vào ngày để xem turn</span>
+            </div>
+            <div class="cal-weekdays">
+              <span>CN</span><span>T2</span><span>T3</span><span>T4</span><span>T5</span><span>T6</span><span>T7</span>
+            </div>
+            <div class="cal-grid">
+              <div class="cal-cell cal-s2"><span class="d">1</span><span class="v">$168</span></div>
+              <div class="cal-cell cal-dim"><span class="d">2</span><span class="v">Nghỉ</span></div>
+              <div class="cal-cell cal-s3"><span class="d">3</span><span class="v">$205</span></div>
+              <div class="cal-cell cal-s2"><span class="d">4</span><span class="v">$174</span></div>
+              <div class="cal-cell cal-s3"><span class="d">5</span><span class="v">$218</span></div>
+              <div class="cal-cell cal-s4"><span class="d">6</span><span class="v">$275</span></div>
+              <div class="cal-cell cal-s4"><span class="d">7</span><span class="v">$254</span></div>
+              <div class="cal-cell cal-s2"><span class="d">8</span><span class="v">$152</span></div>
+              <div class="cal-cell cal-s3 cal-today"><span class="d">9</span><span class="v">$212</span></div>
+              <div class="cal-cell cal-dim"><span class="d">10</span><span class="v"></span></div>
+              <div class="cal-cell cal-dim"><span class="d">11</span><span class="v"></span></div>
+              <div class="cal-cell cal-dim"><span class="d">12</span><span class="v"></span></div>
+              <div class="cal-cell cal-dim"><span class="d">13</span><span class="v"></span></div>
+              <div class="cal-cell cal-dim"><span class="d">14</span><span class="v"></span></div>
+              <div class="cal-cell cal-dim"><span class="d">15</span><span class="v"></span></div>
+              <div class="cal-cell cal-dim"><span class="d">16</span><span class="v"></span></div>
+              <div class="cal-cell cal-dim"><span class="d">17</span><span class="v"></span></div>
+              <div class="cal-cell cal-dim"><span class="d">18</span><span class="v"></span></div>
+              <div class="cal-cell cal-dim"><span class="d">19</span><span class="v"></span></div>
+              <div class="cal-cell cal-dim"><span class="d">20</span><span class="v"></span></div>
+              <div class="cal-cell cal-dim"><span class="d">21</span><span class="v"></span></div>
+              <div class="cal-cell cal-dim"><span class="d">22</span><span class="v"></span></div>
+              <div class="cal-cell cal-dim"><span class="d">23</span><span class="v"></span></div>
+              <div class="cal-cell cal-dim"><span class="d">24</span><span class="v"></span></div>
+              <div class="cal-cell cal-dim"><span class="d">25</span><span class="v"></span></div>
+              <div class="cal-cell cal-dim"><span class="d">26</span><span class="v"></span></div>
+              <div class="cal-cell cal-dim"><span class="d">27</span><span class="v"></span></div>
+              <div class="cal-cell cal-dim"><span class="d">28</span><span class="v"></span></div>
+              <div class="cal-cell cal-dim"><span class="d">29</span><span class="v"></span></div>
+              <div class="cal-cell cal-dim"><span class="d">30</span><span class="v"></span></div>
+              <div class="cal-cell cal-empty"></div>
+              <div class="cal-cell cal-empty"></div>
+              <div class="cal-cell cal-empty"></div>
+              <div class="cal-cell cal-empty"></div>
+              <div class="cal-cell cal-empty"></div>
+              <div class="cal-cell cal-empty"></div>
+              <div class="cal-cell cal-empty"></div>
+              <div class="cal-cell cal-empty"></div>
+              <div class="cal-cell cal-empty"></div>
+              <div class="cal-cell cal-empty"></div>
+              <div class="cal-cell cal-empty"></div>
+              <div class="cal-cell cal-empty"></div>
+            </div>
+          </div>
+
+          <div class="stats-strip">
+            <div class="stat-cell"><b class="num">42</b><span>Turn</span></div>
+            <div class="stat-cell"><b class="num">$346.00</b><span>Tip</span></div>
+            <div class="stat-cell"><b class="num">$476.00</b><span>Tiệm còn nợ</span></div>
+          </div>
+        </div>
+
+        <div class="home-dock">
+          <button type="button" class="btn-primary">+ Thêm turn</button>
+          <button type="button" class="btn-secondary">🎤 Nói turn</button>
+        </div>
+        <nav class="bottom-nav">
+          <div class="nav-tab on"><span class="nav-dot"></span><span>Trang chính</span></div>
+          <div class="nav-tab"><span class="nav-dot"></span><span>Lịch sử</span></div>
+          <div class="nav-tab"><span class="nav-dot"></span><span>Báo cáo</span></div>
+          <div class="nav-tab"><span class="nav-dot"></span><span>Lương</span></div>
+          <div class="nav-tab"><span class="nav-dot"></span><span>Cài đặt</span></div>
+        </nav>
+      </div>
+    </figure>
+  </div>
+</section>
+
+</body>
+</html>
