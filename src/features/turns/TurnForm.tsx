@@ -33,7 +33,6 @@ import {
 } from '../../domain/quickPicks.ts'
 import { t } from '../../lib/i18n.ts'
 import type { Locale } from '../../lib/locale.ts'
-import { requestPersistence } from '../../pwa/persistStorage.ts'
 import { MoneyField } from '../../ui/MoneyField.tsx'
 import { NumberPad } from '../../ui/NumberPad.tsx'
 import { PercentField } from '../../ui/PercentField.tsx'
@@ -51,6 +50,7 @@ import {
   primaryButton,
   secondaryButton,
 } from '../../ui/styles.ts'
+import { afterNewTurnSaved } from './copyTurn.ts'
 import {
   ServiceLineFields,
   type LineErrors,
@@ -65,6 +65,7 @@ import {
   type TurnInput,
 } from './turnStore.ts'
 import {
+  copiedTurnValues,
   newLine,
   presetName,
   tipCents,
@@ -75,9 +76,8 @@ import {
 
 const CLIENT_TYPES: {
   value: ClientType
-  key: 'clientUnspecified' | 'clientWalkIn' | 'clientRequest'
+  key: 'clientWalkIn' | 'clientRequest'
 }[] = [
-  { value: 'unspecified', key: 'clientUnspecified' },
   { value: 'walkIn', key: 'clientWalkIn' },
   { value: 'request', key: 'clientRequest' },
 ]
@@ -112,25 +112,6 @@ function lineFromService(service: TurnService, presets: ServicePreset[]): LineSt
     rateTouched: true,
     originalChoice: choice,
     originalName: service.serviceNameSnapshot,
-  }
-}
-
-/**
- * A service row copied into a brand new turn. Its rate is kept, but the name
- * stays empty so saving uses the preset's current name rather than the old one.
- */
-function copiedLineFromService(service: TurnService, presets: ServicePreset[]): LineState {
-  const preset = presets.find((item) => item.id === service.servicePresetId)
-  const choice = preset ? preset.id : 'other'
-  return {
-    key: crypto.randomUUID(),
-    choice,
-    customName: preset ? '' : service.serviceNameSnapshot,
-    amount: centsToInput(service.servicePriceCents),
-    rate: rateToInput(service.commissionRateSnapshotBp),
-    rateTouched: true,
-    originalChoice: choice,
-    originalName: '',
   }
 }
 
@@ -282,16 +263,18 @@ export function TurnFormFields({ presets, existing, quick, copy, onDone, onClose
   const turn = copy ? undefined : source
   const initialPreset = presets.find((preset) => preset.id === lastServicePresetId) ?? presets[0]
 
-  const initial = draft?.initial
+  // A copy starts from the shared copied values, a draft from its own.
+  const [initial] = useState<TurnFormValues | undefined>(() =>
+    draft?.initial ??
+    (copy && existing && existing.services.length > 0
+      ? copiedTurnValues(existing.turn, existing.services, presets, today)
+      : undefined),
+  )
   const [lines, setLines] = useState<LineState[]>(() =>
     initial
       ? initial.lines
       : existing && existing.services.length > 0
-      ? existing.services.map((service) =>
-          copy
-            ? copiedLineFromService(service, presets)
-            : lineFromService(service, presets),
-        )
+      ? existing.services.map((service) => lineFromService(service, presets))
       : [
           startingLine(
             initialPreset,
@@ -342,12 +325,10 @@ export function TurnFormFields({ presets, existing, quick, copy, onDone, onClose
   )
   const [note, setNote] = useState(initial?.note ?? source?.note ?? '')
   const [moreOpen, setMoreOpen] = useState(
-    initial
-      ? !!draft?.moreOpen
+    draft
+      ? !!draft.moreOpen
       : source
-        ? source.turnCount !== 1 ||
-            source.clientType !== 'unspecified' ||
-            (source.note ?? '').trim() !== ''
+        ? source.turnCount !== 1 || (source.note ?? '').trim() !== ''
         : false,
   )
   const [savedAddAnother, setSavedAddAnother] = useState(false)
@@ -676,7 +657,6 @@ export function TurnFormFields({ presets, existing, quick, copy, onDone, onClose
     if (!input) return null
 
     const lastLine = lines[lines.length - 1]
-    const lastPreset = presets.find((item) => item.id === lastLine.choice)
     lastSavedChoice.current = lastLine.choice
     lastSavedPriceCents.current = parseCents(lastLine.amount)
 
@@ -690,10 +670,7 @@ export function TurnFormFields({ presets, existing, quick, copy, onDone, onClose
       throw error
     }
 
-    if (!turn) {
-      if (lastPreset) updateSettings({ lastServicePresetId: lastPreset.id })
-      void requestPersistence()
-    }
+    if (!turn) afterNewTurnSaved(lastLine.choice, presets)
     return { id: savedId, earnedTotalCents: preview.earnedTotalCents }
   }
 
@@ -1069,6 +1046,28 @@ export function TurnFormFields({ presets, existing, quick, copy, onDone, onClose
         })}
       </div>
 
+      <div
+        role="group"
+        aria-label={t(locale, 'clientType')}
+        className="flex flex-wrap items-center gap-2"
+      >
+        {CLIENT_TYPES.map((item) => (
+          <button
+            key={item.value}
+            type="button"
+            aria-pressed={clientType === item.value}
+            className={`${chip} ${clientType === item.value ? chipOn : chipOff}`}
+            onClick={() => {
+              // Tapping the chosen chip again puts the client back to not set.
+              setClientType(clientType === item.value ? 'unspecified' : item.value)
+              changed()
+            }}
+          >
+            {t(locale, item.key)}
+          </button>
+        ))}
+      </div>
+
       <div className={card} aria-live="polite">
         {lines.length > 1 && (
           <div className="flex items-baseline justify-between gap-3">
@@ -1153,26 +1152,6 @@ export function TurnFormFields({ presets, existing, quick, copy, onDone, onClose
               }}
               className={field}
             />
-          </div>
-
-          <div>
-            <p className={label}>{t(locale, 'clientType')}</p>
-            <div className="flex flex-wrap gap-2">
-              {CLIENT_TYPES.map((item) => (
-                <button
-                  key={item.value}
-                  type="button"
-                  aria-pressed={clientType === item.value}
-                  className={`${chip} ${clientType === item.value ? chipOn : chipOff}`}
-                  onClick={() => {
-                    setClientType(item.value)
-                    changed()
-                  }}
-                >
-                  {t(locale, item.key)}
-                </button>
-              ))}
-            </div>
           </div>
 
           <div>

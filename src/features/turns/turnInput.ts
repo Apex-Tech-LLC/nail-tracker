@@ -3,9 +3,9 @@
 // worked out one way here and another way there.
 // Plain TypeScript: no React, no database.
 
-import type { ClientType, ServicePreset, Turn } from '../../db/schema.ts'
+import type { ClientType, ServicePreset, Turn, TurnService } from '../../db/schema.ts'
 import { isIsoDate, localDateTimeToMs, timeOf, type IsoDate } from '../../domain/dates.ts'
-import { parseCents, parseRateBp, rateToInput } from '../../domain/money.ts'
+import { centsToInput, parseCents, parseRateBp, rateToInput } from '../../domain/money.ts'
 import { t } from '../../lib/i18n.ts'
 import type { Locale } from '../../lib/locale.ts'
 import type { LineErrors, LineState } from './ServiceLineFields.tsx'
@@ -46,6 +46,63 @@ export function newLine(choice: string, rateBp: number): LineState {
     originalChoice: choice,
     originalName: '',
   }
+}
+
+/**
+ * A service row copied into a brand new turn. Its rate is kept, but the name
+ * stays empty so saving uses the preset's current name rather than the old one.
+ */
+export function copiedLineFromService(
+  service: TurnService,
+  presets: readonly ServicePreset[],
+): LineState {
+  const preset = presets.find((item) => item.id === service.servicePresetId)
+  const choice = preset ? preset.id : 'other'
+  return {
+    key: crypto.randomUUID(),
+    choice,
+    customName: preset ? '' : service.serviceNameSnapshot,
+    amount: centsToInput(service.servicePriceCents),
+    rate: rateToInput(service.commissionRateSnapshotBp),
+    rateTouched: true,
+    originalChoice: choice,
+    originalName: '',
+  }
+}
+
+/**
+ * What the Copy form holds before anything is changed: the saved turn's
+ * services, tips and client type, dated `date`, with the time left to "now".
+ */
+export function copiedTurnValues(
+  source: Turn,
+  services: readonly TurnService[],
+  presets: readonly ServicePreset[],
+  date: IsoDate,
+): TurnFormValues {
+  return {
+    lines: services.map((service) => copiedLineFromService(service, presets)),
+    cashText: source.cashTipCents > 0 ? centsToInput(source.cashTipCents) : '',
+    cardText: source.cardTipCents > 0 ? centsToInput(source.cardTipCents) : '',
+    turnCountText: String(source.turnCount),
+    date,
+    time: '',
+    clientType: source.clientType,
+    cashTipReceived: source.cashTipReceived,
+    cardTipReceived: source.cardTipReceived,
+    note: source.note ?? '',
+  }
+}
+
+/** The turn input that saving the untouched Copy form would store. */
+export function copiedTurnInput(
+  source: Turn,
+  services: readonly TurnService[],
+  presets: readonly ServicePreset[],
+  locale: Locale,
+  date: IsoDate,
+): TurnInputResult {
+  return turnInputFromForm(copiedTurnValues(source, services, presets, date), presets, locale)
 }
 
 export function presetName(preset: ServicePreset, locale: Locale): string {

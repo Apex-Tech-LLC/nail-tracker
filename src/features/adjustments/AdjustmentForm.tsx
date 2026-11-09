@@ -79,8 +79,10 @@ function AdjustmentFormFields({ adjustment, onDone }: FieldsProps) {
   const { locale } = useSettings()
   const id = useId()
   const [date, setDate] = useState<IsoDate>(adjustment?.localWorkDate ?? todayIso())
+  // The box holds a positive number; Bonus or Deduction decides the sign.
+  const [deduction, setDeduction] = useState(!!adjustment && adjustment.amountCents < 0)
   const [amountText, setAmountText] = useState(
-    adjustment ? centsToInput(adjustment.amountCents) : '',
+    adjustment ? centsToInput(Math.abs(adjustment.amountCents)) : '',
   )
   const [category, setCategory] = useState<AdjustmentCategory>(
     adjustment?.category ?? 'bonus',
@@ -97,7 +99,8 @@ function AdjustmentFormFields({ adjustment, onDone }: FieldsProps) {
   async function save(): Promise<boolean> {
     if (saveInFlight.current) return false
 
-    const amountCents = parseSignedCents(amountText)
+    const typed = parseSignedCents(amountText)
+    const amountCents = typed === null ? null : deduction ? -Math.abs(typed) : Math.abs(typed)
     const next: Errors = {}
     if (amountCents === null || amountCents === 0) {
       next.amount = t(locale, 'errorAdjustmentAmount')
@@ -207,12 +210,34 @@ function AdjustmentFormFields({ adjustment, onDone }: FieldsProps) {
         error={errors.date}
       />
 
+      <div
+        role="group"
+        aria-label={t(locale, 'adjDirection')}
+        className="flex flex-wrap gap-2"
+      >
+        {([false, true] as const).map((isDeduction) => (
+          <button
+            key={String(isDeduction)}
+            type="button"
+            aria-pressed={deduction === isDeduction}
+            className={`${chip} ${deduction === isDeduction ? chipOn : chipOff}`}
+            onClick={() => setDeduction(isDeduction)}
+          >
+            {t(locale, isDeduction ? 'adjMinus' : 'adjPlus')}
+          </button>
+        ))}
+      </div>
+
       <div>
         <MoneyField
           label={t(locale, 'amountSigned')}
-          inputMode="text"
           value={amountText}
           onChange={(value) => {
+            // A minus sign typed in front still works: it picks Deduction.
+            if (/^\s*[-−]/.test(value)) {
+              setDeduction(true)
+              value = value.replace(/^\s*[-−]\s*/, '')
+            }
             setAmountText(value)
             setErrors((previous) =>
               previous.amount ? { ...previous, amount: undefined } : previous,
@@ -225,7 +250,7 @@ function AdjustmentFormFields({ adjustment, onDone }: FieldsProps) {
 
       <div>
         <p className={label}>{t(locale, 'category')}</p>
-        <div className="flex flex-wrap gap-2">
+        <div role="group" aria-label={t(locale, 'category')} className="flex flex-wrap gap-2">
           {CATEGORIES.map((value) => (
             <button
               key={value}

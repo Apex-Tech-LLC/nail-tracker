@@ -1,11 +1,9 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
 import {
   addTurn,
-  formSave,
   openEarningsToday,
   rowAmount,
   seedSettings,
-  serviceChip,
   turnRow,
 } from './helpers.ts'
 
@@ -29,20 +27,15 @@ async function swipeLeft(page: Page, row: Locator, distance: number): Promise<vo
   await page.mouse.up()
 }
 
-test('the copy button on a Today row opens a filled copy form', async ({ page }) => {
+test('the copy button on a Today row saves a copy in one tap', async ({ page }) => {
   await seedSettings(page)
   await page.clock.setFixedTime(NOON)
   await addTurn(page, { service: 'Gel-X', amount: '75', cash: '5' })
 
-  await page.getByRole('link', { name: 'Copy turn #1' }).click()
-  await expect(page).toHaveURL(/#\/copy\//)
-  await expect(page.getByRole('heading', { name: 'Add Turn' })).toBeVisible()
-  await expect(page.getByLabel('Service amount')).toHaveValue('75.00')
-  await expect(serviceChip(page, 'Gel-X')).toHaveAttribute('aria-pressed', 'true')
-
-  await formSave(page).click()
+  await page.getByRole('button', { name: 'Copy turn #1' }).click()
 
   await expect(page).toHaveURL(/#\/$/)
+  await expect(page.getByRole('status').filter({ hasText: 'Copied, you earn $50' })).toBeVisible()
   await expect(turnRow(page, 2)).toBeVisible()
   await expect(page.getByTestId('hero-earned')).toHaveText('$100.00')
 
@@ -58,7 +51,7 @@ test('swiping a History row left deletes with undo', async ({ page }) => {
 
   await swipeLeft(page, turnRow(page, 1), 120)
 
-  const copyAction = page.getByRole('link', { name: 'Copy', exact: true })
+  const copyAction = page.getByRole('button', { name: 'Copy', exact: true })
   const deleteAction = page.getByRole('button', { name: 'Delete', exact: true })
   await expect(copyAction).toBeVisible()
   await expect(deleteAction).toBeVisible()
@@ -85,7 +78,7 @@ test('a short swipe neither opens the row nor the edit screen', async ({ page })
   await expect(page).toHaveURL(/#\/history$/)
   await expect(turnRow(page, 1)).toBeVisible()
   // aria-hidden action buttons drop out of the accessibility tree while closed.
-  await expect(page.getByRole('link', { name: 'Copy', exact: true })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Copy', exact: true })).toHaveCount(0)
   await expect(page.getByRole('button', { name: 'Delete', exact: true })).toHaveCount(0)
 })
 
