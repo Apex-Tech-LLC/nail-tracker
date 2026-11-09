@@ -127,6 +127,18 @@ export function serviceNames(services: readonly TurnService[]): string[] {
   )
 }
 
+/** The names used on the most service lines in one range; ties go A to Z. */
+export function topServiceNames(services: readonly TurnService[], limit: number): string[] {
+  const counts = new Map<string, number>()
+  for (const service of services) {
+    counts.set(service.serviceNameSnapshot, (counts.get(service.serviceNameSnapshot) ?? 0) + 1)
+  }
+  return [...counts.entries()]
+    .sort(([nameA, countA], [nameB, countB]) => countB - countA || nameA.localeCompare(nameB))
+    .slice(0, limit)
+    .map(([name]) => name)
+}
+
 /** Empty text matches everything; otherwise any service name may contain the text. */
 export function matchesSearch(services: readonly TurnService[], text: string): boolean {
   const needle = foldText(text.trim())

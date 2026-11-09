@@ -59,13 +59,13 @@ export function rowAmount(page: Page, label: string, section?: string): Locator 
 
 /**
  * Opens Reports on today alone, so a turn saved on another day in the same
- * week cannot move the figure, then opens Details. Read a figure with
+ * week cannot move the figure, then opens More. Read a figure with
  * `rowAmount(page, label)`.
  */
 export async function openEarningsToday(page: Page): Promise<void> {
   await page.goto('./#/earnings')
   await page.getByRole('button', { name: 'Day', exact: true }).click()
-  await page.getByRole('button', { name: 'Details', exact: true }).click()
+  await page.getByRole('button', { name: 'More', exact: true }).click()
 }
 
 /** The edit link of the row whose second line shows that turn number. */

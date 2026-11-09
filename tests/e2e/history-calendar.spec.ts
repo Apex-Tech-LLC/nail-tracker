@@ -62,8 +62,8 @@ test('a day off shows on the calendar, survives a reload and a backup', async ({
   // The list still shows the turn and now shows the day off too.
   await expect(turnRow(page, 1)).toBeVisible()
   await expect(
-    page.getByRole('heading', { name: 'Wednesday, November 4' }).locator('..').getByText('Off'),
-  ).toBeVisible()
+    page.getByRole('button', { name: 'Day off for Wednesday, November 4' }),
+  ).toHaveAttribute('aria-pressed', 'true')
 
   await page.getByRole('button', { name: 'Calendar', exact: true }).click()
   await expect(page.getByRole('button', { name: /^Wednesday, November 4 · .*Off/ })).toBeVisible()
