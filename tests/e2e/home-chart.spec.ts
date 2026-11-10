@@ -167,10 +167,10 @@ test.describe('at 375 by 740', () => {
 
       const periods =
         locale === 'en'
-          ? ['Today', 'This week', 'This month']
-          : ['Hôm nay', 'Tuần này', 'Tháng này']
+          ? ['Today', 'This week', 'Pay period', 'This month']
+          : ['Hôm nay', 'Tuần này', 'Kỳ lương', 'Tháng này']
       const strip = page.getByTestId('stats-strip')
-      const boxes = ['today-chart-box', 'week-chart-box', 'month-chart-box']
+      const boxes = ['today-chart-box', 'week-chart-box', 'pay-chart-box', 'month-chart-box']
 
       // The message is shown while the page opens; read it before it is gone.
       await expect(page.getByTestId('goal-message')).toBeVisible()

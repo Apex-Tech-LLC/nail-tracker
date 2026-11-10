@@ -13,6 +13,7 @@ import {
   previousSpan,
   weekDays,
   type HomePeriod,
+  type Span,
 } from '../../domain/comparisons.ts'
 import {
   addDays,
@@ -32,6 +33,13 @@ import {
 import { goalMessageKey, goalProgress, type GoalKind } from '../../domain/goals.ts'
 import { openDay, workMinutes } from '../../domain/hours.ts'
 import { formatUsd, formatUsdShort } from '../../domain/money.ts'
+import type { DateSpan } from '../../domain/payPeriods.ts'
+import {
+  currentPayPeriod,
+  payCurrentSpan,
+  payPreviousSpan,
+  previousPayPeriod,
+} from '../../domain/paySpans.ts'
 import { dueReminder } from '../../domain/reminders.ts'
 import { nextTaxQuarter } from '../../domain/taxes.ts'
 import { numberTurns, sumTotals } from '../../domain/totals.ts'
@@ -55,6 +63,7 @@ import {
   WeekLegend,
   type TurnBar,
 } from './HomeCharts.tsx'
+import { PayPeriodBox } from './PayPeriodBox.tsx'
 
 const RECENT_LIMIT = 10
 const PERIOD_KEY = 'nail-tracker.home-period'
@@ -62,12 +71,14 @@ const PERIOD_KEY = 'nail-tracker.home-period'
 const PERIOD_KEYS: Record<HomePeriod, StringKey> = {
   today: 'homePeriodToday',
   week: 'homePeriodThisWeek',
+  pay: 'payPeriod',
   month: 'homePeriodThisMonth',
 }
 
 const EARNED_KEYS: Record<HomePeriod, StringKey> = {
   today: 'homeEarnedToday',
   week: 'homeEarnedThisWeek',
+  pay: 'homeEarnedPayPeriod',
   month: 'homeEarnedThisMonth',
 }
 
@@ -77,10 +88,12 @@ const COMPARISON_KEYS: Record<
 > = {
   today: { more: 'homeMoreToday', less: 'homeLessToday', same: 'homeSameToday' },
   week: { more: 'homeMoreThisWeek', less: 'homeLessThisWeek', same: 'homeSameThisWeek' },
+  pay: { more: 'homeMorePayPeriod', less: 'homeLessPayPeriod', same: 'homeSamePayPeriod' },
   month: { more: 'homeMoreThisMonth', less: 'homeLessThisMonth', same: 'homeSameThisMonth' },
 }
 
-const PERIODS: HomePeriod[] = ['today', 'week', 'month']
+const PERIODS: HomePeriod[] = ['today', 'week', 'pay', 'month']
+const NO_TURNS = { turns: [], adjustments: [] }
 
 // Room kept for the comparison pill (one line) and the goal bar, whose met
 // message takes the place of its text line, so no period moves what sits below
@@ -91,7 +104,7 @@ const GOAL_SLOT = 'mt-1 h-9'
 function readStoredPeriod(key: string): HomePeriod {
   try {
     const saved = sessionStorage.getItem(key)
-    if (saved === 'today' || saved === 'week' || saved === 'month') return saved
+    if (saved === 'today' || saved === 'week' || saved === 'pay' || saved === 'month') return saved
   } catch {
     // Storage can be blocked; today is always a safe start.
   }
@@ -144,8 +157,6 @@ export function HomePage() {
   const period =
     storedPeriod.key === periodKey ? storedPeriod.period : readStoredPeriod(periodKey)
 
-  const span = currentSpan(period, today, weekStartDay)
-  const previous = previousSpan(period, today, weekStartDay)
   const week = weekRange(today, weekStartDay)
   // Last week and this week together, so future bottles can show last week's fill.
   const weekLoadStart = addDays(week.start, -7)
@@ -166,6 +177,22 @@ export function HomePage() {
 
   const data = useLiveQuery(async () => {
     startLoad('load:home')
+    // The pay period comes from the schedule and the stored periods, so it is
+    // worked out here, where a period added on Payday arrives with the rest.
+    let span: Span | null
+    let previous: Span | null
+    let payPeriod: DateSpan | null = null
+    if (period === 'pay') {
+      const schedule = { type: payPeriodType, anchor: payPeriodAnchorDate }
+      const stored = await db.payPeriods.toArray()
+      payPeriod = currentPayPeriod(stored, schedule, today)
+      const before = payPeriod && previousPayPeriod(stored, schedule, payPeriod)
+      span = payPeriod && payCurrentSpan(payPeriod, today)
+      previous = payPeriod && before && payPreviousSpan(payPeriod, before, today)
+    } else {
+      span = currentSpan(period, today, weekStartDay)
+      previous = previousSpan(period, today, weekStartDay)
+    }
     const [
       current,
       previousData,
@@ -174,18 +201,22 @@ export function HomePage() {
       firstTurn,
       taxData,
       workDays,
-      monthWorkDays,
+      gridWorkDays,
       presence,
     ] = await Promise.all([
-        loadTurnDates(db, span.start, span.end),
-        loadTurnDates(db, previous.start, previous.end),
+        span ? loadTurnDates(db, span.start, span.end) : NO_TURNS,
+        previous ? loadTurnDates(db, previous.start, previous.end) : NO_TURNS,
         loadRange(db, today, today),
         loadTurnDates(db, weekLoadStart, week.end),
         db.turns.orderBy('localWorkDate').first(),
         loadTurnDates(db, taxStart, taxEnd),
         loadWorkDays(db, addDays(today, -1), today),
-        // Only the month grid shows days off, so no other period reads them.
-        period === 'month' ? loadWorkDays(db, month.start, month.end) : Promise.resolve([]),
+        // Only the month and pay period grids show days off, so no other period reads them.
+        period === 'month'
+          ? loadWorkDays(db, month.start, month.end)
+          : payPeriod
+            ? loadWorkDays(db, payPeriod.startDate, payPeriod.endDate)
+            : Promise.resolve([]),
         loadPeriodPresence(db),
       ])
     // Only the period being worked in needs its statement; the rest of the
@@ -193,7 +224,7 @@ export function HomePage() {
     const currentPresence = presence.find(
       (item) => item.period.startDate <= today && today <= item.period.endDate,
     )
-    const currentPayPeriod = currentPresence
+    const periodSummary = currentPresence
       ? await loadPeriodSummary(db, currentPresence.period.id)
       : null
     endLoad('load:home')
@@ -205,21 +236,22 @@ export function HomePage() {
       firstTurn,
       taxData,
       workDays,
-      monthWorkDays,
+      gridWorkDays,
       presence,
-      currentPayPeriod,
+      periodSummary,
+      payPeriod,
+      previous,
     }
   }, [
-    span.start,
-    span.end,
-    previous.start,
-    previous.end,
+    period,
+    payPeriodType,
+    payPeriodAnchorDate,
+    weekStartDay,
     today,
     weekLoadStart,
     week.end,
     taxStart,
     taxEnd,
-    period,
     month.start,
     month.end,
   ])
@@ -263,7 +295,9 @@ export function HomePage() {
   )
 
   const [earnedWhole, earnedCents] = splitMoney(formatUsd(totals.earnedCents))
-  const previousWeekday = formatWeekdayLong(previous.start, locale)
+  const previousWeekday = data.previous ? formatWeekdayLong(data.previous.start, locale) : ''
+  // With no pay period to show there is nothing to compare, and no pill.
+  const showPill = period !== 'pay' || data.payPeriod !== null
 
   let comparisonText: string
   if (comparison.kind === 'nothingToCompare') {
@@ -290,11 +324,11 @@ export function HomePage() {
     data.weekData.adjustments.filter((adjustment) => adjustment.localWorkDate >= week.start),
   )
 
-  const currentPayPeriod = data.currentPayPeriod
+  const periodSummary = data.periodSummary
   // "Salon owes" is what the statement says the salon should pay, less what it
   // has already paid: a paid period owes nothing.
-  const salonOwesCents = currentPayPeriod
-    ? Math.max(0, currentPayPeriod.statement.salonPaysCents - currentPayPeriod.paidCents)
+  const salonOwesCents = periodSummary
+    ? Math.max(0, periodSummary.statement.salonPaysCents - periodSummary.paidCents)
     : totals.expectedPayoutCents
 
   const todayTotals = sumTotals(data.todayData.turns, data.todayData.adjustments)
@@ -433,7 +467,7 @@ export function HomePage() {
         </section>
       )}
 
-      <div className="grid grid-cols-3 gap-1 rounded-control bg-surface-subtle p-[3px]">
+      <div className="grid grid-cols-4 gap-1 rounded-control bg-surface-subtle p-[3px]">
         {PERIODS.map((option) => {
           const on = option === period
           return (
@@ -468,24 +502,29 @@ export function HomePage() {
           </p>
         </div>
         <div className={COMPARISON_SLOT}>
-          <p
-            className={`inline-flex max-w-full items-center gap-1.5 whitespace-nowrap rounded-full px-[11px] py-[5px] text-[13px] font-semibold ${
-              comparison.kind === 'more'
-                ? 'bg-positive-bg text-positive-text'
-                : 'bg-surface-subtle text-text-secondary'
-            }`}
-          >
-            {comparisonText}
-          </p>
+          {showPill && (
+            <p
+              className={`inline-flex max-w-full items-center gap-1.5 whitespace-nowrap rounded-full px-[11px] py-[5px] text-[13px] font-semibold ${
+                comparison.kind === 'more'
+                  ? 'bg-positive-bg text-positive-text'
+                  : 'bg-surface-subtle text-text-secondary'
+              }`}
+            >
+              {comparisonText}
+            </p>
+          )}
         </div>
+        {/* The goals are for a week or a month, so the pay period leaves its slot empty. */}
         <div className={GOAL_SLOT}>
-          <GoalBar
-            kind={period === 'month' ? 'month' : 'week'}
-            earnedCents={period === 'month' ? totals.earnedCents : weekTotals.earnedCents}
-            goalCents={period === 'month' ? monthlyGoalCents : weeklyGoalCents}
-            periodStart={period === 'month' ? month.start : week.start}
-            today={today}
-          />
+          {period !== 'pay' && (
+            <GoalBar
+              kind={period === 'month' ? 'month' : 'week'}
+              earnedCents={period === 'month' ? totals.earnedCents : weekTotals.earnedCents}
+              goalCents={period === 'month' ? monthlyGoalCents : weeklyGoalCents}
+              periodStart={period === 'month' ? month.start : week.start}
+              today={today}
+            />
+          )}
         </div>
       </section>
 
@@ -511,6 +550,15 @@ export function HomePage() {
         </ChartBox>
       )}
 
+      {period === 'pay' && (
+        <PayPeriodBox
+          today={today}
+          current={data.payPeriod}
+          earnedByDate={earnedByDate(data.current.turns, data.current.adjustments)}
+          offDates={dayOffDates(data.gridWorkDays)}
+        />
+      )}
+
       {period === 'month' && (
         <ChartBox
           testId="month-chart-box"
@@ -519,10 +567,12 @@ export function HomePage() {
         >
           <MonthGrid
             today={today}
+            start={month.start}
+            end={month.end}
             weekStart={weekStartDay}
             locale={locale}
             earnedByDate={earnedByDate(data.current.turns, data.current.adjustments)}
-            offDates={dayOffDates(data.monthWorkDays)}
+            offDates={dayOffDates(data.gridWorkDays)}
           />
         </ChartBox>
       )}
@@ -536,11 +586,11 @@ export function HomePage() {
         <Stat value={formatUsdShort(salonOwesCents)} label={t(locale, 'homeSalonOwes')} edge />
       </div>
 
-      {currentPayPeriod?.statement.checkCents != null && (
+      {periodSummary?.statement.checkCents != null && (
         <p className="mt-2 text-sm text-text-secondary">
           {tf(locale, 'homeCheckCashLine', {
-            check: formatUsdShort(currentPayPeriod.statement.checkCents),
-            cash: formatUsdShort(currentPayPeriod.statement.cashCents ?? 0),
+            check: formatUsdShort(periodSummary.statement.checkCents),
+            cash: formatUsdShort(periodSummary.statement.cashCents ?? 0),
           })}
         </p>
       )}

@@ -7,7 +7,7 @@ import { paths } from '../../app/navigation.ts'
 import type { PayPeriodType, ThemeChoice } from '../../app/settings.ts'
 import { updateSettings, useSettings } from '../../app/settings.ts'
 import { db } from '../../db/schema.ts'
-import { isIsoDate, parseIsoDate, todayIso, weekRange } from '../../domain/dates.ts'
+import { isIsoDate, parseIsoDate, todayIso } from '../../domain/dates.ts'
 import { centsToInput, parseCents } from '../../domain/money.ts'
 import { rulesOn } from '../../domain/payRules.ts'
 import { t } from '../../lib/i18n.ts'
@@ -21,6 +21,7 @@ import { BackupSection } from '../backup/BackupSection.tsx'
 import { DeleteAllSection } from '../backup/DeleteAllSection.tsx'
 import { GoalFields, PAD_HEIGHT } from './GoalFields.tsx'
 import { LearnedWordsSection } from './LearnedWordsSection.tsx'
+import { choosePaySchedule, setPayAnchor } from '../payday/paySchedule.ts'
 import { payRulesSummary } from '../payRules/payRulesSummary.ts'
 import { TaxSetAsideChips } from './TaxSetAsideChips.tsx'
 import { TipHandlingFields } from './TipHandlingFields.tsx'
@@ -50,20 +51,6 @@ export function SettingsPage() {
   const rules = useLiveQuery(() => db.payRules.toArray())
   const summary = payRulesSummary(locale, rate, rulesOn(rules ?? [], todayIso()))
 
-  // A weekly or biweekly schedule counts from the first day of a period, so
-  // start it on the first day of the week the person is working in.
-  function chooseSchedule(type: PayPeriodType) {
-    const needsAnchor = type === 'weekly' || type === 'biweekly'
-    if (needsAnchor && payPeriodAnchorDate === null) {
-      updateSettings({
-        payPeriodType: type,
-        payPeriodAnchorDate: weekRange(todayIso(), weekStartDay).start,
-      })
-      return
-    }
-    updateSettings({ payPeriodType: type })
-  }
-
   function changeWage(value: string) {
     setWageText(value)
     if (value.trim() === '') {
@@ -77,6 +64,54 @@ export function SettingsPage() {
   return (
     <>
       <PageHeader title={t(locale, 'settingsTitle')} languageButton={false} />
+      {/* Tracking pay is the point of the app, so its two settings come first. */}
+      <TileGroup<WeekStartChoice>
+        legend={t(locale, 'weekStart')}
+        name="week-start"
+        value={weekStartDay === 1 ? 'monday' : 'sunday'}
+        onChange={(value) => updateSettings({ weekStartDay: value === 'monday' ? 1 : 0 })}
+        options={[
+          { value: 'sunday', label: t(locale, 'sunday') },
+          { value: 'monday', label: t(locale, 'monday') },
+        ]}
+      />
+
+      <TileGroup<PayPeriodType>
+        legend={t(locale, 'paydaySchedule')}
+        name="pay-schedule"
+        value={payPeriodType}
+        onChange={(type) => void choosePaySchedule(type, todayIso())}
+        options={[
+          { value: 'weekly', label: t(locale, 'scheduleWeekly') },
+          { value: 'biweekly', label: t(locale, 'scheduleBiweekly') },
+          { value: 'custom', label: t(locale, 'scheduleCustom') },
+          { value: 'none', label: t(locale, 'scheduleNone') },
+        ]}
+      />
+
+      {(payPeriodType === 'weekly' || payPeriodType === 'biweekly') && (
+        <div>
+          <label htmlFor={anchorId} className={label}>
+            {t(locale, 'anchorDate')}
+          </label>
+          <input
+            id={anchorId}
+            type="date"
+            value={payPeriodAnchorDate ?? ''}
+            onChange={(event) => {
+              if (isIsoDate(event.target.value)) {
+                void setPayAnchor(event.target.value, todayIso())
+              }
+            }}
+            aria-describedby={`${anchorId}-hint`}
+            className={field}
+          />
+          <p id={`${anchorId}-hint`} className="mt-1 text-sm text-text-secondary">
+            {t(locale, 'anchorDateHint')}
+          </p>
+        </div>
+      )}
+
       {/* Language names stay in their own language so anyone can find theirs. No flags. */}
       <TileGroup<Locale>
         legend={t(locale, 'language')}
@@ -133,53 +168,6 @@ export function SettingsPage() {
       <div className={card}>
         <Row label={t(locale, 'commissionBasis')} value={t(locale, 'commissionBasisValue')} />
       </div>
-
-      <TileGroup<WeekStartChoice>
-        legend={t(locale, 'weekStart')}
-        name="week-start"
-        value={weekStartDay === 1 ? 'monday' : 'sunday'}
-        onChange={(value) => updateSettings({ weekStartDay: value === 'monday' ? 1 : 0 })}
-        options={[
-          { value: 'sunday', label: t(locale, 'sunday') },
-          { value: 'monday', label: t(locale, 'monday') },
-        ]}
-      />
-
-      <TileGroup<PayPeriodType>
-        legend={t(locale, 'paydaySchedule')}
-        name="pay-schedule"
-        value={payPeriodType}
-        onChange={chooseSchedule}
-        options={[
-          { value: 'weekly', label: t(locale, 'scheduleWeekly') },
-          { value: 'biweekly', label: t(locale, 'scheduleBiweekly') },
-          { value: 'custom', label: t(locale, 'scheduleCustom') },
-          { value: 'none', label: t(locale, 'scheduleNone') },
-        ]}
-      />
-
-      {(payPeriodType === 'weekly' || payPeriodType === 'biweekly') && (
-        <div>
-          <label htmlFor={anchorId} className={label}>
-            {t(locale, 'anchorDate')}
-          </label>
-          <input
-            id={anchorId}
-            type="date"
-            value={payPeriodAnchorDate ?? ''}
-            onChange={(event) => {
-              if (isIsoDate(event.target.value)) {
-                updateSettings({ payPeriodAnchorDate: event.target.value })
-              }
-            }}
-            aria-describedby={`${anchorId}-hint`}
-            className={field}
-          />
-          <p id={`${anchorId}-hint`} className="mt-1 text-sm text-text-secondary">
-            {t(locale, 'anchorDateHint')}
-          </p>
-        </div>
-      )}
 
       <TipHandlingFields />
 

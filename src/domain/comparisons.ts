@@ -4,7 +4,10 @@
 import { addDays, monthRange, parseIsoDate, weekRange } from './dates.ts'
 import type { IsoDate } from './dates.ts'
 
-export type HomePeriod = 'today' | 'week' | 'month'
+export type HomePeriod = 'today' | 'week' | 'pay' | 'month'
+
+/** The periods that follow the calendar; the pay period follows the schedule (paySpans.ts). */
+export type CalendarPeriod = Exclude<HomePeriod, 'pay'>
 
 export interface Span {
   start: IsoDate
@@ -22,10 +25,15 @@ function firstOfMonth(year: number, month: number): IsoDate {
 }
 
 /** The current period so far: today only; week start to today; month start to today. */
-export function currentSpan(period: HomePeriod, today: IsoDate, weekStart: 0 | 1): Span {
-  if (period === 'today') return { start: today, end: today }
-  if (period === 'week') return { start: weekRange(today, weekStart).start, end: today }
-  return { start: monthRange(today).start, end: today }
+export function currentSpan(period: CalendarPeriod, today: IsoDate, weekStart: 0 | 1): Span {
+  switch (period) {
+    case 'today':
+      return { start: today, end: today }
+    case 'week':
+      return { start: weekRange(today, weekStart).start, end: today }
+    case 'month':
+      return { start: monthRange(today).start, end: today }
+  }
 }
 
 /**
@@ -35,25 +43,27 @@ export function currentSpan(period: HomePeriod, today: IsoDate, weekStart: 0 | 1
  * - month: last month's day 1 to the same day number, capped at last month's last day
  *   (March 31 compares with February 1 to February 28, or 29 in a leap year).
  */
-export function previousSpan(period: HomePeriod, today: IsoDate, weekStart: 0 | 1): Span {
-  if (period === 'today') {
-    const day = addDays(today, -7)
-    return { start: day, end: day }
-  }
-
-  if (period === 'week') {
-    const start = addDays(weekRange(today, weekStart).start, -7)
-    return { start, end: addDays(today, -7) }
-  }
-
-  const { year, month, day } = parseIsoDate(today)
-  const previousYear = month === 1 ? year - 1 : year
-  const previousMonth = month === 1 ? 12 : month - 1
-  const previous = monthRange(firstOfMonth(previousYear, previousMonth))
-  const lastDay = parseIsoDate(previous.end).day
-  return {
-    start: previous.start,
-    end: isoDay(previousYear, previousMonth, Math.min(day, lastDay)),
+export function previousSpan(period: CalendarPeriod, today: IsoDate, weekStart: 0 | 1): Span {
+  switch (period) {
+    case 'today': {
+      const day = addDays(today, -7)
+      return { start: day, end: day }
+    }
+    case 'week': {
+      const start = addDays(weekRange(today, weekStart).start, -7)
+      return { start, end: addDays(today, -7) }
+    }
+    case 'month': {
+      const { year, month, day } = parseIsoDate(today)
+      const previousYear = month === 1 ? year - 1 : year
+      const previousMonth = month === 1 ? 12 : month - 1
+      const previous = monthRange(firstOfMonth(previousYear, previousMonth))
+      const lastDay = parseIsoDate(previous.end).day
+      return {
+        start: previous.start,
+        end: isoDay(previousYear, previousMonth, Math.min(day, lastDay)),
+      }
+    }
   }
 }
 
