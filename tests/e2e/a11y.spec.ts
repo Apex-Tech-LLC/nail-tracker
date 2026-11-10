@@ -19,6 +19,7 @@ const SHOT_DIR = 'screenshots/dark'
 interface Copy {
   appName: string
   thisMonth: string
+  payPeriodChip: string
   addTurn: string
   editTurn: string
   sayYourTurns: string
@@ -49,6 +50,7 @@ const TEXT: Record<Locale, Copy> = {
   en: {
     appName: 'Nail Tracker',
     thisMonth: 'This month',
+    payPeriodChip: 'Pay period',
     addTurn: 'Add Turn',
     editTurn: 'Edit Turn',
     sayYourTurns: 'Say your turns',
@@ -77,6 +79,7 @@ const TEXT: Record<Locale, Copy> = {
   vi: {
     appName: 'Nail Tracker',
     thisMonth: 'Tháng này',
+    payPeriodChip: 'Kỳ lương',
     addTurn: 'Thêm turn',
     editTurn: 'Chỉnh sửa turn',
     sayYourTurns: 'Nói turn trong ngày',
@@ -232,6 +235,22 @@ for (const scheme of SCHEMES) {
           await page.getByRole('button', { name: text.thisMonth, exact: true }).click()
           await expect(page.getByTestId('month-day').first()).toBeVisible()
           await expectScreen(page, scheme, `${locale}-home-month`, text.appName)
+        })
+
+        test('home pay period', async ({ page }) => {
+          await start(page, locale, false, { payPeriodType: 'biweekly' })
+          await page.goto('./')
+          await page.getByRole('button', { name: text.payPeriodChip, exact: true }).click()
+          await expect(page.getByTestId('month-day')).toHaveCount(14)
+          await expectScreen(page, scheme, `${locale}-home-pay-period`, text.appName)
+        })
+
+        test('home pay period asks how often', async ({ page }) => {
+          await start(page, locale, false, { payPeriodType: 'none', payPeriodAnchorDate: null })
+          await page.goto('./')
+          await page.getByRole('button', { name: text.payPeriodChip, exact: true }).click()
+          await expect(page.getByTestId('pay-chart-box').getByRole('button')).toHaveCount(2)
+          await expectScreen(page, scheme, `${locale}-home-pay-setup`, text.appName)
         })
 
         test('add turn', async ({ page }) => {

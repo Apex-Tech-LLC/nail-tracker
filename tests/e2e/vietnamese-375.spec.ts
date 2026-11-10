@@ -325,6 +325,25 @@ async function checkScreen(page: Page, name: string): Promise<void> {
 
 test.use({ viewport: { width: 375, height: 812 } })
 
+test('the pay period box fits in Vietnamese at 375 pixels with no schedule and no period today', async ({
+  page,
+}) => {
+  await fixNow(page, NOON)
+  await seedSettings(page, { ...VIETNAMESE_SETTINGS, payPeriodType: 'none', payPeriodAnchorDate: null })
+  await page.goto('./')
+  await page.getByRole('button', { name: 'Kỳ lương', exact: true }).click()
+  await expect(page.getByText('Bao lâu bạn nhận lương một lần?')).toBeVisible()
+  await checkScreen(page, 'home-pay-setup')
+
+  await page.evaluate(() => {
+    const saved = JSON.parse(localStorage.getItem('nail-tracker.settings') ?? '{}')
+    localStorage.setItem('nail-tracker.settings', JSON.stringify({ ...saved, payPeriodType: 'custom' }))
+  })
+  await page.reload()
+  await expect(page.getByText('Chưa có kỳ lương nào cho hôm nay')).toBeVisible()
+  await checkScreen(page, 'home-pay-custom')
+})
+
 test('every screen fits in Vietnamese at 375 pixels', async ({ page }) => {
   test.setTimeout(300_000)
 
@@ -343,6 +362,24 @@ test('every screen fits in Vietnamese at 375 pixels', async ({ page }) => {
   await expect(page.getByTestId('goal-progress')).toBeVisible()
   await expect(page.getByTestId('week-bottle').first()).toContainText('CN')
   await checkScreen(page, 'home-week')
+
+  // A weekly schedule shows one row and a Change link; a two-week one adds Move a week.
+  await page.getByRole('button', { name: 'Kỳ lương', exact: true }).click()
+  await expect(page.getByTestId('month-day')).toHaveCount(7)
+  await checkScreen(page, 'home-pay-weekly')
+
+  await page.evaluate(() => {
+    const saved = JSON.parse(localStorage.getItem('nail-tracker.settings') ?? '{}')
+    localStorage.setItem('nail-tracker.settings', JSON.stringify({ ...saved, payPeriodType: 'biweekly' }))
+  })
+  await page.reload()
+  await expect(page.getByRole('button', { name: 'Lùi một tuần', exact: true })).toBeVisible()
+  await checkScreen(page, 'home-pay-biweekly')
+  await page.evaluate(() => {
+    const saved = JSON.parse(localStorage.getItem('nail-tracker.settings') ?? '{}')
+    localStorage.setItem('nail-tracker.settings', JSON.stringify({ ...saved, payPeriodType: 'weekly' }))
+  })
+  await page.reload()
 
   await page.getByRole('button', { name: 'Tháng này', exact: true }).click()
   await expect(page.getByTestId('month-day').first()).toBeVisible()

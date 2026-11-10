@@ -3,13 +3,14 @@ import { useLocation } from 'wouter'
 import { paths } from '../../app/navigation.ts'
 import type { PayPeriodType, Settings } from '../../app/settings.ts'
 import { getSettings, updateSettings, useSettings } from '../../app/settings.ts'
-import { todayIso, weekRange } from '../../domain/dates.ts'
+import { todayIso } from '../../domain/dates.ts'
 import { parseRateBp, rateToInput } from '../../domain/money.ts'
 import { t } from '../../lib/i18n.ts'
 import type { Locale } from '../../lib/locale.ts'
 import { PercentField } from '../../ui/PercentField.tsx'
 import { TileGroup } from '../../ui/TileGroup.tsx'
 import { primaryButton } from '../../ui/styles.ts'
+import { choosePaySchedule } from '../payday/paySchedule.ts'
 import type { TipChoice } from './onboardingChoices.ts'
 import { tipSettings } from './onboardingChoices.ts'
 
@@ -83,15 +84,7 @@ export function OnboardingPage() {
 
   function choosePayday(choice: PaydayChoice) {
     setPaydayChoice(choice)
-    const current = getSettings()
-    if ((choice === 'weekly' || choice === 'biweekly') && current.payPeriodAnchorDate === null) {
-      updateSettings({
-        payPeriodType: choice,
-        payPeriodAnchorDate: weekRange(todayIso(), current.weekStartDay).start,
-      })
-      return
-    }
-    updateSettings({ payPeriodType: choice })
+    void choosePaySchedule(choice, todayIso())
   }
 
   return (

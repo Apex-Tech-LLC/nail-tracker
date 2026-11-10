@@ -6,13 +6,12 @@ import { fillPercent, type WeekDay } from '../../domain/comparisons.ts'
 import {
   formatDayLong,
   formatWeekdayLong,
-  monthRange,
   type DateLocale,
   type IsoDate,
 } from '../../domain/dates.ts'
 import { formatUsdShort, formatUsdWhole } from '../../domain/money.ts'
 import { t, tf } from '../../lib/i18n.ts'
-import { calendarWeeks, colorStep, type ColorStep } from '../history/calendar.ts'
+import { colorStep, dayRows, visibleRows, type ColorStep } from '../history/calendar.ts'
 
 const MAX_TURN_BARS = 8
 
@@ -178,23 +177,32 @@ export function TodayLegend({ locale }: { locale: DateLocale }) {
   )
 }
 
-/** The current month: each worked day's whole dollars, darker for bigger days. */
+/**
+ * A calendar of start to end: each worked day's whole dollars, darker for
+ * bigger days. With a week start, rows begin on that day (the month); without
+ * one they begin on `start`, so a week is one row and two weeks are two.
+ */
 export function MonthGrid({
   today,
+  start,
+  end,
   weekStart,
   locale,
   earnedByDate,
   offDates,
 }: {
   today: IsoDate
-  weekStart: 0 | 1
+  start: IsoDate
+  end: IsoDate
+  weekStart?: 0 | 1
   locale: DateLocale
   earnedByDate: ReadonlyMap<IsoDate, number>
   offDates: ReadonlySet<IsoDate>
 }) {
-  const weeks = calendarWeeks(today, weekStart)
-  const range = monthRange(today)
+  const weeks = visibleRows(dayRows(start, end, weekStart), today)
   const best = Math.max(0, ...earnedByDate.values())
+  // A short stretch keeps its rows a good size to tap instead of filling the box.
+  const rowHeight = weeks.length <= 2 ? 'minmax(40px, 72px)' : 'minmax(40px, 1fr)'
 
   return (
     <div className="flex flex-1 flex-col pt-1">
@@ -205,10 +213,10 @@ export function MonthGrid({
       </div>
       <div
         className="mt-0.5 grid flex-1 grid-cols-7 gap-0.5"
-        style={{ gridTemplateRows: `repeat(${weeks.length}, minmax(40px, 1fr))` }}
+        style={{ gridTemplateRows: `repeat(${weeks.length}, ${rowHeight})` }}
       >
         {weeks.flat().map((date) => {
-          if (date < range.start || date > range.end) return <div key={date} aria-hidden="true" />
+          if (date < start || date > end) return <div key={date} aria-hidden="true" />
 
           const earned = earnedByDate.get(date) ?? 0
           const isOff = offDates.has(date)
