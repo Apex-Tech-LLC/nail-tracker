@@ -27,6 +27,7 @@ interface Copy {
   useChatGpt: string
   chatGptPromptLabel: string
   makeTurns: string
+  quickFixes: string
   addService: string
   moreOptions: string
   delete: string
@@ -56,6 +57,7 @@ const TEXT: Record<Locale, Copy> = {
     useChatGpt: 'Use ChatGPT instead',
     chatGptPromptLabel: 'Instructions for ChatGPT',
     makeTurns: 'Make turns',
+    quickFixes: 'Quick fixes',
     addService: 'Add service',
     moreOptions: 'More options',
     delete: 'Delete',
@@ -83,6 +85,7 @@ const TEXT: Record<Locale, Copy> = {
     useChatGpt: 'Dùng ChatGPT',
     chatGptPromptLabel: 'Hướng dẫn cho ChatGPT',
     makeTurns: 'Tạo turn',
+    quickFixes: 'Sửa nhanh',
     addService: 'Thêm dịch vụ',
     moreOptions: 'Thêm tùy chọn',
     delete: 'Xóa',
@@ -181,9 +184,11 @@ async function start(page: Page, locale: Locale, withData = true, overrides: Rec
 /** Types two jobs and one line the reader cannot use, then opens the Check screen. */
 async function openCheck(page: Page, text: Copy) {
   await page.goto('./#/say')
-  await page.locator('textarea').first().fill('Gel manicure 45, 10 tip cash\nPedicure\nblah blah')
+  await page.locator('textarea').first().fill('Gel manicure 45, 10 tip cash\nPedicure\nManicure 30 tip\nblah blah')
   await page.getByRole('button', { name: text.makeTurns, exact: true }).click()
   await expect(page.getByTestId('draft-card').first()).toBeVisible()
+  // A flagged card shows its quick fixes: the tap-target and axe checks cover them.
+  await expect(page.getByRole('group', { name: text.quickFixes }).first()).toBeVisible()
 }
 
 /**

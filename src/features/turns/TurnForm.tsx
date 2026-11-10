@@ -4,7 +4,7 @@ import { useId, useRef, useState, type FocusEvent, type FormEvent } from 'react'
 import { createPortal } from 'react-dom'
 import { Link } from 'wouter'
 import { paths, useAppLocation } from '../../app/navigation.ts'
-import { updateSettings, useSettings } from '../../app/settings.ts'
+import { useSettings } from '../../app/settings.ts'
 import {
   db,
   type ClientType,
@@ -51,6 +51,7 @@ import {
   secondaryButton,
 } from '../../ui/styles.ts'
 import { afterNewTurnSaved } from './copyTurn.ts'
+import { TipChips } from './TipChips.tsx'
 import {
   ServiceLineFields,
   type LineErrors,
@@ -132,7 +133,6 @@ interface SaveResult {
   earnedTotalCents: number
 }
 
-const TIP_VALUES = [500, 1000, 1500, 2000] as const
 const REPEAT_CHIP =
   'flex min-h-11 flex-none items-center gap-1 whitespace-nowrap rounded-control bg-brand-50 px-3 py-2 text-[13px] font-semibold text-brand-ink-strong'
 
@@ -380,10 +380,6 @@ export function TurnFormFields({ presets, existing, quick, copy, onDone, onClose
   const orderedPresets = [...presets].sort(
     (a, b) => (useCounts.get(b.id) ?? 0) - (useCounts.get(a.id) ?? 0),
   )
-  const tipOptions = [
-    ...TIP_VALUES.map((cents) => ({ label: formatUsdShort(cents), cents, percent: false })),
-    { label: '18%', cents: percentTipCents, percent: true },
-  ]
   const targetText = tipButtonsTarget === 'cash' ? cashShown : cardShown
   const targetCents = targetText.trim() === '' ? null : parseCents(targetText)
 
@@ -1009,41 +1005,7 @@ export function TurnFormFields({ presets, existing, quick, copy, onDone, onClose
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        <div className="flex overflow-hidden rounded-control border-[1.5px] border-border-strong">
-          {(['cash', 'card'] as const).map((target) => (
-            <button
-              key={target}
-              type="button"
-              aria-pressed={tipButtonsTarget === target}
-              onClick={() => updateSettings({ tipButtonsTarget: target })}
-              className={`min-h-11 px-2.5 text-sm font-semibold ${
-                tipButtonsTarget === target
-                  ? 'bg-brand-50 text-brand-ink-strong'
-                  : 'bg-surface text-text-secondary'
-              }${target === 'cash' ? ' border-r-[1.5px] border-border-strong' : ''}`}
-            >
-              {t(locale, target === 'cash' ? 'methodCash' : 'methodCard')}
-            </button>
-          ))}
-        </div>
-        {tipOptions.map((option) => {
-          const on = targetCents === option.cents
-          return (
-            <button
-              key={option.label}
-              type="button"
-              aria-pressed={on}
-              onClick={() => fillTip(option.cents, option.percent)}
-              className={`min-h-11 min-w-11 rounded-control border-[1.5px] px-3 text-sm font-semibold ${
-                on
-                  ? 'border-positive-text bg-positive-bg text-positive-text'
-                  : 'border-border bg-surface'
-              }`}
-            >
-              {option.label}
-            </button>
-          )
-        })}
+        <TipChips percentCents={percentTipCents} pressedCents={targetCents} onPick={fillTip} />
       </div>
 
       <div

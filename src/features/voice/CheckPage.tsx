@@ -12,9 +12,11 @@ import type { Locale } from '../../lib/locale.ts'
 import { requestPersistence } from '../../pwa/persistStorage.ts'
 import { primaryButton } from '../../ui/styles.ts'
 import { useToast } from '../../ui/useToast.ts'
-import { presetName, tipCents, turnInputFromForm } from '../turns/turnInput.ts'
+import { tipCents, turnInputFromForm } from '../turns/turnInput.ts'
 import { addTurns, deleteTurn, type TurnInput } from '../turns/turnStore.ts'
 import { answerNotUnderstood, countNotUnderstood, reasonsFor } from './checkReasons.ts'
+import { QuickFixRow } from './QuickFixRow.tsx'
+import { lineName } from './quickFixes.ts'
 import {
   cardFromLeftover,
   clearVoiceSession,
@@ -282,8 +284,7 @@ function CardView({ item, index, presets, date, locale, onOpen, onRemove }: Card
           <span className="block font-bold text-warning-text">{t(locale, 'noServiceCard')}</span>
         )}
         {values.lines.map((line) => {
-          const preset = presets.find((candidate) => candidate.id === line.choice)
-          const name = preset ? presetName(preset, locale) : line.customName.trim() || t(locale, 'presetOther')
+          const name = lineName(line, presets, locale)
           const priceCents = parseCents(line.amount)
           return (
             <span key={line.key} className="flex items-baseline justify-between gap-3">
@@ -325,6 +326,7 @@ function CardView({ item, index, presets, date, locale, onOpen, onRemove }: Card
           </span>
         )}
       </button>
+      {(flagged || card.tipPicked) && <QuickFixRow card={card} input={input} presets={presets} />}
       <div className="flex justify-end border-t border-border px-2">
         <button
           type="button"

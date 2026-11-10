@@ -3,7 +3,7 @@ import { paths, useAppLocation, useGoBack } from '../../app/navigation.ts'
 import { useSettings } from '../../app/settings.ts'
 import { DraftTurnForm } from '../turns/TurnForm.tsx'
 import { learnFromFix } from './learnFromFix.ts'
-import { sessionDate, updateVoiceSession, useVoiceSession } from './voiceSession.ts'
+import { sessionDate, updateCard, useVoiceSession } from './voiceSession.ts'
 
 /** One draft turn in the usual Add turn form. Done hands the values back; nothing is saved. */
 export function DraftEditPage({ cardKey }: { cardKey: string }) {
@@ -32,18 +32,13 @@ export function DraftEditPage({ cardKey }: { cardKey: string }) {
         moreOpen: !card.reviewed && (timeToFix || clientToFix),
         onSave: (values) => {
           void learnFromFix(card, values, locale)
-          updateVoiceSession({
-            cards: session.cards.map((item) =>
-              item.key === card.key
-                ? {
-                    ...item,
-                    reviewed: true,
-                    // A cleared time box keeps the slot the draft had.
-                    values: { ...values, time: values.time || item.values.time },
-                  }
-                : item,
-            ),
-          })
+          updateCard(card.key, (item) => ({
+            ...item,
+            reviewed: true,
+            tipPicked: false,
+            // A cleared time box keeps the slot the draft had.
+            values: { ...values, time: values.time || item.values.time },
+          }))
         },
       }}
     />
