@@ -45,6 +45,7 @@ type QuotedCode =
   | 'priceChange'
   | 'timeNotRead'
   | 'backReference'
+  | 'priceBeforeService'
 
 const QUOTED: Record<QuotedCode, StringKey> = {
   unclearService: 'reasonUnclearService',
@@ -55,6 +56,7 @@ const QUOTED: Record<QuotedCode, StringKey> = {
   priceChange: 'reasonPriceChange',
   timeNotRead: 'reasonTimeNotRead',
   backReference: 'reasonBackReference',
+  priceBeforeService: 'reasonPriceBeforeService',
 }
 
 const quoted = (text: string) => /"([^"]*)"/.exec(text)?.[1] ?? ''

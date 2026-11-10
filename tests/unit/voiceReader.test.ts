@@ -243,11 +243,12 @@ describe('spoken times', () => {
     expect(ten.startTime).toBeNull()
     expect(ten.services[0].priceCents).toBe(1000)
 
-    // 45 after "2 PM" is a price, never minutes.
+    // 45 after "2 PM" is a price, never minutes; said before its service it goes to that service with a check.
     const afterPm = read('at 2 PM 45 gel')
     expect(afterPm.turns[0].startTime).toBe('14:00')
     expect(codes(afterPm.turns[0])).not.toContain('timeNotRead')
-    expect(afterPm.notUnderstood).toContain('45')
+    expect(codes(afterPm.turns[0])).toContain('priceBeforeService')
+    expect(afterPm.notUnderstood).toEqual([])
   })
 
   it('leaves 2.30 as a price', () => {

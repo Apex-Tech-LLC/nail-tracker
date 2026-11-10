@@ -26,6 +26,7 @@ const LOOK_ONLY: ReadonlySet<CheckCode> = new Set<CheckCode>([
   'priceChange',
   'appointment',
   'correction',
+  'priceBeforeService',
 ])
 
 // The reader's own words for a tip said without an amount, put back when a picked tip is taken away.

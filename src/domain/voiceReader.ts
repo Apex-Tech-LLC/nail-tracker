@@ -53,6 +53,7 @@ export type CheckCode =
   | 'timeNotRead'
   | 'timeGuessedHalf'
   | 'backReference'
+  | 'priceBeforeService'
 
 /** A reason to look at a turn again. `text` is plain English for the next card to translate. */
 export interface DraftCheck {
@@ -1305,6 +1306,33 @@ function takePriceBefore(draft: Draft, ctx: Context, before: Atom | undefined) {
   setPrice(draft, ctx, entry, before)
 }
 
+// "2 pedi" is a count; "$2 pedi", "2 dollars pedi" and "2.50 pedi" are prices.
+const DOLLAR_WORDS = /\$|\b(dollars?|bucks?|usd|do)\b/
+
+/**
+ * The amount said right before the service at `i`, when it can be that service's price. An amount said right
+ * after the service is still its price, as before.
+ */
+function priceSaidBefore(ctx: Context, atoms: readonly Atom[], i: number): (Atom & { t: 'money' }) | null {
+  const money = atoms[i - 1]
+  if (money?.t !== 'money' || money.money.cents === null) return null
+  const earlier = atoms[i - 2]
+  if (earlier && NOT_A_PRICE_BEFORE.has(earlier.t)) return null
+  if (atoms[i + 1]?.t === 'money') return null
+  const cents = money.money.cents
+  const bareCount = cents < 1000 && cents % 100 === 0 && !DOLLAR_WORDS.test(foldText(heardOf(ctx, money)))
+  return bareCount ? null : money
+}
+
+/** "45 manicure": an amount no open service took, said right before a service, is that service's price. */
+function takeLoosePrice(draft: Draft, ctx: Context, atoms: readonly Atom[], i: number) {
+  const money = priceSaidBefore(ctx, atoms, i)
+  const entry = draft.entries.at(-1)
+  if (!money || !entry || draft.loose.at(-1) !== money) return
+  takePriceBefore(draft, ctx, money)
+  check(draft, 'priceBeforeService', `Read "${heardOf(ctx, money)}" as the price of ${entry.heard}, said before it; confirm the price.`)
+}
+
 function onMoney(draft: Draft, ctx: Context, atoms: readonly Atom[], i: number): number {
   const atom = atoms[i] as Atom & { t: 'money' }
 
@@ -1481,6 +1509,7 @@ function run(draft: Draft, ctx: Context, atoms: readonly Atom[]) {
       case 'unclear':
         addEntry(draft, ctx, atom)
         if (atom.priceFirst) takePriceBefore(draft, ctx, atoms[i - 1])
+        else takeLoosePrice(draft, ctx, atoms, i)
         break
       case 'money':
         i = skipTo(draft, atoms, i, onMoney(draft, ctx, atoms, i))
@@ -1587,18 +1616,35 @@ interface Segment {
   inferred: boolean
 }
 
-function segmentsOf(sentence: readonly Atom[]): Segment[] {
+// "gel 45, 35 pedi": an amount left over at the end of the turn before is the price of the service that follows.
+function trailingPrice(current: Atom[], ctx: Context, ahead: readonly Atom[]): Atom | null {
+  const probe = newDraft()
+  run(probe, ctx, current)
+  const last = current.at(-1)
+  if (!last || probe.loose.at(-1) !== last || priceSaidBefore(ctx, [...current, ...ahead], current.length) !== last) return null
+  return current.pop() ?? null
+}
+
+function segmentsOf(sentence: readonly Atom[], ctx: Context): Segment[] {
   const same = sentence.some((atom) => atom.t === 'same')
   const segments: Segment[] = [{ atoms: [], fresh: false, inferred: false }]
-  for (const atom of sentence) {
+  for (const [n, atom] of sentence.entries()) {
     const current = segments[segments.length - 1]
     if (atom.t === 'next' && !same) {
       segments.push({ atoms: [], fresh: true, inferred: false })
     } else if ((atom.t === 'service' || atom.t === 'unclear') && !same && startsNewTurn(current.atoms)) {
-      segments.push({ atoms: [atom], fresh: true, inferred: true })
+      const price = trailingPrice(current.atoms, ctx, sentence.slice(n, n + 3))
+      segments.push({ atoms: price ? [price, atom] : [atom], fresh: true, inferred: true })
     } else current.atoms.push(atom)
   }
   return segments
+}
+
+// "at 2 PM. gel x 45": a time said on its own is the time of the first service that follows it.
+const TIME_ONLY = new Set<AtomBody['t']>(['time', ...NOT_CONTENT])
+
+function isTimeOnly(atoms: readonly Atom[]): boolean {
+  return atoms.some((atom) => atom.t === 'time') && atoms.every((atom) => TIME_ONLY.has(atom.t))
 }
 
 function finish(draft: Draft, ctx: Context, leftovers: string[]): DraftTurn {
@@ -1684,6 +1730,15 @@ export function readVoice(input: ReaderInput): ReaderResult {
 
   const drafts: Draft[] = []
   let declared: { n: number; noun: string } | null = null
+  // A time said on its own before any card, kept to see if a service follows.
+  let waiting: { segment: Segment; copies: number } | null = null
+  const startDraft = (segment: Segment, copies: number, atoms: readonly Atom[]) => {
+    const draft = newDraft()
+    draft.inferred = segment.inferred
+    draft.copies = copies
+    run(draft, ctx, atoms)
+    drafts.push(draft)
+  }
   for (const sentence of sentences) {
     let rest = sentence
     let copies = 1
@@ -1697,9 +1752,18 @@ export function readVoice(input: ReaderInput): ReaderResult {
       } else declared ??= { n: count.n, noun: count.noun }
     }
 
-    for (const segment of segmentsOf(rest)) {
+    for (const segment of segmentsOf(rest, ctx)) {
       const probe = newDraft()
       run(probe, ctx, segment.atoms)
+      if (waiting && probe.entries.length > 0 && !segment.atoms.some((atom) => atom.t === 'time')) {
+        startDraft(segment, copies, [...waiting.segment.atoms, ...segment.atoms])
+        waiting = null
+        continue
+      }
+      if (waiting && (hasWork(probe) || hasFollowUp(probe))) {
+        startDraft(waiting.segment, waiting.copies, waiting.segment.atoms)
+        waiting = null
+      }
       const previous = drafts.at(-1)
       if (probe.backRef && previous && probe.entries.length === 0) {
         const said = segment.atoms.map((atom) => heardOf(ctx, atom)).join(' ')
@@ -1711,15 +1775,15 @@ export function readVoice(input: ReaderInput): ReaderResult {
       }
       if (!segment.fresh && previous && !hasWork(probe) && hasFollowUp(probe)) {
         run(previous, ctx, segment.atoms)
+      } else if (drafts.length === 0 && !hasWork(probe) && isTimeOnly(segment.atoms)) {
+        waiting = { segment, copies }
       } else if (hasWork(probe) || hasFollowUp(probe)) {
-        const draft = newDraft()
-        draft.inferred = segment.inferred
-        draft.copies = copies
-        run(draft, ctx, segment.atoms)
-        drafts.push(draft)
+        startDraft(segment, copies, segment.atoms)
       }
     }
   }
+
+  if (waiting) startDraft(waiting.segment, waiting.copies, waiting.segment.atoms)
 
   const turns = drafts.flatMap((draft) => {
     const turn = finish(draft, ctx, notUnderstood)

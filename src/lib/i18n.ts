@@ -232,6 +232,7 @@ const strings = {
     reasonTimeNotRead: 'A time was said ("{heard}"): set the time on this turn',
     reasonTimeGuessedHalf: 'Is that morning or evening?',
     reasonBackReference: '"{heard}" points back to an earlier client: fix it by hand',
+    reasonPriceBeforeService: '"{heard}" was said before the service: read as its price, confirm it',
     cashTipReceivedLabel: 'Cash tip already in my hand',
     cardTipReceivedLabel: 'Card tip already in my hand',
     // Voice options: the first-time how-to on the Say screen
@@ -988,6 +989,7 @@ const strings = {
     reasonTimeNotRead: 'Chưa đọc được giờ "{heard}", nhập giờ cho turn này nha',
     reasonTimeGuessedHalf: 'Giờ sáng hay tối vậy?',
     reasonBackReference: '"{heard}" nhắc tới khách trước đó. Mở turn của khách đó để sửa nha.',
+    reasonPriceBeforeService: '"{heard}" nói trước tên dịch vụ, app lấy làm giá của dịch vụ đó. Xem lại nha.',
     cashTipReceivedLabel: 'Tip cash đã cầm',
     cardTipReceivedLabel: 'Tip card đã cầm',
     // Voice options: the first-time how-to on the Say screen

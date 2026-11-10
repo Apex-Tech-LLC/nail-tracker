@@ -70,6 +70,22 @@ test('Looks right clears the flag in one tap and the turn saves', async ({ page 
   expect(await rows(page, 'turnServices')).toMatchObject([{ servicePriceCents: 6500 }])
 })
 
+test('a price said before its service is kept with a check, and Looks right clears it', async ({ page }) => {
+  await sayText(page, 'at 2 PM. 45 manicure')
+  await expect(page.getByTestId('draft-card')).toHaveCount(1)
+  await expect(card(page)).toContainText('Manicure')
+  await expect(card(page)).toContainText('2:00 PM')
+  await expect(card(page)).toContainText('$45')
+  await expect(card(page)).toContainText('"45" was said before the service')
+
+  await quickFixes(page).getByRole('button', { name: 'Looks right', exact: true }).click()
+  await expect(card(page)).not.toContainText('Check this')
+
+  await page.getByRole('button', { name: 'Save 1 turn' }).click()
+  await expect(page.getByRole('status').filter({ hasText: 'Saved 1 turn' })).toBeVisible()
+  expect(await rows(page, 'turnServices')).toMatchObject([{ servicePriceCents: 4500 }])
+})
+
 test('a line with no price gets its price from the pad, and Cancel leaves it alone', async ({ page }) => {
   await sayText(page, 'Pedicure')
   await expect(card(page)).toContainText('No price')
